@@ -1,0 +1,47 @@
+### Starting build.
+# Target: src/main/ocaml/repl/DaVinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/DaVinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/DaVinci.ml > src/main/ocaml/repl/DaVinci.ml.depends
+# Target: src/main/ocaml/repl/Absdavinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/Absdavinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Absdavinci.ml > src/main/ocaml/repl/Absdavinci.ml.depends
+# Target: src/main/ocaml/repl/Lexdavinci.mll, tags: { debug, extension:mll, file:src/main/ocaml/repl/Lexdavinci.mll, lexer, ocaml, ocamllex, quiet, traverse }
+/opt/local/bin/ocamllex.opt -q src/main/ocaml/repl/Lexdavinci.mll
+# Target: src/main/ocaml/repl/Lexdavinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/Lexdavinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Lexdavinci.ml > src/main/ocaml/repl/Lexdavinci.ml.depends
+# Target: src/main/ocaml/repl/Pardavinci.mly, tags: { debug, extension:mly, file:src/main/ocaml/repl/Pardavinci.mly, ocaml, ocamlyacc, parser, quiet, traverse }
+/opt/local/bin/ocamlyacc src/main/ocaml/repl/Pardavinci.mly
++ /opt/local/bin/ocamlyacc src/main/ocaml/repl/Pardavinci.mly
+1 rule never reduced
+# Target: src/main/ocaml/repl/Pardavinci.mli.depends, tags: { debug, extension:mli, file:src/main/ocaml/repl/Pardavinci.mli, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Pardavinci.mli > src/main/ocaml/repl/Pardavinci.mli.depends
+# Target: src/main/ocaml/repl/Absdavinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/Absdavinci.cmo, file:src/main/ocaml/repl/Absdavinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Absdavinci.cmo src/main/ocaml/repl/Absdavinci.ml
+# Target: src/main/ocaml/repl/Pardavinci.cmi, tags: { byte, compile, debug, extension:mli, file:src/main/ocaml/repl/Pardavinci.mli, interf, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Pardavinci.cmi src/main/ocaml/repl/Pardavinci.mli
+# Target: src/main/ocaml/repl/Printdavinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/Printdavinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Printdavinci.ml > src/main/ocaml/repl/Printdavinci.ml.depends
+# Target: src/main/ocaml/repl/Showdavinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/Showdavinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Showdavinci.ml > src/main/ocaml/repl/Showdavinci.ml.depends
+# Target: src/main/ocaml/repl/Lexdavinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/Lexdavinci.cmo, file:src/main/ocaml/repl/Lexdavinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Lexdavinci.cmo src/main/ocaml/repl/Lexdavinci.ml
+# Target: src/main/ocaml/repl/Printdavinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/Printdavinci.cmo, file:src/main/ocaml/repl/Printdavinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Printdavinci.cmo src/main/ocaml/repl/Printdavinci.ml
++ /opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Printdavinci.cmo src/main/ocaml/repl/Printdavinci.ml
+File "src/main/ocaml/repl/Printdavinci.ml", line 134, characters 36-168:
+Warning 8: this pattern-matching is not exhaustive.
+Here is an example of a value that is not matched:
+[]
+# Target: src/main/ocaml/repl/Showdavinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/Showdavinci.cmo, file:src/main/ocaml/repl/Showdavinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Showdavinci.cmo src/main/ocaml/repl/Showdavinci.ml
+# Target: src/main/ocaml/repl/DaVinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/DaVinci.cmo, file:src/main/ocaml/repl/DaVinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/DaVinci.cmo src/main/ocaml/repl/DaVinci.ml
+# Target: src/main/ocaml/repl/Pardavinci.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/Pardavinci.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/Pardavinci.ml > src/main/ocaml/repl/Pardavinci.ml.depends
+# Target: src/main/ocaml/repl/BNFC_Util.ml.depends, tags: { debug, extension:ml, file:src/main/ocaml/repl/BNFC_Util.ml, ocaml, ocamldep, quiet, traverse }
+/opt/local/bin/ocamlfind ocamldep -modules src/main/ocaml/repl/BNFC_Util.ml > src/main/ocaml/repl/BNFC_Util.ml.depends
+# Target: src/main/ocaml/repl/BNFC_Util.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/BNFC_Util.cmo, file:src/main/ocaml/repl/BNFC_Util.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/BNFC_Util.cmo src/main/ocaml/repl/BNFC_Util.ml
+# Target: src/main/ocaml/repl/Pardavinci.cmo, tags: { byte, compile, debug, extension:cmo, extension:ml, file:src/main/ocaml/repl/Pardavinci.cmo, file:src/main/ocaml/repl/Pardavinci.ml, implem, ocaml, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -c -g -I src/main/ocaml/repl -o src/main/ocaml/repl/Pardavinci.cmo src/main/ocaml/repl/Pardavinci.ml
+# Target: src/main/ocaml/repl/DaVinci.byte, tags: { byte, debug, dont_link_with, extension:byte, file:src/main/ocaml/repl/DaVinci.byte, link, ocaml, program, quiet, traverse }
+/opt/local/bin/ocamlfind ocamlc -g -linkpkg src/main/ocaml/repl/Absdavinci.cmo src/main/ocaml/repl/BNFC_Util.cmo src/main/ocaml/repl/Pardavinci.cmo src/main/ocaml/repl/Lexdavinci.cmo src/main/ocaml/repl/Printdavinci.cmo src/main/ocaml/repl/Showdavinci.cmo src/main/ocaml/repl/DaVinci.cmo -o src/main/ocaml/repl/DaVinci.byte
+# Compilation successful.

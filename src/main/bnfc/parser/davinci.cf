@@ -1,0 +1,86 @@
+-- -*- mode: Haskell;-*- 
+-- Filename:    davinci.cf 
+-- Authors:     lgm                                                    
+-- Creation:    Mon Jul  7 16:41:40 2014 
+-- Copyright:   Not supplied 
+-- Description: 
+-- ------------------------------------------------------------------------
+
+-- Parse           . REPL             ::= ":parse" Agent "."                  ;
+-- Type            . REPL             ::= ":type" Agent "."                   ;
+-- Load            . REPL             ::= ":load" String "."                  ;
+-- Shell           . REPL             ::= ":sh" String "."                    ;
+-- Complete        . REPL             ::= ":quit"                             ;
+-- Evaluate        . REPL             ::= Agent "."                           ;
+
+Composition     . Agent            ::= "{" [Agent] "}"                     ;
+Superposition   . Agent            ::= "switch" "{" [GuardedAgent] "}"     ;
+Replication     . Agent            ::= "*" Channel                         ;
+Reception       . Agent            ::= "for" "(" [Binding] ")" Agent       ;
+Filtration      . Agent            ::= "for" "(" [Binding] "|" [Pattern] ")" Agent ;
+Intimation      . Agent            ::= Variation "!?" "(" Concretion ")"   ;
+Transmission    . Agent            ::= Variation "!!" "(" Concretion ")"   ;
+Actualization   . Agent            ::= Value                               ;
+
+Injection       . GuardedAgent     ::= "case" Pattern "=>" Agent           ;
+
+Applicant       . Abstraction      ::= "(" Variation ")" Agent             ;
+Applicand       . Concretion       ::= "(" Information ")"                 ;
+
+Question        . Binding          ::= Pattern "<-" Channel "??" "(" Pattern ")" ;
+Interrogation   . Binding          ::= Pattern "<-" Channel "?!" "(" Pattern ")" ;
+
+Element         . Pattern          ::= Symbol "(" [Pattern] ")"            ;
+Variable        . Pattern          ::= Variation                           ;
+Materialization . Pattern          ::= Value                               ;
+Procession      . Pattern          ::= Lyst                                ;
+
+Identification  . Channel          ::= LIdent                              ;
+Nomination      . Channel          ::= Variation                           ;
+Transcription   . Channel          ::= "@" "'" Agent "'"                   ;
+
+Tag             . Symbol           ::= LIdent                              ;
+
+Atomic          . Variation        ::= UIdent                              ;
+--Abandon         . Variation        ::= Wild                                ;
+
+Indirection     . Information      ::= Variation                           ;
+Reflection      . Information      ::= Agent                               ;
+
+Empty           . Lyst             ::= "[" "]"                             ;
+Enum            . Lyst             ::= "[" [Pattern] "]"                   ;
+Cons            . Lyst             ::= "[" [Pattern] "|" Lyst "]"          ;
+ConsV           . Lyst             ::= "[" [Pattern] "|" Variation "]"     ;
+
+BooleanLiteral  . Value            ::= Duality                             ;
+StringLiteral   . Value            ::= String                              ;
+IntegerLiteral  . Value            ::= Integer                             ;
+DoubleLiteral   . Value            ::= Double                              ;
+Reification     . Value            ::= "@" "'" Agent "'"                   ;
+
+Verity          . Duality          ::= "true"                              ;
+Absurdity       . Duality          ::= "false"                             ;
+
+[]              . [Agent]          ::=                                     ;
+(: [])          . [Agent]          ::= Agent                               ;
+(:)             . [Agent]          ::= Agent ";" [Agent]                   ;
+
+[]              . [GuardedAgent]   ::=                                     ;
+(: [])          . [GuardedAgent]   ::= GuardedAgent                        ;
+(:)             . [GuardedAgent]   ::= GuardedAgent ";" [GuardedAgent]     ;
+
+--[]              . [Pattern]        ::=                                     ;
+(: [])          . [Pattern]        ::= Pattern                             ;
+(:)             . [Pattern]        ::= Pattern "," [Pattern]               ;
+
+[]              . [Binding]        ::=                                     ;
+(: [])          . [Binding]        ::= Binding                             ;
+(:)             . [Binding]        ::= Binding ";" [Binding]               ;
+
+comment "//" ;
+comment "/*" "*/" ;
+
+token UIdent (upper (letter | digit | '_')*) ;
+token LIdent (lower (letter | digit | '_')*) ;
+--token Wild   '_' char* ;
+token Wild   '_' ;
