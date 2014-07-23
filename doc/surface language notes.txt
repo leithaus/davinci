@@ -1,0 +1,64 @@
+
+There is a nice page that shows the core language of OCaml, the surface language that we need is similar: http://caml.inria.fr/pub/docs/manual-ocaml/coreexamples.html
+It doesn’t show the grammar but give the feature set and some examples.
+We specifically don’t care about the rest of the language: the module system, Objects (OO features), labels and variants, classes, etc. 
+The full OCaml grammar is given here: http://caml.inria.fr/pub/docs/manual-ocaml/language.html
+A lot of it is not needed, basically we need to strip this down. The ocamllex and ocamlyacc sources files for the OCaml lexer and parser are useful too. 
+HOWEVER, I would suggest that we look into Caml light instead of OCaml: http://caml.inria.fr/caml-light/
+Caml light has probably all we need, without the clutter of OCaml. The grammar is much simpler. It will save us time.
+The manual is here: http://caml.inria.fr/pub/docs/manual-caml-light/ , it says: Release 0.74, December 1997 (!!)
+
+A major reference:
+http://gallium.inria.fr/~xleroy/publi/ZINC.pdf
+This is the report of Xavier Leroy when he built Zinc, which is essentially the core of OCaml. It’s dated 1990. Pretty much everything is described in depth.
+
+
+
+
+
+
+All we really need for now:
+
+
+syntactic constructs:
+(lambda abstraction + application) let [pattern] = [expr] in [expr]
+(pattern cases disjunction) match [expr] with [pattern1] -> [expr1] | [pattern2] -> [expr2]
+(lambda multi-abstraction) fun [pattern1] [pattern2] -> expr
+(lambda multi-application) f [expr1] [expr2] …
+if [expr] then [expr] else [expr]
+
+
+arithmetic expressions:
++, - , *, /
+
+
+core functions:
+max, min
+see http://caml.inria.fr/pub/docs/manual-ocaml/libref/Pervasives.html , which is the core set of OCaml functions. We only need to use a small subset of OCaml core.
+
+
+values literals:
+string
+integer
+float
+bool
+
+
+syntactic sugars:
+list, list concatenation: [], a :: l
+tuples: (a, b, c)
+
+
+data:
+type specifications (data constructors): algebraic constructs with parametric polymorphism
+value constructors
+
+
+
+
+
+
+Example programs:
+
+see http://caml.inria.fr/pub/docs/manual-ocaml/coreexamples.html
+
