@@ -1,0 +1,113 @@
+-- -*- mode: Haskell;-*- 
+-- Filename:    cacao.cf 
+-- Authors:     lgm                                                    
+-- Creation:    Wed Jul 23 17:00:01 2014 
+-- Copyright:   Not supplied 
+-- Description: 
+-- Inspired by MiniCaml
+--
+-- e ::= x                   
+--   | let x = e in e        
+--   | let rec f x = e in e  
+--   | fun x -> e            
+--   | e e			  
+--   | true                  
+--   | false                 
+--   | if e then e else e    
+--   | n                     
+--   | - e                   
+--   | e + e                 
+--   | e * e                 
+--   | e / e                 
+--   | e = e                 
+--   | e > e                 
+--   | e < e                 
+
+--   | []                   
+--   | e :: e               
+--   | List.tl e
+--
+-- ------------------------------------------------------------------------
+
+Sequence        . Expr            ::= Expr ";" Expr1                              ;
+Application     . Expr1           ::= Expr1 [Expr2] ";;"                          ;
+Supposition     . Expr2           ::= "let" Pattern "=" Expr2 "in" Expr3          ;
+Recurrence      . Expr2           ::= "let" "rec" Pattern "=" Expr2 "in" Expr3    ;
+Abstraction     . Expr3           ::= "fun" Pattern "->" Expr4                    ;
+Condition       . Expr4           ::= "if" Expr4 "then" Expr5 "else" Expr5        ;
+Comprehension   . Expr4           ::= "for" "(" [Binding] ")" Expr5               ;
+Filtration      . Expr4           ::= "for" "(" [Binding] "|" [Pattern] ")" Expr5 ;
+Equation        . Expr4           ::= Expr5 "=" Expr5                             ;
+ComparisonLT    . Expr4           ::= Expr5 "<" Expr5                             ;
+ComparisonGT    . Expr4           ::= Expr5 ">" Expr5                             ;
+ComparisonLTE   . Expr4           ::= Expr5 "<=" Expr5                            ;
+ComparisonGTE   . Expr4           ::= Expr5 ">=" Expr5                            ;
+Calculation     . Expr5           ::= ArithmeticExpr                              ;
+
+_               . Expr            ::= Expr1                                       ;
+_               . Expr1           ::= Expr2                                       ;
+_               . Expr2           ::= Expr3                                       ;
+_               . Expr3           ::= Expr4                                       ;
+_               . Expr4           ::= Expr5                                       ;
+_               . Expr5           ::= "(" Expr ")"                                ;
+
+Division        . ArithmeticExpr  ::= ArithmeticExpr "/" ArithmeticExpr1          ;
+Addition        . ArithmeticExpr1 ::= ArithmeticExpr1 "+" ArithmeticExpr2         ;
+Multiplication  . ArithmeticExpr2 ::= ArithmeticExpr2 "*" ArithmeticExpr3         ;
+Juxtaposition   . ArithmeticExpr3 ::= ArithmeticExpr3 "::" ArithmeticExpr4        ;
+Negation        . ArithmeticExpr4 ::= "-" ArithmeticExpr5                         ;
+Mention         . ArithmeticExpr5 ::= Variation                                   ;
+Actualization   . ArithmeticExpr5 ::= Value                                       ;
+
+Question        . Binding         ::= Pattern "<-" Expr5                          ;
+
+Element         . Pattern         ::= Symbol "(" [Pattern] ")"                    ;
+Variable        . Pattern         ::= Variation                                   ;
+Materialization . Pattern         ::= Value                                       ;
+Procession      . Pattern         ::= Lyst                                        ;
+
+Atomic          . Variation       ::= UIdent                                      ;
+Abandon         . Variation       ::= Wild                                        ;
+Transcription   . Variation       ::= "`" Expr "'"                                ;
+
+Empty           . Lyst            ::= "[" "]"                                     ;
+Enum            . Lyst            ::= "[" [Pattern] "]"                           ;
+Cons            . Lyst            ::= "[" [Pattern] "|" Lyst "]"                  ;
+ConsV           . Lyst            ::= "[" [Pattern] "|" Variation "]"             ;
+
+BooleanLiteral  . Value           ::= Duality                                     ;
+StringLiteral   . Value           ::= String                                      ;
+IntegerLiteral  . Value           ::= Integer                                     ;
+DoubleLiteral   . Value           ::= Double                                      ;
+Reification     . Value           ::= "$" Expr "$"                                ;
+
+Verity          . Duality         ::= "true"                                      ;
+Absurdity       . Duality         ::= "false"                                     ;
+
+Tag             . Symbol          ::= LIdent                                      ;
+
+--[]              . [Expr2]         ::=                                            ;
+(: [])          . [Expr2]         ::= Expr2                                       ;
+(:)             . [Expr2]         ::= Expr2 [Expr2]                               ;
+
+--[]              . [Pattern]        ::=                                           ;
+(: [])          . [Pattern]       ::= Pattern                                     ;
+(:)             . [Pattern]       ::= Pattern "," [Pattern]                       ;
+
+[]              . [Binding]       ::=                                             ;
+(: [])          . [Binding]       ::= Binding                                     ;
+--(:)             . [Binding]       ::= Binding ";" [Binding]                       ;
+(:)             . [Binding]       ::= Binding "," [Binding]                       ;
+
+comment "//" ;
+comment "/*" "*/" ;
+
+comment "(*" "*)" ;
+
+token UIdent (upper (letter | digit | '_')*) ;
+token LIdent (lower (letter | digit | '_')*) ;
+--token Wild   '_' char* ;
+token Wild   '_' ;
+
+
+

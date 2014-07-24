@@ -1,7 +1,7 @@
 OASISFormat: 0.4
 Name:        davinci
 Version:     0.1
-Synopsis:    DaVinci is a language built from the ground up for reading,
+Synopsis:    Cacao is a language built from the ground up for reading,
   writing and running distributed programs.
 Authors:     Lucius Gregory Meredith
 License:     LGPL-2.1 with OCaml linking exception
@@ -10,5 +10,5 @@ Plugins:     DevFiles (0.4)
 Executable davinci
   Path:       src/main/ocaml/repl
   BuildTools: ocamlbuild
-  MainIs:     DaVinci.ml
+  MainIs:     Cacao.ml
   
