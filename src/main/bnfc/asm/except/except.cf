@@ -1,0 +1,81 @@
+-- -*- mode: Haskell;-*- 
+-- Filename:    delimcc.cf 
+-- Authors:     lgm                                                    
+-- Creation:    Tue Jul 29 14:23:27 2014 
+-- Copyright:   Not supplied 
+-- Description: 
+-- ------------------------------------------------------------------------
+
+EXCApplication     . Expr         ::= Expr [Expr1] ";"                           ;
+EXCTry             . Expr1        ::= "try" Expr1 [Expr2] ";"                    ;
+EXCRaise           . Expr2        ::= "raise" Prompt Expr3                       ;
+EXCValue           . Expr3        ::= Value                                      ;
+
+_                  . Expr         ::= Expr1                                      ;
+_                  . Expr1        ::= Expr2                                      ;
+_                  . Expr2        ::= Expr3                                      ;
+_                  . Expr3        ::= "(" Expr ")"                               ;
+
+EXCAbstraction     . Value        ::= "\\" [Variation] "->" Expr3                ;
+EXCSituation       . Value        ::= "@" Context                                ;
+EXCMention         . Value        ::= Pattern                                    ;
+EXCDelineation     . Value        ::= Prompt                                     ;
+--EXCGround          . Value        ::= GroundValue                                ;
+
+EXCLAppCtxt        . Context      ::= "{" Context [Expr2] "}"                    ;
+EXCRAppCtxt        . Context      ::= "{" Value Context "}"                      ;
+EXCLTryCtxt        . Context      ::= "{" "try" Prompt Context Expr3 "}"         ;
+EXCRTryCtxt        . Context      ::= "{" "try" Prompt Expr3 Context "}"         ;
+EXCRaiseCtxt       . Context      ::= "{" "raise" Prompt Context "}"             ;
+
+EXCElement         . Pattern      ::= Symbol "(" [Pattern] ")"                   ;
+EXCVariable        . Pattern      ::= Variation                                  ;
+EXCMaterialization . Pattern      ::= GroundValue                                ;
+EXCProcession      . Pattern      ::= Lyst                                       ;
+
+EXCAtomic          . Variation    ::= UIdent                                     ;
+EXCAbandon         . Variation    ::= Wild                                       ;
+EXCTranscription   . Variation    ::= "`" Expr3 "'"                              ;
+
+EXCBooleanLiteral  . GroundValue  ::= Duality                                    ;
+EXCStringLiteral   . GroundValue  ::= String                                     ;
+EXCIntegerLiteral  . GroundValue  ::= Integer                                    ;
+EXCDoubleLiteral   . GroundValue  ::= Double                                     ;
+EXCReification     . GroundValue  ::= "$" Expr3 "$"                              ;
+
+EXCVerity          . Duality      ::= "true"                                     ;
+EXCAbsurdity       . Duality      ::= "false"                                    ;
+
+EXCEmpty           . Lyst         ::= "[" "]"                                    ;
+EXCEnum            . Lyst         ::= "[" [Pattern] "]"                          ;
+EXCCons            . Lyst         ::= "[" [Pattern] "|" Lyst "]"                 ;
+EXCConsV           . Lyst         ::= "[" [Pattern] "|" Variation "]"            ;
+
+EXCTag             . Symbol       ::= LIdent                                     ;
+EXCPrompt          . Prompt       ::= "%" LIdent "%"                             ;
+
+--[]                 . [Expr1]       ::=                                            ;
+(: [])             . [Expr1]      ::= Expr1                                      ;
+(:)                . [Expr1]      ::= Expr1 [Expr1]                              ;
+
+--[]                 . [Expr2]       ::=                                            ;
+(: [])             . [Expr2]      ::= Expr2                                      ;
+(:)                . [Expr2]      ::= Expr2 [Expr2]                              ;
+
+--[]                 . [Pattern]     ::=                                            ;
+(: [])             . [Pattern]    ::= Pattern                                    ;
+(:)                . [Pattern]    ::= Pattern "," [Pattern]                      ;
+
+--[]                 . [Variation]   ::=                                            ;
+(: [])             . [Variation]  ::= Variation                                  ;
+(:)                . [Variation]  ::= Variation "," [Variation]                  ;
+
+comment "//" ;
+comment "/*" "*/" ;
+
+comment "(*" "*)" ;
+
+token UIdent (upper (letter | digit | '_')*) ;
+token LIdent (lower (letter | digit | '_')*) ;
+--token Wild   '_' char* ;
+token Wild   '_' ;

@@ -1,0 +1,11 @@
+all:
+	happy -gca Parexcept.y
+	alex -g Lexexcept.x
+	latex Docexcept.tex; dvips Docexcept.dvi -o Docexcept.ps
+	ghc --make Testexcept.hs -o Testexcept
+clean:
+	-rm -f *.log *.aux *.hi *.o *.dvi
+	-rm -f Docexcept.ps
+distclean: clean
+	-rm -f Docexcept.* Lexexcept.* Parexcept.* Layoutexcept.* Skelexcept.* Printexcept.* Testexcept.* Absexcept.* Testexcept ErrM.* SharedString.* except.dtd XMLexcept.* Makefile*
+

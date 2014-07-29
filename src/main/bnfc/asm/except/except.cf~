@@ -1,0 +1,82 @@
+-- -*- mode: Haskell;-*- 
+-- Filename:    delimcc.cf 
+-- Authors:     lgm                                                    
+-- Creation:    Tue Jul 29 14:23:27 2014 
+-- Copyright:   Not supplied 
+-- Description: 
+-- ------------------------------------------------------------------------
+
+DCCApplication     . Expr         ::= Expr [Expr1] ";"                           ;
+DCCTakeSC          . Expr1        ::= "takeSC" Expr1 Expr2                       ;
+DCCPushSC          . Expr1        ::= "pushSC" Expr1 Expr2                       ;
+DCCPushPrompt      . Expr2        ::= "pushP" Expr2 Expr3                        ;
+DCCNewPrompt       . Expr3        ::= "newP"                                     ;
+DCCValue           . Expr3        ::= Value                                      ;
+
+_                  . Expr         ::= Expr1                                      ;
+_                  . Expr1        ::= Expr2                                      ;
+_                  . Expr2        ::= Expr3                                      ;
+_                  . Expr3        ::= "(" Expr ")"                               ;
+
+DCCAbstraction     . Value        ::= "\\" [Variation] "->" Expr3                ;
+DCCSituation       . Value        ::= "@" Context                                ;
+DCCMention         . Value        ::= Pattern                                    ;
+DCCDelineation     . Value        ::= Prompt                                     ;
+--DCCGround          . Value        ::= GroundValue                                ;
+
+DCCLAppCtxt        . Context      ::= "{" Context [Expr1] "}"                    ;
+DCCRAppCtxt        . Context      ::= "{" Value Context "}"                      ;
+DCCLTakeSCCtxt     . Context      ::= "{" "takeSC" Context Expr3 "}"             ;
+DCCRTakeSCCtxt     . Context      ::= "{" "takeSC" Prompt Context "}"            ;
+DCCPushSCCtxt      . Context      ::= "{" "pushSC" Context Expr3 "}"             ;
+DCCLPushPromptCtxt . Context      ::= "{" "pushP" Context Expr3 "}"              ;
+DCCRPushPromptCtxt . Context      ::= "{" "pushP" Prompt Context "}"             ;
+DCCEmptyCtxt       . Context      ::= "{" "}"                                    ;
+
+DCCElement         . Pattern      ::= Symbol "(" [Pattern] ")"                   ;
+DCCVariable        . Pattern      ::= Variation                                  ;
+DCCMaterialization . Pattern      ::= GroundValue                                ;
+DCCProcession      . Pattern      ::= Lyst                                       ;
+
+DCCAtomic          . Variation    ::= UIdent                                     ;
+DCCAbandon         . Variation    ::= Wild                                       ;
+DCCTranscription   . Variation    ::= "`" Expr3 "'"                              ;
+
+DCCBooleanLiteral  . GroundValue  ::= Duality                                    ;
+DCCStringLiteral   . GroundValue  ::= String                                     ;
+DCCIntegerLiteral  . GroundValue  ::= Integer                                    ;
+DCCDoubleLiteral   . GroundValue  ::= Double                                     ;
+DCCReification     . GroundValue  ::= "$" Expr3 "$"                              ;
+
+DCCVerity          . Duality      ::= "true"                                     ;
+DCCAbsurdity       . Duality      ::= "false"                                    ;
+
+DCCEmpty           . Lyst         ::= "[" "]"                                    ;
+DCCEnum            . Lyst         ::= "[" [Pattern] "]"                          ;
+DCCCons            . Lyst         ::= "[" [Pattern] "|" Lyst "]"                 ;
+DCCConsV           . Lyst         ::= "[" [Pattern] "|" Variation "]"            ;
+
+DCCTag             . Symbol       ::= LIdent                                     ;
+DCCPrompt          . Prompt       ::= "%" LIdent "%"                             ;
+
+--[]                 . [Expr1]       ::=                                            ;
+(: [])             . [Expr1]      ::= Expr1                                      ;
+(:)                . [Expr1]      ::= Expr1 [Expr1]                              ;
+
+--[]                 . [Pattern]     ::=                                            ;
+(: [])             . [Pattern]    ::= Pattern                                    ;
+(:)                . [Pattern]    ::= Pattern "," [Pattern]                      ;
+
+--[]                 . [Variation]   ::=                                            ;
+(: [])             . [Variation]  ::= Variation                                  ;
+(:)                . [Variation]  ::= Variation "," [Variation]                  ;
+
+comment "//" ;
+comment "/*" "*/" ;
+
+comment "(*" "*)" ;
+
+token UIdent (upper (letter | digit | '_')*) ;
+token LIdent (lower (letter | digit | '_')*) ;
+--token Wild   '_' char* ;
+token Wild   '_' ;
