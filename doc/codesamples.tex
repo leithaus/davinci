@@ -1,0 +1,197 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{xspace}
+\usepackage{verbatim}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+%\usepackage{fullpage}
+
+%% +-----------------------------------------------------------------+
+%% | Configuration                                                   |
+%% +-----------------------------------------------------------------+
+
+\hypersetup{%
+  a4paper=true,
+  pdfstartview=FitH,
+  colorlinks=false,
+  pdfborder=0 0 0,
+  pdftitle = {OCaml-text user manual},
+  pdfauthor = {JÃ©rÃ©mie Dimino},
+  pdfkeywords = {OCaml, Unicode}
+}
+
+\lstset{
+  language=[Objective]Caml,
+  extendedchars=\true,
+  inputencoding=utf8,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  basicstyle=\ttfamily,
+  frame=l,
+  framerule=1.5mm,
+  xleftmargin=6mm,
+  framesep=4mm,
+  rulecolor=\color{lightgray},
+  moredelim=*[s][\itshape]{(*}{*)},
+  moredelim=[is][\textcolor{darkgray}]{Â§}{Â§},
+  escapechar=Â°,
+  keywordstyle=\color[rgb]{0.627451, 0.125490, 0.941176},
+  stringstyle=\color[rgb]{0.545098, 0.278431, 0.364706},
+  commentstyle=\color[rgb]{0.698039, 0.133333, 0.133333},
+  numberstyle=\color[rgb]{0.372549, 0.619608, 0.627451}
+}
+
+\begin{document}
+
+% \lstset{language=[Objective]Caml}\begin{lstlisting}
+% let search txt =
+%   let rec loop pointer =
+%     match Text.next pointer with
+%       | None ->
+%           (* End of the text *)
+%           false
+%       | Some(".", pointer) ->
+%           true
+%       | Some(ch, pointer) ->
+%           loop pointer
+%   in
+%   loop (Text.pointer_l txt)
+% \end{lstlisting}
+
+\section{Arithmetic examples}
+\lstset{language=[Objective]Caml}\begin{lstlisting}
+  let two = 1 + ( 1 / 1 );;
+  let oneAndAHalf =
+    1.0 +. 1.0 /. ( 1.0 +. 1.0 /. 1.0 );;
+  let oneAndTwoThirds =
+    1.0 +. ( 1.0 /. ( 1.0 +. ( 1.0 /. ( 1.0 +. 1.0 ) ) ) );;
+\end{lstlisting}
+
+\section{$\lambda$-calculus examples}
+\lstset{language=[Objective]Caml}\begin{lstlisting}
+  let id = fun x -> x ;;
+  id( id ) ;;
+  id( id ) == id ;;
+\end{lstlisting}
+
+\section{Slightly more realistic examples}
+Convert continued fraction list notation to float value
+
+\lstset{language=[Objective]Caml}\begin{lstlisting}
+  let reduceContinuedFraction = fun( elems : int list ) ->
+  let characteristic : int = List.hd( elems ) in
+  let mantissa : int list = List.tl( elems ) in
+  let reducer =
+    List.fold_left
+      ( fun acc e -> ( fun r -> acc( 1.0 /. ( float( e ) +. r ) ) ) )
+      ( fun r -> float( characteristic ) +. r )
+      mantissa
+  in reducer( 0.0 );;
+\end{lstlisting}
+
+\break
+\section{Delimited continuation examples}
+\lstset{language=[Objective]Caml}\begin{lstlisting}
+(*
+  Oleg's delimited continuation example from his Delimited Control
+  in OCaml paper. This is the final definition of update and
+  includes the ``time traveling'' client that rebalaces the tree
+  on update.
+*)
+type (’k, ’v) tree =
+   | Empty
+   | Node of (’k, ’v) tree * ’k * ’v * (’k, ’v) tree
+
+type (’k,’v) res =
+    Done of (’k,’v) tree
+    | ReqNF of ’k * (’v,(’k,’v) res) subcont
+
+let rec update : (’k,’v) res prompt ->
+  ’k -> (’v->’v) -> (’k,’v) tree -> (’k,’v) tree =
+  fun pnf k f ->
+    let rec loop = function
+      | Empty ->
+          Node(
+            Empty,
+            k,
+            take_subcont pnf (fun c () -> ReqNF (k,c)),
+            Empty
+          )
+      | Node (l,k1,v1,r) ->
+          begin
+            match compare k k1 with
+              | 0 -> Node(l,k1,f v1,r)
+              | n when n < 0 -> Node(loop l,k1,v1,r)
+              | _            -> Node(l,k1,v1,loop r)
+          end
+    in loop
+
+let pnf = new_prompt () in
+ match push_prompt pnf (fun () -> Done (update pnf 1 succ tree1)) with
+   | Done tree    -> tree
+   | ReqNF (k,c)  ->
+      rebalance (match push_subcont c (fun () -> 100) with Done x -> x)
+\end{lstlisting}
+
+\break
+\lstset{language=[Objective]Caml}
+Delimcc implements restartable exceptions with multiple, explicit restarts. The value of the type \lstinline$subcont$ is the restart object, created by \lstinline$take_subcont$ as it raises an exception. Passing the restart object to the function \lstinline$push_subcont$ resumes the interrupted computation. The function \lstinline$update$ not only throws the exception when the key is not found; it also collects the data needed for recovery – the exception object c and the missing key – and packs them into the envelope \lstinline$ReqNF$.
+
+The function call \lstinline$push subcont c (fun () -> 100)$ resumes the evaluation of \lstinline$update4$ as if the expression \lstinline$take subcont pnf (...)$ returned \lstinline$100$. We have started with the expression \lstinline$Done (update4 pnf 1 succ tree1)$,whos eevaluation was interrupted by the exception; \lstinline$push_prompt$ has caught the exception, \lstinline$yielding ReqNF (k,c)$ rather than the value \lstinline$Done tree$ expected as the result of our expression. The restarted expression does not raise any further exceptions, finishing normally, with the result \lstinline$Done tree$. The result becomes the value yielded by \lstinline$push_subcont$. (The last \lstinline$Done x$ pattern-match in the sample application is therefore total.)
+
+Upon the exception restart a new node is added to the tree, changing the height of its branch and potentially requiring rebalancing. We may need to rebalance the tree only after the key lookup failure and the addition of a new node. The optimal solution is to proceed upon the assumption of no rebalancing; if we eventually discover that the key was missing and a new node has to be adjoined, we go ‘back in time’ and add the call to rebalance at the beginning.
+
+\break
+\section{Concurrency examples}
+\lstset{language=[Objective]Caml}\begin{lstlisting}
+(*
+  Predicate to check that a string begins with a letter between
+  'M' - 'Z' or 'm' - 'z'
+*)
+let mThruZ =
+  fun s -> let fc = Char.code( Char.uppercase( s.[0] ) )
+    in ( fc > 76 ) && ( fc < 91 );;
+
+(*
+  Create a one time pipe from chan1 to chan2:
+   Read user profiles of the form profile( fstName, lstName, data )
+   from channel chan1, selecting for those with
+   lstName beginning with a letter between 'M' - 'Z' or 'm' - 'z'.
+   Publish to channel chan2 records of the form
+   candidate( lstName, fstName )
+*)
+from(
+  e <- ( chan1 ? ( profile( fstName, lstName, _ ) ) )
+  | mThruZ( e( lstName ) )
+) chan2 ! candidate( e( lstName ), e( fstName ) )
+
+(*
+  Create a standing pipe from chan1 to chan2.
+*)
+from(
+  e <- ( chan1 ?* ( profile( fstName, lstName, _ ) ) )
+  | mThruZ( e( lstName ) )
+) chan2 ! candidate( e( lstName ), e( fstName ) )
+
+(*
+  Suggest trades between matching bids and asks.
+*)
+from(
+  bid <- ( bids ?* ( bid( bidCommodity, bidPrice, bidContact, _ ) ) );
+  ask <- ( asks ?* ( ask( askCommodity, askPrice, askContact, _ ) ) )
+  | bid( bidCommodity ) == ask( askCommodity )
+    && spread( bid( bidPrice ), ask( askPrice ) )
+) let tradeChan = newChan() in
+    ( bid( bidContact )
+      ! suggest( tradeChan, bid( bidCommodity ), ask( askPrice ) ) );
+    ( ask( askContact )
+      ! suggest( tradeChan, ask( askCommodity ), bid( bidPrice ) ) )
+\end{lstlisting}
+
+\end{document}

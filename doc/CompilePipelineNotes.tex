@@ -1,4 +1,5 @@
 \documentclass{beamer}
+
 \usetheme{Copenhagen}
 \usecolortheme{orchid}
 \title{CacaoScript: Syntax and Semantics}
@@ -91,17 +92,35 @@
   \subsection{The basics: arithmetic}
   \begin{frame}
     \frametitle{Sum, products, etc}    
+    We can write down any continued fraction such as
+    $P/Q = a + 1/(b + 1/(c + 1/(d + \ldots)))$        
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesArithmetic.pdf}
+      \end{center}      
+    \end{figure}
+%     let two = 1 + ( 1 / 1 );;
+%     let oneAndAHalf = 1.0 +. 1.0 /. ( 1.0 +. 1.0 /. 1.0 );;
+%     let oneAndTwoThirds = 1.0 +. ( 1.0 /. ( 1.0 +. ( 1.0 /. ( 1.0 +. 1.0 ) ) ) );;
   \end{frame}
   \subsection{The basics: abstraction and application}
   \begin{frame}
     \frametitle{$(\lambda x.x)(\lambda x.x)$}    
-  \end{frame}
-  \subsection{More realistic examples: in-place update of map}
-  \begin{frame}
-    \frametitle{in-place update with delimcc}    
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[height=2in]{pipelinefigures/InplaceUpdateCodeSampleI.pdf}
+        \includegraphics[width=\textwidth,height=0.2\textheight,keepaspectratio]{pipelinefigures/CodeSamplesAbstractionApplication.pdf}
+      \end{center}      
+    \end{figure}
+%     let id = fun x -> x ;;
+%     id( id ) ;;
+%     id( id ) == id ;;
+  \end{frame}
+  \subsection{More realistic examples}
+  \begin{frame}
+    \frametitle{Continued fractions}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSampleContinuedFractions.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
@@ -109,7 +128,7 @@
     \frametitle{in-place update with delimcc}    
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/InplaceUpdateClientCode.pdf}
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesDelimCCInplaceUpdateTypes.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
@@ -117,7 +136,7 @@
     \frametitle{in-place update with delimcc}    
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/InplaceUpdateExplanation.pdf}
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesDelimCCInplaceUpdateTraversal.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
@@ -125,13 +144,66 @@
     \frametitle{in-place update with delimcc}    
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/InplaceUpdateElaboration.pdf}
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesDelimCCExplanationI.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
+  \begin{frame}
+    \frametitle{in-place update with delimcc}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesDelimCCExplanationII.pdf}
+      \end{center}      
+    \end{figure}
+  \end{frame}
+  \begin{frame}
+    \frametitle{in-place update with delimcc}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/CodeSamplesDelimCCExplanationIII.pdf}
+      \end{center}      
+    \end{figure}
+  \end{frame}
+%   \begin{frame}
+%     \frametitle{in-place update with delimcc}    
+%     \begin{figure}[ht]
+%       \begin{center}        
+%         \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/InplaceUpdateElaboration.pdf}
+%       \end{center}      
+%     \end{figure}
+%   \end{frame}
   \subsection{More realistic examples: concurrency}
   \begin{frame}
     \frametitle{concurrency}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/CodeSamplesConcurrencyHelpPredicate.pdf}
+      \end{center}      
+    \end{figure}    
+  \end{frame}
+  \begin{frame}
+    \frametitle{concurrency}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/CodeSamplesOneTimePipe.pdf}
+      \end{center}      
+    \end{figure}
+  \end{frame}
+  \begin{frame}
+    \frametitle{concurrency}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/CodeSamplesStandingPipe.pdf}
+      \end{center}      
+    \end{figure}
+  \end{frame}
+  \begin{frame}
+    \frametitle{concurrency}    
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{pipelinefigures/CodeSamplesMatchingBidsToAsks.pdf}
+      \end{center}      
+    \end{figure}
   \end{frame}
   \section{The pipeline}
   \begin{frame}
@@ -147,7 +219,7 @@
     \frametitle{The delimCC machine}
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[height=2in]{pipelinefigures/DelimCCMachineSpec1.svg/image1.pdf}
+        \includegraphics[height=2in]{pipelinefigures/DelimCCMachineSpecI.pdf}
       \end{center}      
     \end{figure}
 
@@ -157,11 +229,20 @@
     \frametitle{The exception machine}
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[height=2in]{pipelinefigures/ExceptionMachineSpec1.svg/image2.pdf}
+        \includegraphics[height=2in]{pipelinefigures/ExceptionMachineSpecI.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
-  \section{Eliminating the delimCC machine}
+  \section{Eliminating the middle men}
+  \begin{frame}
+    \frametitle{Eliminating the middle men}
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[height=2in]{pipelinefigures/PoliteFictions.pdf}
+      \end{center}      
+    \end{figure}
+
+  \end{frame}
   \begin{frame}
     \frametitle{Eliminating the delimCC machine}
     \begin{figure}[ht]
