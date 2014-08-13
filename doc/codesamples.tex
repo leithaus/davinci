@@ -223,4 +223,28 @@ is just the composition of $C$ with $\ldb - \rdb$ $ = C(\ldb - \rdb)$.
       8      @=10     SETGLOBAL 0
     \end{verbatim}
 
+\lstset{language=[Objective]Caml}\begin{lstlisting}[mathescape]
+  $CS($ let id = fun x -> x in let rslt = id( id ) in id == rslt ;; $)$
+  $ = C(\ldb$ let id = fun x -> x in let rslt = id( id ) in id == rslt ;; $\rdb )$
+  $ = C($ let id = fun x -> x in let rslt = id( id ) in id == rslt ;; $)$  
+\end{lstlisting}
+
+    \begin{verbatim}
+      0      @=0      BRANCH 3
+
+      1      @=2      ACC 0
+      2      @=3      RETURN 1
+
+      3      @=5      CLOSURE 0 1
+      4      @=8      PUSHACC 0
+      5      @=9      PUSHACC 1
+      6      @=10     APPLY 1
+      7      @=11     PUSHACC 0
+      8      @=12     PUSHACC 2
+      9      @=13     EQ
+      10     @=14     POP 2
+      11     @=16     ATOM 0
+      12     @=17     SETGLOBAL 0
+    \end{verbatim}
+
 \end{document}
