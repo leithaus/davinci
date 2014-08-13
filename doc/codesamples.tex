@@ -11,6 +11,10 @@
 \usepackage{xcolor}
 %\usepackage{fullpage}
 
+\newcommand{\ldb}{[\![}
+\newcommand{\rdb}{]\!]}
+\newcommand{\meaningof}[1]{\ldb #1 \rdb}
+
 %% +-----------------------------------------------------------------+
 %% | Configuration                                                   |
 %% +-----------------------------------------------------------------+
@@ -193,5 +197,30 @@ from(
     ( ask( askContact )
       ! suggest( tradeChan, ask( askCommodity ), bid( bidPrice ) ) )
 \end{lstlisting}
+
+\section{Compilation pathway for ordinary code}
+In symbols, suppose
+$C : OCamlSource \rightarrow ZincByteCode$, and $\ldb - \rdb$ is the
+desugaring map from above then our compiler,
+$CS : CacaoScriptSource \rightarrow ZincByteCode$
+is just the composition of $C$ with $\ldb - \rdb$ $ = C(\ldb - \rdb)$.
+
+\lstset{language=[Objective]Caml}\begin{lstlisting}[mathescape]
+  $CS($ let two = 1 + ( 1 / 1 );; $)$
+  $ = C(\ldb$ let two = 1 + ( 1 / 1 );; $\rdb )$
+  $ = C($ let two = 1 + ( 1 / 1 );; $)$  
+\end{lstlisting}
+
+    \begin{verbatim}
+      0      @=0      CONST 1
+      1      @=1      PUSHCONST 1
+      2      @=2      DIVINT
+      3      @=3      PUSHCONST 1
+      4      @=4      ADDINT
+      5      @=5      PUSHACC 0
+      6      @=6      MAKEBLOCK 1 0
+      7      @=8      POP 1
+      8      @=10     SETGLOBAL 0
+    \end{verbatim}
 
 \end{document}

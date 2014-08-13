@@ -7,6 +7,13 @@
 \author{Ivan Chollet,Lucius Gregory Meredith,Paul Steckler}
 \date{\today}
 
+\newcommand{\ldb}{[\![}
+%\newcommand{\ldb}{\lefthalfcup}
+\newcommand{\rdb}{]\!]}
+%\newcommand{\rdb}{\righthalfcup}
+\newcommand{\meaningof}[1]{\ldb #1 \rdb}
+%\newcommand{\meaningof}[1]{\lefthalfcup #1 \righthalfcup}
+
 \AtBeginSection[]
 {
   \begin{frame}
@@ -71,7 +78,7 @@
     \frametitle{Delimited continuations}
     \begin{figure}[ht]
       \begin{center}        
-        \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{pipelinefigures/SyntaxSugarDelimCC.pdf}
+        \includegraphics[width=\textwidth,height=0.3\textheight,keepaspectratio]{pipelinefigures/SyntaxSugarDelimCC.pdf}
       \end{center}      
     \end{figure}
   \end{frame}
@@ -252,13 +259,67 @@
     \end{figure}
 
   \end{frame}
+  \begin{frame}
+    \frametitle{Eliminating the Exception machine} The Exception
+    machine is really only a simplification of the the Zinc
+    machine. It embeds directly into the Zinc machine. It's sole
+    purpose is to provide an abstract target for the elimination of
+    delimited continuation sugar to any abstract machine that supports
+    exceptions such as the Zinc machine or the JVM or ...
+  \end{frame}
+  \begin{frame}
+    \frametitle{Eliminating the Exception machine} 
+    Thus, of our examples, only those that incur a dependency on
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.3\textheight,keepaspectratio]{pipelinefigures/SyntaxSugarDelimCC.pdf}
+      \end{center}      
+    \end{figure}
+    will have a different compilation path.
+  \end{frame}
+  \begin{frame}
+    \frametitle{Eliminating the middle men}    
+    In symbols, suppose
+$C : OCamlSource \rightarrow ZincByteCode$, and $\ldb - \rdb$ is the
+desugaring map from above then our compiler,
+$CS : CacaoScriptSource \rightarrow ZincByteCode$
+is just the composition of $C \circ \ldb - \rdb$ $ = C(\ldb - \rdb)$.
+  \end{frame}
+  \begin{frame}
+    \frametitle{Eliminating the Exception machine} 
+    To illustrate the point:
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.2\textheight,keepaspectratio]{pipelinefigures/CompilationPathwayCore.pdf}
+      \end{center}      
+    \end{figure}
+    
+  \end{frame}
   \section{The Zinc machine}
   \begin{frame}
     \frametitle{The Zinc machine}
+    This is well documented.
+    
+  \end{frame}
+  \begin{frame}
+    \frametitle{Compiling our examples to the Zinc machine}
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.075\textheight,keepaspectratio]{pipelinefigures/CompilerPathwayArithmeticExampleCompilationInvocation.pdf}
+      \end{center}      
+    \end{figure}        
+    \begin{figure}[ht]
+      \begin{center}        
+        \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{pipelinefigures/CompilationPathwayArithmeticExampleBytecode.pdf}
+      \end{center}      
+    \end{figure}        
   \end{frame}
   \section{LLVM}
   \begin{frame}
-    \frametitle{The LLVM}
+    \frametitle{The LLVM} The purpose of targeting LLVM from the Zinc
+    machine byte code (the subject of various student projects in the
+    OCaml community) is to be able to target a variety of hardware
+    architectures, notably the mobile platforms.
   \end{frame}
   \section{Conclusions}
   \begin{frame}
