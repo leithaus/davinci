@@ -4,7 +4,7 @@ open Abscacao
 open Lexing
 %}
 
-%token TOK_else TOK_false TOK_for TOK_fun TOK_if TOK_in TOK_let TOK_rec TOK_then TOK_true
+%token TOK_else TOK_false TOK_from TOK_fun TOK_if TOK_in TOK_let TOK_newP TOK_pushP TOK_pushSC TOK_rec TOK_takeSC TOK_then TOK_true TOK_yield
 
 %token SYMB1 /* ; */
 %token SYMB2 /* ;; */
@@ -111,8 +111,10 @@ expr3 : TOK_fun pattern SYMB4 expr4 { Abstraction ($2, $4) }
 ;
 
 expr4 : TOK_if expr4 TOK_then expr5 TOK_else expr5 { Condition ($2, $4, $6) } 
-  | TOK_for SYMB5 binding_list SYMB6 expr5 { Comprehension ($3, $5) }
-  | TOK_for SYMB5 binding_list SYMB7 pattern_list SYMB6 expr5 { Filtration ($3, $5, $7) }
+  | TOK_from SYMB5 binding_list SYMB6 TOK_yield expr5 { Comprehension ($3, $6) }
+  | TOK_from SYMB5 binding_list SYMB6 expr5 { Consolidation ($3, $5) }
+  | TOK_from SYMB5 binding_list SYMB7 pattern_list SYMB6 TOK_yield expr5 { Filtration ($3, $5, $8) }
+  | TOK_from SYMB5 binding_list SYMB7 pattern_list SYMB6 expr5 { Concentration ($3, $5, $7) }
   | expr5 SYMB3 expr5 { Equation ($1, $3) }
   | expr5 SYMB8 expr5 { ComparisonLT ($1, $3) }
   | expr5 SYMB9 expr5 { ComparisonGT ($1, $3) }
@@ -121,8 +123,11 @@ expr4 : TOK_if expr4 TOK_then expr5 TOK_else expr5 { Condition ($2, $4, $6) }
   | expr5 {  $1 }
 ;
 
-expr5 : arithmeticExpr { Calculation $1 } 
-  | SYMB5 expr SYMB6 {  $2 }
+expr5 : TOK_newP { Acquisition  } 
+  | TOK_pushP expr5 expr5 { Suspension ($2, $3) }
+  | TOK_takeSC expr5 expr5 { Release ($2, $3) }
+  | TOK_pushSC expr5 expr5 { InnerSuspension ($2, $3) }
+  | arithmeticExpr { Calculation $1 }
 ;
 
 arithmeticExpr : arithmeticExpr SYMB12 arithmeticExpr1 { Division ($1, $3) } 
@@ -142,6 +147,7 @@ arithmeticExpr4 : SYMB16 arithmeticExpr5 { Negation $2 }
 
 arithmeticExpr5 : variation { Mention $1 } 
   | value { Actualization $1 }
+  | SYMB5 expr SYMB6 { Aggregation $2 }
 ;
 
 binding : pattern SYMB17 expr5 { Question ($1, $3) } 

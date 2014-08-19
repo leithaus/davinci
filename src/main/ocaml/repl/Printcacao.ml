@@ -92,13 +92,19 @@ let rec prtExpr (i:int) (e:expr) : doc = match e with
   |    Recurrence (pattern, expr0, expr) -> prPrec i 2 (concatD [render "let" ; render "rec" ; prtPattern 0 pattern ; render "=" ; prtExpr 2 expr0 ; render "in" ; prtExpr 3 expr])
   |    Abstraction (pattern, expr) -> prPrec i 3 (concatD [render "fun" ; prtPattern 0 pattern ; render "->" ; prtExpr 4 expr])
   |    Condition (expr0, expr1, expr) -> prPrec i 4 (concatD [render "if" ; prtExpr 4 expr0 ; render "then" ; prtExpr 5 expr1 ; render "else" ; prtExpr 5 expr])
-  |    Comprehension (bindings, expr) -> prPrec i 4 (concatD [render "for" ; render "(" ; prtBindingListBNFC 0 bindings ; render ")" ; prtExpr 5 expr])
-  |    Filtration (bindings, patterns, expr) -> prPrec i 4 (concatD [render "for" ; render "(" ; prtBindingListBNFC 0 bindings ; render "|" ; prtPatternListBNFC 0 patterns ; render ")" ; prtExpr 5 expr])
+  |    Comprehension (bindings, expr) -> prPrec i 4 (concatD [render "from" ; render "(" ; prtBindingListBNFC 0 bindings ; render ")" ; render "yield" ; prtExpr 5 expr])
+  |    Consolidation (bindings, expr) -> prPrec i 4 (concatD [render "from" ; render "(" ; prtBindingListBNFC 0 bindings ; render ")" ; prtExpr 5 expr])
+  |    Filtration (bindings, patterns, expr) -> prPrec i 4 (concatD [render "from" ; render "(" ; prtBindingListBNFC 0 bindings ; render "|" ; prtPatternListBNFC 0 patterns ; render ")" ; render "yield" ; prtExpr 5 expr])
+  |    Concentration (bindings, patterns, expr) -> prPrec i 4 (concatD [render "from" ; render "(" ; prtBindingListBNFC 0 bindings ; render "|" ; prtPatternListBNFC 0 patterns ; render ")" ; prtExpr 5 expr])
   |    Equation (expr0, expr) -> prPrec i 4 (concatD [prtExpr 5 expr0 ; render "=" ; prtExpr 5 expr])
   |    ComparisonLT (expr0, expr) -> prPrec i 4 (concatD [prtExpr 5 expr0 ; render "<" ; prtExpr 5 expr])
   |    ComparisonGT (expr0, expr) -> prPrec i 4 (concatD [prtExpr 5 expr0 ; render ">" ; prtExpr 5 expr])
   |    ComparisonLTE (expr0, expr) -> prPrec i 4 (concatD [prtExpr 5 expr0 ; render "<=" ; prtExpr 5 expr])
   |    ComparisonGTE (expr0, expr) -> prPrec i 4 (concatD [prtExpr 5 expr0 ; render ">=" ; prtExpr 5 expr])
+  |    Acquisition  -> prPrec i 5 (concatD [render "newP"])
+  |    Suspension (expr0, expr) -> prPrec i 5 (concatD [render "pushP" ; prtExpr 5 expr0 ; prtExpr 5 expr])
+  |    Release (expr0, expr) -> prPrec i 5 (concatD [render "takeSC" ; prtExpr 5 expr0 ; prtExpr 5 expr])
+  |    InnerSuspension (expr0, expr) -> prPrec i 5 (concatD [render "pushSC" ; prtExpr 5 expr0 ; prtExpr 5 expr])
   |    Calculation arithmeticexpr -> prPrec i 5 (concatD [prtArithmeticExpr 0 arithmeticexpr])
 
 and prtExprListBNFC _ es : doc = match es with
@@ -113,6 +119,7 @@ and prtArithmeticExpr (i:int) (e:arithmeticExpr) : doc = match e with
   |    Negation arithmeticexpr -> prPrec i 4 (concatD [render "-" ; prtArithmeticExpr 5 arithmeticexpr])
   |    Mention variation -> prPrec i 5 (concatD [prtVariation 0 variation])
   |    Actualization value -> prPrec i 5 (concatD [prtValue 0 value])
+  |    Aggregation expr -> prPrec i 5 (concatD [render "(" ; prtExpr 0 expr ; render ")"])
 
 
 and prtBinding (i:int) (e:binding) : doc = match e with

@@ -28,12 +28,18 @@ and transExpr (x : expr) : result = match x with
   | Abstraction (pattern, expr) -> failure x
   | Condition (expr0, expr1, expr) -> failure x
   | Comprehension (bindings, expr) -> failure x
+  | Consolidation (bindings, expr) -> failure x
   | Filtration (bindings, patterns, expr) -> failure x
+  | Concentration (bindings, patterns, expr) -> failure x
   | Equation (expr0, expr) -> failure x
   | ComparisonLT (expr0, expr) -> failure x
   | ComparisonGT (expr0, expr) -> failure x
   | ComparisonLTE (expr0, expr) -> failure x
   | ComparisonGTE (expr0, expr) -> failure x
+  | Acquisition  -> failure x
+  | Suspension (expr0, expr) -> failure x
+  | Release (expr0, expr) -> failure x
+  | InnerSuspension (expr0, expr) -> failure x
   | Calculation arithmeticexpr -> failure x
 
 
@@ -45,6 +51,7 @@ and transArithmeticExpr (x : arithmeticExpr) : result = match x with
   | Negation arithmeticexpr -> failure x
   | Mention variation -> failure x
   | Actualization value -> failure x
+  | Aggregation expr -> failure x
 
 
 and transBinding (x : binding) : result = match x with

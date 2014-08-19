@@ -12,12 +12,18 @@ and expr =
  | Abstraction of pattern * expr
  | Condition of expr * expr * expr
  | Comprehension of binding list * expr
+ | Consolidation of binding list * expr
  | Filtration of binding list * pattern list * expr
+ | Concentration of binding list * pattern list * expr
  | Equation of expr * expr
  | ComparisonLT of expr * expr
  | ComparisonGT of expr * expr
  | ComparisonLTE of expr * expr
  | ComparisonGTE of expr * expr
+ | Acquisition
+ | Suspension of expr * expr
+ | Release of expr * expr
+ | InnerSuspension of expr * expr
  | Calculation of arithmeticExpr
 
 and arithmeticExpr =
@@ -28,6 +34,7 @@ and arithmeticExpr =
  | Negation of arithmeticExpr
  | Mention of variation
  | Actualization of value
+ | Aggregation of expr
 
 and binding =
    Question of pattern * expr

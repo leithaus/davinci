@@ -53,12 +53,18 @@ let rec showExpr (e:expr) : showable = match e with
   |    Abstraction (pattern, expr) -> s2s "Abstraction" >> c2s ' ' >> c2s '(' >> showPattern pattern  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Condition (expr0, expr1, expr) -> s2s "Condition" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr1  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Comprehension (bindings, expr) -> s2s "Comprehension" >> c2s ' ' >> c2s '(' >> showList showBinding bindings  >> s2s ", " >>  showExpr expr >> c2s ')'
+  |    Consolidation (bindings, expr) -> s2s "Consolidation" >> c2s ' ' >> c2s '(' >> showList showBinding bindings  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Filtration (bindings, patterns, expr) -> s2s "Filtration" >> c2s ' ' >> c2s '(' >> showList showBinding bindings  >> s2s ", " >>  showList showPattern patterns  >> s2s ", " >>  showExpr expr >> c2s ')'
+  |    Concentration (bindings, patterns, expr) -> s2s "Concentration" >> c2s ' ' >> c2s '(' >> showList showBinding bindings  >> s2s ", " >>  showList showPattern patterns  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Equation (expr0, expr) -> s2s "Equation" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    ComparisonLT (expr0, expr) -> s2s "ComparisonLT" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    ComparisonGT (expr0, expr) -> s2s "ComparisonGT" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    ComparisonLTE (expr0, expr) -> s2s "ComparisonLTE" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    ComparisonGTE (expr0, expr) -> s2s "ComparisonGTE" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
+  |    Acquisition  -> s2s "Acquisition" 
+  |    Suspension (expr0, expr) -> s2s "Suspension" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
+  |    Release (expr0, expr) -> s2s "Release" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
+  |    InnerSuspension (expr0, expr) -> s2s "InnerSuspension" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Calculation arithmeticexpr -> s2s "Calculation" >> c2s ' ' >> c2s '(' >> showArithmeticExpr arithmeticexpr >> c2s ')'
 
 
@@ -70,6 +76,7 @@ and showArithmeticExpr (e:arithmeticExpr) : showable = match e with
   |    Negation arithmeticexpr -> s2s "Negation" >> c2s ' ' >> c2s '(' >> showArithmeticExpr arithmeticexpr >> c2s ')'
   |    Mention variation -> s2s "Mention" >> c2s ' ' >> c2s '(' >> showVariation variation >> c2s ')'
   |    Actualization value -> s2s "Actualization" >> c2s ' ' >> c2s '(' >> showValue value >> c2s ')'
+  |    Aggregation expr -> s2s "Aggregation" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
 
 
 and showBinding (e:binding) : showable = match e with

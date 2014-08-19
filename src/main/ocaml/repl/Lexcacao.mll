@@ -7,9 +7,9 @@ let symbol_table = Hashtbl.create 23
 let _ = List.iter (fun (kwd, tok) -> Hashtbl.add symbol_table kwd tok)
                   [(";", SYMB1);(";;", SYMB2);("=", SYMB3);("->", SYMB4);("(", SYMB5);(")", SYMB6);("|", SYMB7);("<", SYMB8);(">", SYMB9);("<=", SYMB10);(">=", SYMB11);("/", SYMB12);("+", SYMB13);("*", SYMB14);("::", SYMB15);("-", SYMB16);("<-", SYMB17);("`", SYMB18);("'", SYMB19);("[", SYMB20);("]", SYMB21);("$", SYMB22);(",", SYMB23)]
 
-let resword_table = Hashtbl.create 10
+let resword_table = Hashtbl.create 15
 let _ = List.iter (fun (kwd, tok) -> Hashtbl.add resword_table kwd tok)
-                  [("else", TOK_else);("false", TOK_false);("for", TOK_for);("fun", TOK_fun);("if", TOK_if);("in", TOK_in);("let", TOK_let);("rec", TOK_rec);("then", TOK_then);("true", TOK_true)]
+                  [("else", TOK_else);("false", TOK_false);("from", TOK_from);("fun", TOK_fun);("if", TOK_if);("in", TOK_in);("let", TOK_let);("newP", TOK_newP);("pushP", TOK_pushP);("pushSC", TOK_pushSC);("rec", TOK_rec);("takeSC", TOK_takeSC);("then", TOK_then);("true", TOK_true);("yield", TOK_yield)]
 
 
 let unescapeInitTail (s:string) : string =
