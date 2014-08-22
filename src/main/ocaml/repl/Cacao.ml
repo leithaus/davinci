@@ -8,6 +8,7 @@
 (* ------------------------------------------------------------------------ *)
 
 open Lexing
+open Evaluator
 
 let parse (c : in_channel) : Abscacao.expr = 
     Parcacao.pExpr Lexcacao.token (Lexing.from_channel c)
