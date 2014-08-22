@@ -14,34 +14,53 @@ open Values
 open Continuations
 open Exceptions
 open Knot
+open Monad
 
 module rec Eval :
   functor ( Value : VALUES ) -> 
     functor ( Env : ENVIRONMENTS ) -> 
       functor ( Cont : CONTINUATIONS ) ->
+        functor ( M : MONAD ) ->
 sig
   type ident = ReflectiveNominal.nominal 
   type term = ReflectiveTerm.term
   type value = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).value
+  type 'a monad = 'a M.monad
   type env = ( ident, value ) Env.env
   type ktn = ( value, term ) Cont( ReflectiveNominal )( Env ).cont
       
-  val reduce : term -> env -> ktn -> value
+  val reduce : term -> env -> ktn -> value monad
+(*   val bottom : value *)
+(*   val yunit : value *)
 end =
   functor ( Value : VALUES ) -> 
     functor ( Env : ENVIRONMENTS ) -> 
       functor ( Cont : CONTINUATIONS ) ->
+        functor ( M : MONAD ) ->
 struct
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
   type value = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).value
+  type 'a monad = 'a M.monad
   type env = ( ident, value ) Env.env
   type ktn = ( value, term ) Cont( ReflectiveNominal )( Env ).cont
       
-  let reduce t e k =
+(*   let bottom = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).BOTTOM *)
+(*   let yunit = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).UNIT *)
+
+  let rec reduce t e k =
     match t with 
-        ReflectiveTerm.Sequence( ts ) ->
-          raise ( NotYetImplemented "Sequence" )
+        ReflectiveTerm.Sequence( [] ) ->
+          raise ( NotYetImplemented "Empty sequence" )
+      | ReflectiveTerm.Sequence( thd :: ttl ) ->
+          let _ = (reduce thd e k ) in 
+          let rec loop ts =
+            match ts with
+                tshd :: [] -> (reduce tshd e k )
+              | tshd :: tstl ->
+                  let _ = (reduce tshd e k ) in
+                    ( loop tstl )          
+          in ( loop ttl )
       | ReflectiveTerm.Application( op, actls ) ->
           raise ( NotYetImplemented "Application" )
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->

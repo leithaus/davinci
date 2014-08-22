@@ -21,6 +21,7 @@ sig
       Ground of ground
       | Closure of ident list * term * env
       | BOTTOM
+      | UNIT
   and ground =
       Boolean of bool
       | String of string
