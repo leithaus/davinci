@@ -87,6 +87,7 @@ sig
       | IntegerLiteral of int
       | DoubleLiteral of float
       | Reification of term
+      | UNIT
   and duality =
       Verity
       | Absurdity

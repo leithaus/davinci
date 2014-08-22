@@ -30,28 +30,39 @@ sig
   type ktn = ( value, term ) Cont( ReflectiveNominal )( Env ).cont
       
   val reduce : term -> env -> ktn -> value monad
-(*   val bottom : value *)
-(*   val yunit : value *)
+  val apply_closure : value -> value -> value
+  val bottom : value
+  val yunit : value
 end =
   functor ( Value : VALUES ) -> 
     functor ( Env : ENVIRONMENTS ) -> 
       functor ( Cont : CONTINUATIONS ) ->
         functor ( M : MONAD ) ->
 struct
+  module RValue = Value( ReflectiveNominal )( ReflectiveTerm )( Env )
+  module RCont = Cont( ReflectiveNominal )( Env )
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
-  type value = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).value
+  type value = RValue.value
   type 'a monad = 'a M.monad
   type env = ( ident, value ) Env.env
-  type ktn = ( value, term ) Cont( ReflectiveNominal )( Env ).cont
-      
-(*   let bottom = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).BOTTOM *)
-(*   let yunit = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).UNIT *)
+  type ktn = ( value, term ) RCont.cont
 
+  exception NonFunctionInOpPosition of value
+      
+  let bottom = RValue.BOTTOM
+  let yunit = RValue.UNIT 
+
+  let apply_closure op v =
+    raise ( NotYetImplemented "apply_closure" )
+  
   let rec reduce t e k =
     match t with 
+        (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
-          raise ( NotYetImplemented "Empty sequence" )
+          ( M.m_unit yunit ) 
+      | ReflectiveTerm.Sequence( thd :: [] ) ->
+          (reduce thd e k )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
           let _ = (reduce thd e k ) in 
           let rec loop ts =
@@ -61,8 +72,34 @@ struct
                   let _ = (reduce tshd e k ) in
                     ( loop tstl )          
           in ( loop ttl )
+
+      (* application *)
+      | ReflectiveTerm.Application( op, [] ) ->
+          ( M.m_bind
+              ( reduce op e k )
+              ( fun clsr ->
+                match clsr with
+                    RValue.Closure( _, _, _ ) ->
+                      ( M.m_unit ( apply_closure clsr ReflectiveTerm.UNIT ) )
+                  | _ -> raise ( NonFunctionInOpPosition clsr )
+              )
+          )
       | ReflectiveTerm.Application( op, actls ) ->
-          raise ( NotYetImplemented "Application" )
+          let bind_reduce acc actual =
+            ( M.m_bind 
+                ( reduce actual e k )
+                ( fun a ->  
+                  ( M.m_bind acc
+                      ( fun clsr ->
+                        match clsr with 
+                            RValue.Closure( _, _, _ ) -> ( M.m_unit ( apply_closure clsr a ) )
+                          | _ -> raise ( NonFunctionInOpPosition clsr )
+                      )
+                  )
+                ) 
+            ) in
+            ( List.fold_left bind_reduce ( reduce op e k ) actls )
+            
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->
           raise ( NotYetImplemented "Supposition" )
       | ReflectiveTerm.Recurrence( ptn, pterm, eterm ) ->
@@ -100,7 +137,7 @@ struct
       | ReflectiveTerm.InnerSuspension( pterm, eterm ) -> 
           raise ( NotYetImplemented "InnerSuspension" )
       | ReflectiveTerm.Calculation( aterm ) -> 
-          raise ( NotYetImplemented "Calculuation" )
+          raise ( NotYetImplemented "Calculuation" )   
 end
 (* This gives a simple and effective form of reflection for quasiquote *)
 and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
