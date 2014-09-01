@@ -17,41 +17,35 @@ open Knot
 open Monad
 
 module rec Eval :
-  functor ( Value : VALUES ) -> 
-    functor ( Env : ENVIRONMENTS ) -> 
-      functor ( Cont : CONTINUATIONS ) ->
-        functor ( M : MONAD ) ->
+  functor ( M : MONAD ) ->
 sig
-  type ident = ReflectiveNominal.nominal 
-  type term = ReflectiveTerm.term
-  type value = Value( ReflectiveNominal )( ReflectiveTerm )( Env ).value
   type 'a monad = 'a M.monad
-  type env = ( ident, value ) Env.env
-  type ktn = ( value, term ) Cont( ReflectiveNominal )( Env ).cont
+  type ident = ReflectiveNominal.nominal
+  type term = ReflectiveTerm.term
+  type value = ReflectiveValue.value
+  type env = ( ident, value ) ReflectiveEnv.env
+  type ktn = ( value, term ) ReflectiveK.cont
       
-  val reduce : term -> env -> ktn -> value monad
+  val reduce : term -> env -> ktn -> value monad 
   val apply_closure : value -> value -> value
   val bottom : value
   val yunit : value
 end =
-  functor ( Value : VALUES ) -> 
-    functor ( Env : ENVIRONMENTS ) -> 
-      functor ( Cont : CONTINUATIONS ) ->
-        functor ( M : MONAD ) ->
+  functor ( M : MONAD ) ->
 struct
-  module RValue = Value( ReflectiveNominal )( ReflectiveTerm )( Env )
-  module RCont = Cont( ReflectiveNominal )( Env )
+  (* module RValue = Value( ReflectiveNominal )( ReflectiveTerm )( Env )
+     module RCont = Cont( ReflectiveNominal )( Env ) *)
+  type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
-  type value = RValue.value
-  type 'a monad = 'a M.monad
-  type env = ( ident, value ) Env.env
-  type ktn = ( value, term ) RCont.cont
+  type value = ReflectiveValue.value
+  type env = ( ident, value ) ReflectiveEnv.env
+  type ktn = ( value, term ) ReflectiveK.cont
 
-  exception NonFunctionInOpPosition of value
+  exception NonFunctionInOpPosition of value 
       
-  let bottom = RValue.BOTTOM
-  let yunit = RValue.UNIT 
+  let bottom = ReflectiveValue.BOTTOM
+  let yunit = ReflectiveValue.UNIT 
 
   let apply_closure op v =
     raise ( NotYetImplemented "apply_closure" )
@@ -79,7 +73,7 @@ struct
               ( reduce op e k )
               ( fun clsr ->
                 match clsr with
-                    RValue.Closure( _, _, _ ) ->
+                    ReflectiveValue.Closure( _, _, _ ) ->
                       ( M.m_unit ( apply_closure clsr ReflectiveTerm.UNIT ) )
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
@@ -92,7 +86,7 @@ struct
                   ( M.m_bind acc
                       ( fun clsr ->
                         match clsr with 
-                            RValue.Closure( _, _, _ ) -> ( M.m_unit ( apply_closure clsr a ) )
+                            ReflectiveValue.Closure( _, _, _ ) -> ( M.m_unit ( apply_closure clsr a ) )
                           | _ -> raise ( NonFunctionInOpPosition clsr )
                       )
                   )
@@ -105,6 +99,8 @@ struct
       | ReflectiveTerm.Recurrence( ptn, pterm, eterm ) ->
           raise ( NotYetImplemented "Recurrence" )
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
+(*           let clsr : value = ( ReflectiveValue.Closure ptn eterm e ) in *)
+(*             ( M.m_unit clsr  ) *)
           raise ( NotYetImplemented "Abstraction" )
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           raise ( NotYetImplemented "Condition" )
@@ -142,3 +138,6 @@ end
 (* This gives a simple and effective form of reflection for quasiquote *)
 and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
 and ReflectiveTerm : TERMS = TERM( ReflectiveNominal ) 
+and ReflectiveValue : VALUES = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
+and ReflectiveK : CONTINUATIONS = CONTINUATIONFUNCTOR( ReflectiveNominal )( ReflectiveEnv )
+and ReflectiveEnv : ENVIRONMENTS = ListEnv (* ReflectiveNominal *)

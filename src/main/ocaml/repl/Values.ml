@@ -11,15 +11,57 @@ open Nominals
 open Terms
 
 module type VALUES =
-  functor (Nominal : NOMINALS) ->
-    functor (Term : TERMS) ->
-      functor (Env : ENVIRONMENTS) ->
+sig
+  type ident 
+  type term
+  type pattern
+  type ('n, 'v) environment
+  type value =
+      Ground of ground
+      | Closure of pattern * term * env
+      | BOTTOM
+      | UNIT
+  and ground =
+      Boolean of bool
+      | String of string
+      | Integer of int
+      | Double of float
+      | Reification of term
+  and env = (ident, value) environment
+end
+
+module VALUE : VALUES =
+struct
+  type ident 
+  type term
+  type pattern
+  type ('n, 'v) environment
+  type value =
+      Ground of ground
+      | Closure of pattern * term * env
+      | BOTTOM
+      | UNIT
+  and ground =
+      Boolean of bool
+      | String of string
+      | Integer of int
+      | Double of float
+      | Reification of term
+  and env = (ident, value) environment
+end
+
+module type VALUESFUNCTOR =
+  functor ( Nominal : NOMINALS ) ->
+    functor ( Term : TERMS ) ->
+      functor ( Env : ENVIRONMENTS ) ->
 sig
   type ident = Nominal.nominal
   type term = Term.term
+  type pattern = Term.pattern
+  type ('n, 'v) environment = ('n, 'v) Env.env
   type value =
       Ground of ground
-      | Closure of ident list * term * env
+      | Closure of pattern * term * env
       | BOTTOM
       | UNIT
   and ground =
@@ -28,23 +70,31 @@ sig
       | Integer of int
       | Double of float
       | Reification of Term.term
-  and env = (ident, value) Env.env
+  and env = (ident, value) environment
 end
 
-module VALUE ( Nominal : NOMINALS ) ( Term : TERMS ) ( Env : ENVIRONMENTS ) =
+module VALUEFUNCTOR : VALUESFUNCTOR =
+  functor ( Nominal : NOMINALS ) ->
+    functor ( Term : TERMS ) ->
+      functor ( Env : ENVIRONMENTS ) ->
 struct
   type ident = Nominal.nominal
-  type term = Term.term                
+  type term = Term.term
+  type pattern = Term.pattern
+  type ('n, 'v) environment = ('n, 'v) Env.env
   type value =
       Ground of ground
-      | Closure of ident list * term * env
+      | Closure of pattern * term * env
       | BOTTOM
+      | UNIT
   and ground =
       Boolean of bool
       | String of string
       | Integer of int
       | Double of float
       | Reification of Term.term
-  and env = ( ident, value ) Env.env
+  and env = ( ident, value ) environment
 end
+
+
 

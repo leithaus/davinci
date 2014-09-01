@@ -15,3 +15,10 @@ sig
   val fresh : unit -> nominal
 end 
 
+module HashedNominals ( Nominal : NOMINALS ) : Hashtbl.HashedType =
+  struct
+    type t = Nominal.nominal
+    let equal n1 n2 = ( Nominal.comparator n1 n2 )
+    let hash n = Hashtbl.hash n
+  end
+
