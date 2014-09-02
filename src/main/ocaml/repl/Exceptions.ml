@@ -7,3 +7,4 @@
 (* ------------------------------------------------------------------------ *)
 
 exception NotYetImplemented of string
+exception NotEnough 

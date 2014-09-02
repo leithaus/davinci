@@ -55,30 +55,34 @@ module type VALUESFUNCTOR =
     functor ( Term : TERMS ) ->
       functor ( Env : ENVIRONMENTS ) ->
 sig
-  type ident = Nominal.nominal
+  type ident = Nominal.nominal 
   type term = Term.term
-  type pattern = Term.pattern
+  type pattern = Term.pattern 
   type ('n, 'v) environment = ('n, 'v) Env.env
-  type value =
+  type value = 
       Ground of ground
-      | Closure of pattern * term * env
+      | Closure of pattern * term * env 
       | BOTTOM
-      | UNIT
+      | UNIT 
   and ground =
       Boolean of bool
       | String of string
       | Integer of int
       | Double of float
-      | Reification of Term.term
-  and env = (ident, value) environment
+      | Reification of term
+  and env = ( ident, value ) Env.env 
 end
+(*   with type ident = Nominal.nominal *)
+(* with type term = Term.term *)
+(* with type pattern = Term.pattern *)
+(* with type ('n, 'v) environment = ('n, 'v) Env.env *)
 
 module VALUEFUNCTOR : VALUESFUNCTOR =
   functor ( Nominal : NOMINALS ) ->
     functor ( Term : TERMS ) ->
       functor ( Env : ENVIRONMENTS ) ->
 struct
-  type ident = Nominal.nominal
+  type ident = Nominal.nominal 
   type term = Term.term
   type pattern = Term.pattern
   type ('n, 'v) environment = ('n, 'v) Env.env
@@ -92,8 +96,8 @@ struct
       | String of string
       | Integer of int
       | Double of float
-      | Reification of Term.term
-  and env = ( ident, value ) environment
+      | Reification of term
+  and env = ( ident, value ) Env.env
 end
 
 

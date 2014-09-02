@@ -16,30 +16,32 @@ open Exceptions
 open Knot
 open Monad
 
-module rec Eval :
+module type EVAL =
   functor ( M : MONAD ) ->
 sig
-  type 'a monad = 'a M.monad
-  type ident = ReflectiveNominal.nominal
-  type term = ReflectiveTerm.term
-  type value = ReflectiveValue.value
-  type env = ( ident, value ) ReflectiveEnv.env
-  type ktn = ( value, term ) ReflectiveK.cont
+  type 'a monad 
+  type ident
+  type term
+  type value
+  type env
+  type ktn
       
-  val reduce : term -> env -> ktn -> value monad 
+  val reduce : term -> env -> ktn -> value monad
   val apply_closure : value -> value -> value
+  val apply_k : ktn -> value -> value
+
   val bottom : value
   val yunit : value
-end =
+end 
+
+module rec ReflectiveEval : EVAL =
   functor ( M : MONAD ) ->
 struct
-  (* module RValue = Value( ReflectiveNominal )( ReflectiveTerm )( Env )
-     module RCont = Cont( ReflectiveNominal )( Env ) *)
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
   type value = ReflectiveValue.value
-  type env = ( ident, value ) ReflectiveEnv.env
+  type env = ReflectiveValue.env
   type ktn = ( value, term ) ReflectiveK.cont
 
   exception NonFunctionInOpPosition of value 
@@ -50,13 +52,16 @@ struct
   let apply_closure op v =
     raise ( NotYetImplemented "apply_closure" )
   
+  let apply_k k v =
+    raise ( NotYetImplemented "apply_k" )
+
   let rec reduce t e k =
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
           ( M.m_unit yunit ) 
       | ReflectiveTerm.Sequence( thd :: [] ) ->
-          (reduce thd e k )
+          ( reduce thd e k )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
           let _ = (reduce thd e k ) in 
           let rec loop ts =
@@ -65,6 +70,7 @@ struct
               | tshd :: tstl ->
                   let _ = (reduce tshd e k ) in
                     ( loop tstl )          
+              | _ -> raise NotEnough
           in ( loop ttl )
 
       (* application *)
@@ -99,12 +105,12 @@ struct
       | ReflectiveTerm.Recurrence( ptn, pterm, eterm ) ->
           raise ( NotYetImplemented "Recurrence" )
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
-(*           let clsr : value = ( ReflectiveValue.Closure ptn eterm e ) in *)
-(*             ( M.m_unit clsr  ) *)
-          raise ( NotYetImplemented "Abstraction" )
+          let clsr = ReflectiveValue.Closure( ptn, eterm, e ) in
+          let v = ( apply_k k clsr ) in 
+            ( M.m_unit v )
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           raise ( NotYetImplemented "Condition" )
-      | ReflectiveTerm.Comprehension( bindings, eterm ) ->
+      | ReflectiveTerm.Comprehension( bindings, eterm ) -> 
           raise ( NotYetImplemented "Comprehension" )
       | ReflectiveTerm.Consolidation( bindings, eterm ) ->
           raise ( NotYetImplemented "Consolidation" )
@@ -138,6 +144,9 @@ end
 (* This gives a simple and effective form of reflection for quasiquote *)
 and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
 and ReflectiveTerm : TERMS = TERM( ReflectiveNominal ) 
-and ReflectiveValue : VALUES = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
+and ReflectiveValue : VALUES with type ident = ReflectiveNominal.nominal
+                             and type term = ReflectiveTerm.term
+                             and type pattern = ReflectiveTerm.pattern
+  = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
 and ReflectiveK : CONTINUATIONS = CONTINUATIONFUNCTOR( ReflectiveNominal )( ReflectiveEnv )
 and ReflectiveEnv : ENVIRONMENTS = ListEnv (* ReflectiveNominal *)
