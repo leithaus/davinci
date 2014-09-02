@@ -50,10 +50,7 @@ struct
   let yunit = ReflectiveValue.UNIT 
 
   let apply_closure op v =
-    raise ( NotYetImplemented "apply_closure" )
-  
-  let apply_k k v =
-    raise ( NotYetImplemented "apply_k" )
+    raise ( NotYetImplemented "apply_closure" ) 
 
   let rec reduce t e k =
     match t with 
@@ -92,7 +89,8 @@ struct
                   ( M.m_bind acc
                       ( fun clsr ->
                         match clsr with 
-                            ReflectiveValue.Closure( _, _, _ ) -> ( M.m_unit ( apply_closure clsr a ) )
+                            ReflectiveValue.Closure( _, _, _ ) ->
+                              ( M.m_unit ( apply_closure clsr a ) )
                           | _ -> raise ( NonFunctionInOpPosition clsr )
                       )
                   )
@@ -105,9 +103,7 @@ struct
       | ReflectiveTerm.Recurrence( ptn, pterm, eterm ) ->
           raise ( NotYetImplemented "Recurrence" )
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
-          let clsr = ReflectiveValue.Closure( ptn, eterm, e ) in
-          let v = ( apply_k k clsr ) in 
-            ( M.m_unit v )
+          ( M.m_unit ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) ) )
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           raise ( NotYetImplemented "Condition" )
       | ReflectiveTerm.Comprehension( bindings, eterm ) -> 
@@ -140,6 +136,9 @@ struct
           raise ( NotYetImplemented "InnerSuspension" )
       | ReflectiveTerm.Calculation( aterm ) -> 
           raise ( NotYetImplemented "Calculuation" )   
+  and apply_k k v =
+    raise ( NotYetImplemented "apply_k" )
+  
 end
 (* This gives a simple and effective form of reflection for quasiquote *)
 and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
