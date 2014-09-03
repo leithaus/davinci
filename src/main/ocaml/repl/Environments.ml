@@ -11,43 +11,43 @@ open Exceptions
 
 module type ENVIRONMENTS =
 sig
-  type ('n, 'a) env
-  val empty : ('n, 'a) env
-  val extend : 'n * 'a * ('n, 'a) env -> ('n, 'a) env
-  val sum : ('n, 'a) env -> ('n, 'a) env -> ('n, 'a) env
-  val lookup : 'n * ('n, 'a) env -> 'a option
+  type ('n, 'a) map
+  val empty : ('n, 'a) map
+  val extend : 'n * 'a * ('n, 'a) map -> ('n, 'a) map
+  val sum : ('n, 'a) map -> ('n, 'a) map -> ('n, 'a) map
+  val lookup : 'n * ('n, 'a) map -> 'a option
 end
 
 (* module HashtblEnv ( Nominal : NOMINALS ) = *)
 (* struct *)
 (*   module HNoms = HashedNominals( Nominal ) *)
 (*   module Table = Hashtbl.Make( HNoms ) *)
-(*   type ('n, 'a) env = 'a Table.t *)
+(*   type ('n, 'a) map = 'a Table.t *)
 (*   let empty = raise ( NotYetImplemented "empty" ) *)
 (*   let extend tpl = *)
 (*     match tpl with *)
-(*         ( n, a, env ) -> ( Table.add env n a ) *)
+(*         ( n, a, map ) -> ( Table.add map n a ) *)
 (*   let lookup tpl = *)
 (*     match tpl with *)
-(*         ( n, env ) -> ( Table.find env n ) *)
+(*         ( n, map ) -> ( Table.find map n ) *)
 (* end *)
 
 module ListEnv : ENVIRONMENTS =
 struct
-  type ('n, 'a) env = ('n * 'a) list
+  type ('n, 'a) map = ('n * 'a) list
   let empty : ( 'n * 'a ) list = []
   let extend tpl = 
     match tpl with
-        ( n, a, env ) -> ( n, a ) :: env
+        ( n, a, m ) -> ( n, a ) :: m
   let sum e1 e2 = ( List.append e1 e2 )
   let lookup tpl = 
     match tpl with
-        ( n, env ) ->
+        ( n, m ) ->
           try
             let ( _, a ) =
               (List.find
                   ( fun ( p ) -> match p with ( n, a ) -> true )
-                  env ) in
+                  m ) in
               ( Some a )
           with
               Not_found -> None

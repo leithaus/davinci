@@ -18,7 +18,7 @@ sig
   type ('n, 'v) environment
   type value =
       Ground of ground
-      | Closure of pattern * term * env
+      | Closure of pattern * term * v_env
       | BOTTOM
       | UNIT
   and ground =
@@ -27,7 +27,7 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
-  and env =
+  and v_env =
       Env of (ident, value) environment
 end
 
@@ -39,7 +39,7 @@ struct
   type ('n, 'v) environment
   type value =
       Ground of ground
-      | Closure of pattern * term * env
+      | Closure of pattern * term * v_env
       | BOTTOM
       | UNIT
   and ground =
@@ -48,7 +48,7 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
-  and env =
+  and v_env =
       Env of (ident, value) environment  
 end
 
@@ -60,10 +60,10 @@ sig
   type ident = Nominal.nominal 
   type term = Term.term
   type pattern = Term.pattern 
-  type ('n, 'v) environment = ('n, 'v) Env.env
+  type ('n, 'v) environment = ('n, 'v) Env.map
   type value = 
       Ground of ground
-      | Closure of pattern * term * env 
+      | Closure of pattern * term * v_env
       | BOTTOM
       | UNIT 
   and ground =
@@ -72,8 +72,8 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
-  and env =
-      Env of ( ident, value ) Env.env 
+  and v_env =
+      Env of ( ident, value ) Env.map
 end
 
 module VALUEFUNCTOR : VALUESFUNCTOR =
@@ -84,10 +84,10 @@ struct
   type ident = Nominal.nominal 
   type term = Term.term
   type pattern = Term.pattern
-  type ('n, 'v) environment = ('n, 'v) Env.env
+  type ('n, 'v) environment = ('n, 'v) Env.map
   type value =
       Ground of ground
-      | Closure of pattern * term * env
+      | Closure of pattern * term * v_env
       | BOTTOM
       | UNIT
   and ground =
@@ -96,8 +96,8 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
-  and env = 
-      Env of ( ident, value ) Env.env
+  and v_env = 
+      Env of ( ident, value ) Env.map
 end
 
 

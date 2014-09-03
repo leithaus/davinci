@@ -13,10 +13,10 @@ open Nominals
 module type CONTINUATIONS =
 sig
   type nominal
-  type ('n, 'v) env
+  type ('n, 'v) k_env
   type ('v, 't) cont =
       STOP
-      | ARG of 't * (nominal, 'v) env * ('v, 't) cont
+      | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont
       | FUN of 'v * ('v, 't) cont
 end
 
@@ -25,10 +25,10 @@ module type CONTINUATIONSFUNCTOR =
       functor (Env : ENVIRONMENTS) ->
 sig
   type nominal = Nominal.nominal
-  type ('n, 'v) env = ('n, 'v) Env.env
+  type ('n, 'v) k_env = ('n, 'v) Env.map
   type ('v, 't) cont =
       STOP
-      | ARG of 't * (nominal, 'v) env * ('v, 't) cont
+      | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont
       | FUN of 'v * ('v, 't) cont
 end
 
@@ -37,10 +37,10 @@ module CONTINUATIONFUNCTOR : CONTINUATIONSFUNCTOR =
     functor ( Env : ENVIRONMENTS ) ->
 struct
   type nominal = Nominal.nominal
-  type ('n, 'v) env = ('n, 'v) Env.env  
+  type ('n, 'v) k_env = ('n, 'v) Env.map
   type ( 'v, 't ) cont =
       STOP
-      | ARG of 't * ( Nominal.nominal, 'v ) Env.env * ( 'v, 't ) cont
+      | ARG of 't * ( Nominal.nominal, 'v ) k_env * ( 'v, 't ) cont
       | FUN of 'v * ( 'v, 't ) cont
 end
 
