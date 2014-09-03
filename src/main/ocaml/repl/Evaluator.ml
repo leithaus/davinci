@@ -16,29 +16,43 @@ open Exceptions
 open Knot
 open Monad
 
+(* The type of an abstract machine derived from a monadic evaluator *)
 module type EVAL =
   functor ( M : MONAD ) ->
 sig
   type 'a monad 
-  type ident
-  type term
-  type arith_term
-  type pattern
-  type value
-  type env
-  type ktn
-      
+  type ident (* The type used for identifiers *)
+  type term  (* The type used for terms in the language *)
+  type arith_term (* The type used for arithmetic terms in the language *)
+  type pattern (* The type used for patterns in the language *)
+  type value (* The type of values *)
+  type env (* The type of environments *)
+  type ktn (* The type of continuations *)
+
+  (* The reduction of terms and/or the transitions of the abstract machine *)
   val reduce : term -> env -> ktn -> value monad
+  (* The primitive arithmetic operations *)
   val calculate : arith_term -> env -> ktn -> value monad
+  (* Application of closures *)
   val apply_closure : value -> value -> value
+  (* Application of continuations *)
   val apply_k : ktn -> value -> value
 
+  (* Pattern-matching *)
   val unify : pattern -> value -> env option
 
+  (* Divergence *)
   val bottom : value
+  (* Unit *)
   val yunit : value
 end 
 
+(*
+  An abstract machine derived from a monadic evaluator for a language that supports:
+  reflection
+  delimited continuations
+  monadic comprehension
+*)
 module rec ReflectiveEval : EVAL =
   functor ( M : MONAD ) ->
 struct
