@@ -22,12 +22,14 @@ sig
   type 'a monad 
   type ident
   type term
+  type arith_term
   type pattern
   type value
   type env
   type ktn
       
   val reduce : term -> env -> ktn -> value monad
+  val calculate : arith_term -> env -> ktn -> value monad
   val apply_closure : value -> value -> value
   val apply_k : ktn -> value -> value
 
@@ -43,6 +45,7 @@ struct
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
+  type arith_term = ReflectiveTerm.arithmeticTerm
   type pattern = ReflectiveTerm.pattern
   type value = ReflectiveValue.value
   type env = ReflectiveValue.env
@@ -65,7 +68,7 @@ struct
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
-          ( M.m_unit yunit ) 
+          ( M.m_unit ( apply_k k yunit )  )
       | ReflectiveTerm.Sequence( thd :: [] ) ->
           ( reduce thd e k )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
@@ -129,7 +132,7 @@ struct
       (* abstraction *)
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
           ( M.m_unit ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) ) )
-      
+            
       (* condition *)            
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           ( M.m_bind
@@ -178,7 +181,104 @@ struct
 
       (* primitive arithmetic calculation *)
       | ReflectiveTerm.Calculation( aterm ) -> 
-          raise ( NotYetImplemented "Calculuation" )   
+          ( calculate aterm e k )
+  and calculate a e k =
+    match a with 
+        Division( aterm1, aterm2 ) ->
+          ( M.m_bind
+              ( calculate aterm1 e k )
+              ( fun a ->
+                ( M.m_bind
+                    ( calculate aterm2 e k )
+                    ( fun b ->
+                      match ( a, b ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) /. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. float( d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 / d2 ) ) ) )
+                    )
+                )
+              )
+          )
+            
+      | Addition( aterm1, aterm2 ) ->
+          ( M.m_bind
+              ( calculate aterm1 e k )
+              ( fun a ->
+                ( M.m_bind
+                    ( calculate aterm2 e k )
+                    ( fun b ->
+                      match ( a, b ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) +. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. float( d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 + d2 ) ) ) )
+                    )
+                )
+              )
+          )
+      | Multiplication( aterm1, aterm2 ) ->
+          ( M.m_bind
+              ( calculate aterm1 e k )
+              ( fun a ->
+                ( M.m_bind
+                    ( calculate aterm2 e k )
+                    ( fun b ->
+                      match ( a, b ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) *. d2 ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. float( d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 * d2 ) ) ) )
+                    )
+                )
+              )
+          )
+      | Juxtaposition( aterm1, aterm2 ) ->
+          raise ( NotYetImplemented "Juxtaposition" )
+      | Negation( aterm ) ->
+          raise ( NotYetImplemented "Negation" )
+      | Mention( aterm ) ->
+          raise ( NotYetImplemented "Mention" )
+      | Actualization( aterm ) ->
+          raise ( NotYetImplemented "Actualization" )
+      | Aggregation( aterm ) ->
+          raise ( NotYetImplemented "Aggregation" )
   and apply_k k v =
     raise ( NotYetImplemented "apply_k" )
   
