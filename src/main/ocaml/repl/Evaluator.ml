@@ -73,7 +73,66 @@ struct
   let yunit = ReflectiveValue.UNIT 
 
   let unify p t =
-    raise ( NotYetImplemented "unify" ) 
+    match ( p, t ) with
+        ( ReflectiveTerm.Element( fnctr, sptns ), t ) ->
+          raise ( NotYetImplemented "unify Element" )
+      | ( ReflectiveTerm.Variable( v ), t ) ->
+          raise ( NotYetImplemented "unify Variable" )
+      | ( ReflectiveTerm.Materialization( c ), t ) ->
+          raise ( NotYetImplemented "unify Materialization" )
+      | ( ReflectiveTerm.Procession( l ), t ) ->
+          raise ( NotYetImplemented "unify Procession" )
+          (* For pattern-matching on reified terms *)
+      | ( ReflectiveTerm.PtnSequence( v ), t ) ->
+          raise ( NotYetImplemented "unify PtnSequence" )
+      | ( ReflectiveTerm.PtnApplication( fn, actls ), t ) ->
+          raise ( NotYetImplemented "unify PtnApplication" )
+      | ( ReflectiveTerm.PtnSupposition( lptn, ltrm, lbody ), t ) ->
+          raise ( NotYetImplemented "unify PtnSupposition" )
+      | ( ReflectiveTerm.PtnRecurrence( lptn, ltrm, lbody ), t ) ->
+          raise ( NotYetImplemented "unify PtnRecurrence" )
+      | ( ReflectiveTerm.PtnAbstraction( ptn, body ), t ) ->
+          raise ( NotYetImplemented "unify PtnRecurrence" )
+      | ( ReflectiveTerm.PtnCondition( ptest, ptrue, pfalse ), t ) ->
+          raise ( NotYetImplemented "unify PtnCondition" )
+      | ( ReflectiveTerm.PtnComprehension( pbnds, pbdy ), t ) ->
+          raise ( NotYetImplemented "unify PtnComprehension" )
+      | ( ReflectiveTerm.PtnConsolidation( pbnds, pbdy ), t ) ->
+          raise ( NotYetImplemented "unify PtnConsolidation" )
+      | ( ReflectiveTerm.PtnFiltration( pbnds, pbdy, pcnds ), t ) ->
+          raise ( NotYetImplemented "unify PtnConsolidation" )
+      | ( ReflectiveTerm.PtnConcentration( pbnds, pbdy, pcnds ), t ) ->
+          raise ( NotYetImplemented "unify PtnConcentration" )
+      | ( ReflectiveTerm.PtnEquation( pl, pr ), t ) ->
+          raise ( NotYetImplemented "unify PtnEquation" )
+      | ( ReflectiveTerm.PtnComparisonLT( pl, pr ), t ) ->
+          raise ( NotYetImplemented "unify PtnComparisonLT" )
+      | ( ReflectiveTerm.PtnComparisonGT( pl, pr ), t ) ->
+          raise ( NotYetImplemented "unify PtnComparisonGT" )
+      | ( ReflectiveTerm.PtnComparisonLTE( pl, pr ), t ) ->
+          raise ( NotYetImplemented "unify PtnComparisonLTE" )
+      | ( ReflectiveTerm.PtnComparisonGTE( pl, pr ), t ) ->
+          raise ( NotYetImplemented "unify PtnComparisonGTE" )
+      | ( ReflectiveTerm.PtnReflection( v ), t ) ->
+          raise ( NotYetImplemented "unify PtnReflection" )
+      | ( ReflectiveTerm.PtnAcquisition, t ) ->
+          raise ( NotYetImplemented "unify PtnAcquisition" )
+      | ( ReflectiveTerm.PtnSuspension( u, v ), t ) ->
+          raise ( NotYetImplemented "unify PtnSuspension" )
+      | ( ReflectiveTerm.PtnRelease( u, v ), t ) ->
+          raise ( NotYetImplemented "unify PtnRelease" )
+      | ( ReflectiveTerm.PtnInnerSuspension( u, v ), t ) ->
+          raise ( NotYetImplemented "unify PtnInnerSuspension" )
+      | ( ReflectiveTerm.PtnDivision( v1, v2 ), t ) ->
+          raise ( NotYetImplemented "unify PtnDivision" )
+      | ( ReflectiveTerm.PtnAddition( v1, v2 ), t ) ->
+          raise ( NotYetImplemented "unify PtnAddition" )
+      | ( ReflectiveTerm.PtnMultiplication( v1, v2 ), t ) ->
+          raise ( NotYetImplemented "unify PtnMultiplication" )
+      | ( ReflectiveTerm.PtnJuxtaposition( v1, v2 ), t ) ->
+          raise ( NotYetImplemented "unify PtnJuxtaposition" )
+      | ( ReflectiveTerm.PtnNegation( n ), t ) ->
+          raise ( NotYetImplemented "unify PtnNegation" )
 
   let apply_closure op v =
     raise ( NotYetImplemented "apply_closure" ) 
