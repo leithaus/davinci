@@ -74,7 +74,7 @@ sig
       | PtnJuxtaposition of var * var
       | PtnNegation of var
   and variation =
-      Identifer of var
+      Identifier of var
       | Abandon of wild
   and lyst =
       Empty

@@ -195,19 +195,23 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) /. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) /. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. float( d2 ) ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. float( d2 ) ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 / d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 / d2 ) ) ) ) )
                     )
                 )
               )
@@ -224,19 +228,23 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) +. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) +. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. float( d2 ) ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. float( d2 ) ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 + d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 + d2 ) ) ) ) )
                     )
                 )
               )
@@ -252,19 +260,23 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) *. d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) *. d2 ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. float( d2 ) ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. float( d2 ) ) ) ) ) )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 * d2 ) ) ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 * d2 ) ) ) ) )
                     )
                 )
               )
@@ -273,8 +285,12 @@ struct
           raise ( NotYetImplemented "Juxtaposition" )
       | Negation( aterm ) ->
           raise ( NotYetImplemented "Negation" )
-      | Mention( aterm ) ->
-          raise ( NotYetImplemented "Mention" )
+      | Mention( n ) ->
+          ( match ( n, e ) with
+              ( Identifier( v ), ReflectiveValue.Env( renv ) ) ->
+(*                 ( M.m_unit ( apply_k k ( ReflectiveEnv.lookup ( v, renv ) ) ) ) *)
+                raise ( NotYetImplemented "Mention lookup" )
+            | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | Actualization( aterm ) ->
           raise ( NotYetImplemented "Actualization" )
       | Aggregation( aterm ) ->
