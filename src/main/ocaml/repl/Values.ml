@@ -27,7 +27,8 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
-  and env = (ident, value) environment
+  and env =
+      Env of (ident, value) environment
 end
 
 module VALUE : VALUES =
@@ -47,7 +48,8 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
-  and env = (ident, value) environment
+  and env =
+      Env of (ident, value) environment  
 end
 
 module type VALUESFUNCTOR =
@@ -70,12 +72,9 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
-  and env = ( ident, value ) Env.env 
+  and env =
+      Env of ( ident, value ) Env.env 
 end
-(*   with type ident = Nominal.nominal *)
-(* with type term = Term.term *)
-(* with type pattern = Term.pattern *)
-(* with type ('n, 'v) environment = ('n, 'v) Env.env *)
 
 module VALUEFUNCTOR : VALUESFUNCTOR =
   functor ( Nominal : NOMINALS ) ->
@@ -97,7 +96,8 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
-  and env = ( ident, value ) Env.env
+  and env = 
+      Env of ( ident, value ) Env.env
 end
 
 

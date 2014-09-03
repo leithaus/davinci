@@ -14,6 +14,7 @@ sig
   type ('n, 'a) env
   val empty : ('n, 'a) env
   val extend : 'n * 'a * ('n, 'a) env -> ('n, 'a) env
+  val sum : ('n, 'a) env -> ('n, 'a) env -> ('n, 'a) env
   val lookup : 'n * ('n, 'a) env -> 'a option
 end
 
@@ -38,6 +39,7 @@ struct
   let extend tpl = 
     match tpl with
         ( n, a, env ) -> ( n, a ) :: env
+  let sum e1 e2 = ( List.append e1 e2 )
   let lookup tpl = 
     match tpl with
         ( n, env ) ->

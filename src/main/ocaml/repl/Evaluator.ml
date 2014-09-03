@@ -22,6 +22,7 @@ sig
   type 'a monad 
   type ident
   type term
+  type pattern
   type value
   type env
   type ktn
@@ -29,6 +30,8 @@ sig
   val reduce : term -> env -> ktn -> value monad
   val apply_closure : value -> value -> value
   val apply_k : ktn -> value -> value
+
+  val unify : pattern -> value -> env option
 
   val bottom : value
   val yunit : value
@@ -40,14 +43,20 @@ struct
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
+  type pattern = ReflectiveTerm.pattern
   type value = ReflectiveValue.value
   type env = ReflectiveValue.env
   type ktn = ( value, term ) ReflectiveK.cont
 
   exception NonFunctionInOpPosition of value 
+  exception MatchFailure of pattern * term
+  exception RuntimeException of string * term
       
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT 
+
+  let unify p t =
+    raise ( NotYetImplemented "unify" ) 
 
   let apply_closure op v =
     raise ( NotYetImplemented "apply_closure" ) 
@@ -97,15 +106,41 @@ struct
                 ) 
             ) in
             ( List.fold_left bind_reduce ( reduce op e k ) actls )
-            
+
+      (* let *)
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->
-          raise ( NotYetImplemented "Supposition" )
+          ( M.m_bind
+              ( reduce pterm e k )
+              ( fun a ->                
+                match ( ( unify ptn a ), e ) with
+                    ( Some( ptn_env ), ReflectiveValue.Env( renv ) ) ->
+                      ( reduce
+                          eterm
+                          ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                          k )
+                  | _ -> raise ( MatchFailure ( ptn, pterm ) )
+              )
+          )
+
+      (* letrec *)
       | ReflectiveTerm.Recurrence( ptn, pterm, eterm ) ->
           raise ( NotYetImplemented "Recurrence" )
+
+      (* abstraction *)
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
           ( M.m_unit ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) ) )
+      
+      (* condition *)            
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
-          raise ( NotYetImplemented "Condition" )
+          ( M.m_bind
+              ( reduce test e k )
+              ( fun a ->
+                ( match a with
+                    ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) ) -> ( reduce tbranch e k )
+                  | ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) ) -> ( reduce fbranch e k )
+                  | _ -> raise ( RuntimeException ( "expected Boolean", test ) ) ) ) )
+
+      (* monadic desugaring *)
       | ReflectiveTerm.Comprehension( bindings, eterm ) -> 
           raise ( NotYetImplemented "Comprehension" )
       | ReflectiveTerm.Consolidation( bindings, eterm ) ->
@@ -114,6 +149,8 @@ struct
           raise ( NotYetImplemented "Filtration" )
       | ReflectiveTerm.Concentration( bindings, conditions, eterm ) ->
           raise ( NotYetImplemented "Concentration" )
+
+      (* comparison *)
       | ReflectiveTerm.Equation( lhs, rhs ) ->
           raise ( NotYetImplemented "Equation" )
       | ReflectiveTerm.ComparisonLT( lhs, rhs ) ->
@@ -124,8 +161,12 @@ struct
           raise ( NotYetImplemented "ComparisonLTE" )
       | ReflectiveTerm.ComparisonGTE( lhs, rhs ) ->
           raise ( NotYetImplemented "ComparisonGTE" )
+
+      (* reflection -- dual to reification *)
       | ReflectiveTerm.Reflection( v ) ->
           raise ( NotYetImplemented "Reflection" )
+
+      (* delimited continuations *)
       | ReflectiveTerm.Acquisition -> 
           raise ( NotYetImplemented "Acquisition" )
       | ReflectiveTerm.Suspension( pterm, eterm ) -> 
@@ -134,6 +175,8 @@ struct
           raise ( NotYetImplemented "Release" )
       | ReflectiveTerm.InnerSuspension( pterm, eterm ) -> 
           raise ( NotYetImplemented "InnerSuspension" )
+
+      (* primitive arithmetic calculation *)
       | ReflectiveTerm.Calculation( aterm ) -> 
           raise ( NotYetImplemented "Calculuation" )   
   and apply_k k v =
@@ -146,6 +189,7 @@ and ReflectiveTerm : TERMS = TERM( ReflectiveNominal )
 and ReflectiveValue : VALUES with type ident = ReflectiveNominal.nominal
                              and type term = ReflectiveTerm.term
                              and type pattern = ReflectiveTerm.pattern
+                             and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.env
   = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
 and ReflectiveK : CONTINUATIONS = CONTINUATIONFUNCTOR( ReflectiveNominal )( ReflectiveEnv )
 and ReflectiveEnv : ENVIRONMENTS = ListEnv (* ReflectiveNominal *)
