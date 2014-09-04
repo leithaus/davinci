@@ -37,7 +37,7 @@ sig
   (* Application of continuations *)
   val apply_k : ktn -> value -> value
   (* Application of closures *)
-  val apply_closure : value -> value -> value
+  val apply_closure : value -> value -> ktn -> value monad
 
   (* Pattern-matching *)
   val unify : pattern -> value -> env option
@@ -81,8 +81,6 @@ struct
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
           ( M.m_unit ( apply_k k yunit )  )
-      | ReflectiveTerm.Sequence( thd :: [] ) ->
-          ( reduce thd e k )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
           let _ = (reduce thd e k ) in 
           let rec loop ts =
@@ -101,7 +99,7 @@ struct
               ( fun clsr ->
                 match clsr with
                     ReflectiveValue.Closure( _, _, _ ) ->
-                      ( M.m_unit ( apply_closure clsr ReflectiveValue.UNIT ) )
+                      ( apply_closure clsr ReflectiveValue.UNIT k )
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
           )
@@ -114,7 +112,7 @@ struct
                       ( fun clsr ->
                         match clsr with 
                             ReflectiveValue.Closure( _, _, _ ) ->
-                              ( M.m_unit ( apply_closure clsr a ) )
+                              ( apply_closure clsr a k )
                           | _ -> raise ( NonFunctionInOpPosition clsr )
                       )
                   )
@@ -326,8 +324,18 @@ struct
       | ReflectiveTerm.UNIT -> yunit
   and apply_k k v =
     raise ( NotYetImplemented "apply_k" )  
-  and apply_closure op v =
-    raise ( NotYetImplemented "apply_closure" )  
+  and apply_closure op v k =
+    match op with
+        Closure( c_ptn, c_term, c_env ) ->
+          let nc_ptn : pattern = c_ptn in
+          ( match ( ( unify nc_ptn v ), c_env ) with
+              ( Some( ReflectiveValue.Env( c_ptn_env ) ), ReflectiveValue.Env( c_renv ) ) ->
+                let nc_k : ktn = k in
+                let nc_term : term = c_term in
+                let nc_env : env = ( ReflectiveValue.Env( ReflectiveEnv.sum c_ptn_env c_renv ) ) in
+                  ( reduce nc_term nc_env nc_k )
+            | _ -> raise ( MatchFailure ( c_ptn, v ) ) )
+      | _ -> raise ( NonFunctionInOpPosition op )
   and unify p t = 
     match ( p, t ) with 
         ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> 
