@@ -76,9 +76,6 @@ struct
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT 
 
-  let apply_closure op v =
-    raise ( NotYetImplemented "apply_closure" )
-
   let rec reduce t e k =
     match t with 
         (* sequential composition *)
@@ -104,7 +101,7 @@ struct
               ( fun clsr ->
                 match clsr with
                     ReflectiveValue.Closure( _, _, _ ) ->
-                      ( M.m_unit ( apply_closure clsr ReflectiveTerm.UNIT ) )
+                      ( M.m_unit ( apply_closure clsr ReflectiveValue.UNIT ) )
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
           )
@@ -329,6 +326,8 @@ struct
       | ReflectiveTerm.UNIT -> yunit
   and apply_k k v =
     raise ( NotYetImplemented "apply_k" )  
+  and apply_closure op v =
+    raise ( NotYetImplemented "apply_closure" )  
   and unify p t = 
     match ( p, t ) with 
         ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> 
