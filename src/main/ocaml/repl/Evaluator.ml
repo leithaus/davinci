@@ -18,6 +18,7 @@ open Monad
 
 module type EVAL =
 sig
+  (* Algebraic theory of names, variables, identifiers *)
   module rec ReflectiveNominal : NOMINALS    
     (* Algebraic theory of terms *)
   and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
@@ -33,15 +34,27 @@ sig
   and ReflectiveEnv : ENVIRONMENTS
 
   type 'a monad 
-  type ident (* The type used for identifiers *)
-  type term  (* The type used for terms in the language *)
-  type arith_term (* The type used for arithmetic terms in the language *)
-  type pattern (* The type used for patterns in the language *)
-  type binding (* The type used for binding declarations in the language *)
-  type value (* The type of values *)
-  type literal (* The type of literals *)
-  type env (* The type of environments *)
-  type ktn (* The type of continuations *)
+
+      (* The types in the algebraic theories we use in the semantic model *) 
+
+      (* The type used for identifiers *) 
+  type ident = ReflectiveNominal.nominal
+      (* The type used for terms in the language *)
+  type term = ReflectiveTerm.term
+      (* The type used for arithmetic terms in the language *)
+  type arith_term = ReflectiveTerm.arithmeticTerm
+      (* The type used for patterns in the language *)
+  type pattern = ReflectiveTerm.pattern
+      (* The type used for binding declarations in the language *)
+  type binding = ReflectiveTerm.binding
+      (* The type of literals *)
+  type literal = ReflectiveTerm.value
+      (* The type of values *)
+  type value = ReflectiveValue.value
+      (* The type of environments *)
+  type env = ReflectiveValue.v_env
+      (* The type of continuations *)
+  type ktn = ( value, term ) ReflectiveK.cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
   val reduce : term -> env -> ktn -> value monad
@@ -60,6 +73,9 @@ sig
   val bottom : value
   (* Unit *)
   val yunit : value
+    
+  val init_env : env
+  val init_k : ktn
 end 
 
 (* The type of an abstract machine derived from a monadic evaluator *)
@@ -82,15 +98,24 @@ sig
   and ReflectiveEnv : ENVIRONMENTS
 
   type 'a monad 
-  type ident (* The type used for identifiers *)
-  type term  (* The type used for terms in the language *)
-  type arith_term (* The type used for arithmetic terms in the language *)
-  type pattern (* The type used for patterns in the language *)
-  type binding (* The type used for binding declarations in the language *)
-  type value (* The type of values *)
-  type literal (* The type of literals *)
-  type env (* The type of environments *)
-  type ktn (* The type of continuations *)
+      (* The type used for identifiers *)
+  type ident = ReflectiveNominal.nominal
+      (* The type used for terms in the language *)
+  type term = ReflectiveTerm.term
+      (* The type used for arithmetic terms in the language *)
+  type arith_term = ReflectiveTerm.arithmeticTerm
+      (* The type used for patterns in the language *)
+  type pattern = ReflectiveTerm.pattern
+      (* The type used for binding declarations in the language *)
+  type binding = ReflectiveTerm.binding
+      (* The type of literals *)
+  type literal = ReflectiveTerm.value
+      (* The type of values *)
+  type value = ReflectiveValue.value
+      (* The type of environments *)
+  type env = ReflectiveValue.v_env
+      (* The type of continuations *)
+  type ktn = ( value, term ) ReflectiveK.cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
   val reduce : term -> env -> ktn -> value monad

@@ -49,13 +49,13 @@ struct
                 print_string ( "ast = " ^ ( astStr ^ ".\n" ) );
                 print_newline ();
                 flush stdout;
-                (* let term : CEK.REval.term = ( CEK.expr_to_term ast ) in *)
-(*                 let nrml = ( CEK.REval.reduce term CEK.REval.init_env CEK.REval.init_k ) in *)
-(*                   begin *)
-(*                     print_rslt nrml; *)
-(*                     print_newline (); *)
-(*                     flush stdout *)
-(*                   end *)
+                let term = ( CEK.expr_to_term ast ) in
+                let nrml = ( CEK.REval.reduce term CEK.REval.init_env CEK.REval.init_k ) in
+                  begin
+                    print_rslt nrml;
+                    print_newline ();
+                    flush stdout
+                  end
               end
           done)
       with e ->
