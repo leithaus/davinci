@@ -16,7 +16,30 @@ open Exceptions
 open Knot
 open Monad
 
-module type EVAL =
+(*
+  The type of a monadic evaluator dependent on a monad and a collection of
+  algebraic theories for
+
+  - names/variables/identifiers
+  - terms
+  - values
+  - continuations
+  - environments
+
+  Note that there is a spectrum of evaluation methods from monadic evaluator to 
+  abstract machine. Thus, the function reduce may polymorphically represent the reduction
+  arrow of an operational semantics, or the transitions of an abstract machine.
+
+  This correspondence, far from being a nicety, is essential for practical proofs
+  of the correctness of execution.
+
+  Of special interest is built in support for 
+  
+  - reflection 
+  - delimited continuations
+  - monadic comprehensions
+*)
+module type EVAL = 
 sig
   (* Algebraic theory of names, variables, identifiers *)
   module rec ReflectiveNominal : NOMINALS    
@@ -135,8 +158,9 @@ sig
   (* Unit *)
   val yunit : value
 
+  (* Initial configurations *)
   val init_env : env
-  val init_k : ktn
+  val init_k : ktn 
 end 
 
 (*
