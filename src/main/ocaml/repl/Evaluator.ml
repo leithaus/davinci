@@ -78,8 +78,6 @@ struct
 
   let apply_closure op v =
     raise ( NotYetImplemented "apply_closure" )
-  let materialize lit = 
-    raise ( NotYetImplemented "materialize" )
 
   let rec reduce t e k =
     match t with 
@@ -314,6 +312,21 @@ struct
           raise ( NotYetImplemented "Actualization" )
       | Aggregation( aterm ) ->
           raise ( NotYetImplemented "Aggregation" )
+  and materialize lit = 
+    match lit with
+        ReflectiveTerm.BooleanLiteral( ReflectiveTerm.Verity ) ->
+          ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) )
+      | ReflectiveTerm.BooleanLiteral( ReflectiveTerm.Absurdity ) ->
+          ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) )
+      | ReflectiveTerm.StringLiteral( s ) ->
+          ReflectiveValue.Ground( ReflectiveValue.String( s ) )
+      | ReflectiveTerm.IntegerLiteral( i ) ->
+          ReflectiveValue.Ground( ReflectiveValue.Integer( i ) )
+      | ReflectiveTerm.DoubleLiteral( d ) ->
+          ReflectiveValue.Ground( ReflectiveValue.Double( d ) )
+      | ReflectiveTerm.Reification( t ) ->
+          ReflectiveValue.Ground( ReflectiveValue.Reification( t ) )
+      | ReflectiveTerm.UNIT -> yunit
   and apply_k k v =
     raise ( NotYetImplemented "apply_k" )  
   and unify p t = 
