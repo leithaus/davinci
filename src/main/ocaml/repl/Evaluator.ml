@@ -132,7 +132,7 @@ struct
               ( reduce pterm e k )
               ( fun a ->                
                 match ( ( unify ptn a ), e ) with
-                    ( Some( ptn_env ), ReflectiveValue.Env( renv ) ) ->
+                    ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
                       ( reduce
                           eterm
                           ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
@@ -313,74 +313,69 @@ struct
           raise ( NotYetImplemented "Aggregation" )
   and apply_k k v =
     raise ( NotYetImplemented "apply_k" )  
-  and unify p t =
-    let rslt : env = ( ReflectiveValue.Env ReflectiveEnv.empty ) in
-      ( Some rslt )
-    (* match ( p, t ) with *)
-(*         ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> *)
-(*           raise ( NotYetImplemented "unify Element" ) *)
-(*       | ( ReflectiveTerm.Variable( ReflectiveTerm.Identifier( n ) ), t ) -> *)
-(*           let nmap : ( ident, value ) ReflectiveEnv.map = ( ReflectiveEnv.extend ( n, t, ( ReflectiveEnv.empty ) ) ) in *)
-(*           let vnenv : env = ( ReflectiveValue.Env nmap ) in *)
-(*             ( Some vnenv )  *)
-(*       | ( ReflectiveTerm.Materialization( c ), t ) ->  *)
-(*           let m = ( materialize c ) in  *)
-(*             ( match ( m == t ) with   *)
-(*                 true -> ( Some ( ReflectiveEnv.empty ) )   *)
-(*               | false -> raise ( MatchFailure ( p, t ) ) )  *)
-(*       | ( ReflectiveTerm.Procession( l ), t ) -> *)
-(*           raise ( NotYetImplemented "unify Procession" ) *)
-(*       | ( ReflectiveTerm.PtnSequence( v ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnSequence" ) *)
-(*       | ( ReflectiveTerm.PtnApplication( fn, actls ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnApplication" ) *)
-(*       | ( ReflectiveTerm.PtnSupposition( lptn, ltrm, lbody ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnSupposition" ) *)
-(*       | ( ReflectiveTerm.PtnRecurrence( lptn, ltrm, lbody ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnRecurrence" ) *)
-(*       | ( ReflectiveTerm.PtnAbstraction( ptn, body ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnRecurrence" ) *)
-(*       | ( ReflectiveTerm.PtnCondition( ptest, ptrue, pfalse ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnCondition" ) *)
-(*       | ( ReflectiveTerm.PtnComprehension( pbnds, pbdy ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnComprehension" ) *)
-(*       | ( ReflectiveTerm.PtnConsolidation( pbnds, pbdy ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnConsolidation" ) *)
-(*       | ( ReflectiveTerm.PtnFiltration( pbnds, pbdy, pcnds ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnConsolidation" ) *)
-(*       | ( ReflectiveTerm.PtnConcentration( pbnds, pbdy, pcnds ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnConcentration" ) *)
-(*       | ( ReflectiveTerm.PtnEquation( pl, pr ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnEquation" ) *)
-(*       | ( ReflectiveTerm.PtnComparisonLT( pl, pr ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnComparisonLT" ) *)
-(*       | ( ReflectiveTerm.PtnComparisonGT( pl, pr ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnComparisonGT" ) *)
-(*       | ( ReflectiveTerm.PtnComparisonLTE( pl, pr ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnComparisonLTE" ) *)
-(*       | ( ReflectiveTerm.PtnComparisonGTE( pl, pr ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnComparisonGTE" ) *)
-(*       | ( ReflectiveTerm.PtnReflection( v ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnReflection" ) *)
-(*       | ( ReflectiveTerm.PtnAcquisition, t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnAcquisition" ) *)
-(*       | ( ReflectiveTerm.PtnSuspension( u, v ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnSuspension" ) *)
-(*       | ( ReflectiveTerm.PtnRelease( u, v ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnRelease" ) *)
-(*       | ( ReflectiveTerm.PtnInnerSuspension( u, v ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnInnerSuspension" ) *)
-(*       | ( ReflectiveTerm.PtnDivision( v1, v2 ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnDivision" ) *)
-(*       | ( ReflectiveTerm.PtnAddition( v1, v2 ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnAddition" ) *)
-(*       | ( ReflectiveTerm.PtnMultiplication( v1, v2 ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnMultiplication" ) *)
-(*       | ( ReflectiveTerm.PtnJuxtaposition( v1, v2 ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnJuxtaposition" ) *)
-(*       | ( ReflectiveTerm.PtnNegation( n ), t ) -> *)
-(*           raise ( NotYetImplemented "unify PtnNegation" )   *)
-  
+  and unify p t = 
+    match ( p, t ) with 
+        ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> 
+          raise ( NotYetImplemented "unify Element" )
+      | ( ReflectiveTerm.Variable( ReflectiveTerm.Identifier( n ) ), t ) -> 
+          ( Some ( ReflectiveValue.Env ( ReflectiveEnv.extend ( n, t, ( ReflectiveEnv.empty ) ) ) ) )
+      | ( ReflectiveTerm.Materialization( c ), t ) -> 
+          let m = ( materialize c ) in 
+            ( match ( m == t ) with
+                true -> ( Some ( ReflectiveValue.Env ( ReflectiveEnv.empty ) ) )
+              | false -> raise ( MatchFailure ( p, t ) ) ) 
+      | ( ReflectiveTerm.Procession( l ), t ) ->
+          raise ( NotYetImplemented "unify Procession" ) 
+      | ( ReflectiveTerm.PtnSequence( v ), t ) ->
+          raise ( NotYetImplemented "unify PtnSequence" ) 
+      | ( ReflectiveTerm.PtnApplication( fn, actls ), t ) -> 
+          raise ( NotYetImplemented "unify PtnApplication" )
+      | ( ReflectiveTerm.PtnSupposition( lptn, ltrm, lbody ), t ) -> 
+          raise ( NotYetImplemented "unify PtnSupposition" )
+      | ( ReflectiveTerm.PtnRecurrence( lptn, ltrm, lbody ), t ) -> 
+          raise ( NotYetImplemented "unify PtnRecurrence" )
+      | ( ReflectiveTerm.PtnAbstraction( ptn, body ), t ) -> 
+          raise ( NotYetImplemented "unify PtnRecurrence" )
+      | ( ReflectiveTerm.PtnCondition( ptest, ptrue, pfalse ), t ) -> 
+          raise ( NotYetImplemented "unify PtnCondition" )
+      | ( ReflectiveTerm.PtnComprehension( pbnds, pbdy ), t ) -> 
+          raise ( NotYetImplemented "unify PtnComprehension" )
+      | ( ReflectiveTerm.PtnConsolidation( pbnds, pbdy ), t ) -> 
+          raise ( NotYetImplemented "unify PtnConsolidation" )
+      | ( ReflectiveTerm.PtnFiltration( pbnds, pbdy, pcnds ), t ) -> 
+          raise ( NotYetImplemented "unify PtnConsolidation" )
+      | ( ReflectiveTerm.PtnConcentration( pbnds, pbdy, pcnds ), t ) -> 
+          raise ( NotYetImplemented "unify PtnConcentration" )
+      | ( ReflectiveTerm.PtnEquation( pl, pr ), t ) -> 
+          raise ( NotYetImplemented "unify PtnEquation" )
+      | ( ReflectiveTerm.PtnComparisonLT( pl, pr ), t ) -> 
+          raise ( NotYetImplemented "unify PtnComparisonLT" )
+      | ( ReflectiveTerm.PtnComparisonGT( pl, pr ), t ) -> 
+          raise ( NotYetImplemented "unify PtnComparisonGT" )
+      | ( ReflectiveTerm.PtnComparisonLTE( pl, pr ), t ) -> 
+          raise ( NotYetImplemented "unify PtnComparisonLTE" ) 
+      | ( ReflectiveTerm.PtnComparisonGTE( pl, pr ), t ) -> 
+          raise ( NotYetImplemented "unify PtnComparisonGTE" ) 
+      | ( ReflectiveTerm.PtnReflection( v ), t ) ->
+          raise ( NotYetImplemented "unify PtnReflection" ) 
+      | ( ReflectiveTerm.PtnAcquisition, t ) ->
+          raise ( NotYetImplemented "unify PtnAcquisition" ) 
+      | ( ReflectiveTerm.PtnSuspension( u, v ), t ) -> 
+          raise ( NotYetImplemented "unify PtnSuspension" )
+      | ( ReflectiveTerm.PtnRelease( u, v ), t ) -> 
+          raise ( NotYetImplemented "unify PtnRelease" ) 
+      | ( ReflectiveTerm.PtnInnerSuspension( u, v ), t ) -> 
+          raise ( NotYetImplemented "unify PtnInnerSuspension" ) 
+      | ( ReflectiveTerm.PtnDivision( v1, v2 ), t ) -> 
+          raise ( NotYetImplemented "unify PtnDivision" ) 
+      | ( ReflectiveTerm.PtnAddition( v1, v2 ), t ) -> 
+          raise ( NotYetImplemented "unify PtnAddition" ) 
+      | ( ReflectiveTerm.PtnMultiplication( v1, v2 ), t ) -> 
+          raise ( NotYetImplemented "unify PtnMultiplication" ) 
+      | ( ReflectiveTerm.PtnJuxtaposition( v1, v2 ), t ) -> 
+          raise ( NotYetImplemented "unify PtnJuxtaposition" ) 
+      | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
+          raise ( NotYetImplemented "unify PtnNegation" )   
 end
 (* This gives a simple and effective form of reflection for quasiquote *)
 and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
