@@ -16,15 +16,28 @@ open Exceptions
 open Knot
 open Monad
 
-(* The type of an abstract machine derived from a monadic evaluator *)
 module type EVAL =
-  functor ( M : MONAD ) ->
 sig
+  module rec ReflectiveNominal : NOMINALS    
+    (* Algebraic theory of terms *)
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
+    (* Algebraic theory of values *)
+  and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
+                                 and type term = ReflectiveTerm.term
+                                 and type pattern = ReflectiveTerm.pattern
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )    
+    (* Algebraic theory of continuations *)
+  and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
+                                    and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
+    (* Algebraic theory of environments *)
+  and ReflectiveEnv : ENVIRONMENTS
+
   type 'a monad 
   type ident (* The type used for identifiers *)
   type term  (* The type used for terms in the language *)
   type arith_term (* The type used for arithmetic terms in the language *)
   type pattern (* The type used for patterns in the language *)
+  type binding (* The type used for binding declarations in the language *)
   type value (* The type of values *)
   type literal (* The type of literals *)
   type env (* The type of environments *)
@@ -49,20 +62,94 @@ sig
   val yunit : value
 end 
 
+(* The type of an abstract machine derived from a monadic evaluator *)
+module type EVALFUNCTOR =
+  functor ( M : MONAD ) ->
+sig
+  (* Algebraic theory of names, variables, identifiers *)
+  module rec ReflectiveNominal : NOMINALS    
+    (* Algebraic theory of terms *)
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
+    (* Algebraic theory of values *)
+  and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
+                                 and type term = ReflectiveTerm.term
+                                 and type pattern = ReflectiveTerm.pattern
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )    
+    (* Algebraic theory of continuations *)
+  and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
+                                    and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
+    (* Algebraic theory of environments *)
+  and ReflectiveEnv : ENVIRONMENTS
+
+  type 'a monad 
+  type ident (* The type used for identifiers *)
+  type term  (* The type used for terms in the language *)
+  type arith_term (* The type used for arithmetic terms in the language *)
+  type pattern (* The type used for patterns in the language *)
+  type binding (* The type used for binding declarations in the language *)
+  type value (* The type of values *)
+  type literal (* The type of literals *)
+  type env (* The type of environments *)
+  type ktn (* The type of continuations *)
+
+  (* The reduction of terms and/or the transitions of the abstract machine *)
+  val reduce : term -> env -> ktn -> value monad
+  (* The primitive arithmetic operations *)
+  val calculate : arith_term -> env -> ktn -> value monad
+  (* Application of continuations *)
+  val apply_k : ktn -> value -> value
+  (* Application of closures *)
+  val apply_closure : value -> value -> ktn -> value monad
+
+  (* Pattern-matching *)
+  val unify : pattern -> value -> env option
+  val materialize : literal -> value
+
+  (* Divergence *)
+  val bottom : value
+  (* Unit *)
+  val yunit : value
+
+  val init_env : env
+  val init_k : ktn
+end 
+
 (*
   An abstract machine derived from a monadic evaluator for a language that supports:
   reflection
   delimited continuations
   monadic comprehension
 *)
-module rec ReflectiveEval : EVAL =
+module ReflectiveEval : EVALFUNCTOR =
   functor ( M : MONAD ) ->
 struct
+  (* This gives a simple and effective form of reflection for quasiquote *)
+  module rec ReflectiveNominal : NOMINALS
+    (* Algebraic theory of names, variables, identifiers *)
+    = NOMINAL( ReflectiveTerm )
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal) 
+    (* Algebraic theory of terms *)
+    = TERM( ReflectiveNominal ) 
+  and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
+                                 and type term = ReflectiveTerm.term
+                                 and type pattern = ReflectiveTerm.pattern
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )
+    (* Algebraic theory of values *)
+  = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
+  and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
+                                    and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
+    (* Algebraic theory of continuations *)
+    = CONTINUATIONFUNCTOR( ReflectiveNominal )( ReflectiveEnv )
+  and ReflectiveEnv : ENVIRONMENTS =
+    (* Algebraic theory of environments *)
+    ListEnv (* ReflectiveNominal *)
+
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
   type term = ReflectiveTerm.term
   type arith_term = ReflectiveTerm.arithmeticTerm
   type pattern = ReflectiveTerm.pattern
+  type binding = ReflectiveTerm.binding
   type literal = ReflectiveTerm.value
   type value = ReflectiveValue.value
   type env = ReflectiveValue.v_env
@@ -401,16 +488,10 @@ struct
           raise ( NotYetImplemented "unify PtnJuxtaposition" ) 
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
+
+  let init_env = raise ( NotYetImplemented "init_env" )
+  let init_k = raise ( NotYetImplemented "init_k" )
 end
-(* This gives a simple and effective form of reflection for quasiquote *)
-and ReflectiveNominal : NOMINALS = NOMINAL( ReflectiveTerm )
-and ReflectiveTerm : TERMS with type var = ReflectiveNominal.nominal = TERM( ReflectiveNominal ) 
-and ReflectiveValue : VALUES with type ident = ReflectiveNominal.nominal
-                             and type term = ReflectiveTerm.term
-                             and type pattern = ReflectiveTerm.pattern
-                             and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map
-  = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
-and ReflectiveK : CONTINUATIONS with type nominal = ReflectiveNominal.nominal
-                                and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map
-  = CONTINUATIONFUNCTOR( ReflectiveNominal )( ReflectiveEnv )
-and ReflectiveEnv : ENVIRONMENTS = ListEnv (* ReflectiveNominal *)
+
+
+
