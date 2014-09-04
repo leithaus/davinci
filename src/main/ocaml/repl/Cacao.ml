@@ -7,7 +7,10 @@
 (* Description:                                                             *)
 (* ------------------------------------------------------------------------ *)
 
+open Monad
 open REPL
+
+module CacaoScriptREPL : REPLS = REPL( Identity_Monad ) ;;
 
 let dummy () =
   begin
@@ -19,11 +22,11 @@ let dummy () =
 match !Sys.interactive with
     true ->
       begin
-        REPL.read_eval_print_loop ();
+        CacaoScriptREPL.read_eval_print_loop ();
         exit 0
       end
   | _ -> () ;;
       
 let main () = 
-  REPL.read_eval_print_loop ()
+  CacaoScriptREPL.read_eval_print_loop ()
 ;;

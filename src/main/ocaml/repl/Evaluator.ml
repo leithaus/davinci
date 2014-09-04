@@ -120,7 +120,7 @@ sig
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
 
-  type 'a monad 
+  type 'a monad = 'a M.monad
       (* The type used for identifiers *)
   type ident = ReflectiveNominal.nominal
       (* The type used for terms in the language *)

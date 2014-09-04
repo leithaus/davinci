@@ -13,10 +13,35 @@ open Evaluator
 open Monad
 open Stage1
 
-module CEK : ASTXFORMS = ASTXFORM( Identity_Monad )
+module type REPLS =
+sig
+  module Pipeline : ASTXFORMS
 
-module REPL =
+  val parse : in_channel -> Abscacao.expr
+  val showTree : Abscacao.expr -> string
+  val print_rslt : Pipeline.model_value -> string
+  val eval : Pipeline.model_term -> Pipeline.model_value Pipeline.REval.monad
+  val read_eval_print_loop : unit -> unit
+end
+
+module type REPLFUNCTOR =
+  functor ( M : MONAD ) ->
+sig
+  module Pipeline : ( ASTXFORMS with type 'a REval.monad = 'a M.monad )
+
+  val parse : in_channel -> Abscacao.expr
+  val showTree : Abscacao.expr -> string
+  val print_rslt : Pipeline.model_value -> string
+  val eval : Pipeline.model_term -> Pipeline.model_value Pipeline.REval.monad
+  val read_eval_print_loop : unit -> unit
+end
+
+module REPL : REPLFUNCTOR =
+  functor ( M : MONAD ) ->
 struct
+  module Pipeline : ( ASTXFORMS with type 'a REval.monad = 'a M.monad )
+    = ASTXFORM( M )
+
   let parse (c : in_channel) : Abscacao.expr = 
     Parcacao.pExpr Lexcacao.token (Lexing.from_channel c)
 
@@ -26,6 +51,12 @@ struct
 
   let print_rslt v =
     raise ( NotYetImplemented "print_rslt" )
+
+  let eval m_term =
+    ( Pipeline.REval.reduce
+        m_term
+        Pipeline.REval.init_env
+        Pipeline.REval.init_k )
 
   let read_eval_print_loop () = 
     (* let dbg = ref false in *)
@@ -49,10 +80,13 @@ struct
                 print_string ( "ast = " ^ ( astStr ^ ".\n" ) );
                 print_newline ();
                 flush stdout;
-                let term = ( CEK.expr_to_term ast ) in
-                let nrml = ( CEK.REval.reduce term CEK.REval.init_env CEK.REval.init_k ) in
+                let term = ( Pipeline.expr_to_term ast ) in
                   begin
-                    print_rslt nrml;
+                    ( M.m_bind
+                        ( eval term )
+                        ( fun nrml ->
+                          print_string ( print_rslt nrml );
+                          ( M.m_unit nrml ) ) );
                     print_newline ();
                     flush stdout
                   end

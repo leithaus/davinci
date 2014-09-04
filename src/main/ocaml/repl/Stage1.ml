@@ -18,6 +18,7 @@ sig
   type model_term = REval.term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
+  type model_value = REval.value
 
   val expr_to_term : expr -> model_term
   val ptrn_to_pattern : pattern -> model_pattern
@@ -27,11 +28,12 @@ end
 module type ASTXFORMFUNCTOR =
   functor ( M : MONAD ) ->
 sig
-  module REval : EVAL
+  module REval : ( EVAL with type 'a monad = 'a M.monad )
 
   type model_term = REval.term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
+  type model_value = REval.value
 
   val expr_to_term : expr -> model_term
   val ptrn_to_pattern : pattern -> model_pattern
@@ -41,11 +43,13 @@ end
 module ASTXFORM : ASTXFORMFUNCTOR =
   functor ( M : MONAD ) ->
 struct
-  module REval : EVAL = ReflectiveEval( M )
+  module REval : ( EVAL with type 'a monad = 'a M.monad )
+    = ReflectiveEval( M )
 
   type model_term = REval.term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
+  type model_value = REval.value
 
   let rec expr_to_term e =
     match e with
