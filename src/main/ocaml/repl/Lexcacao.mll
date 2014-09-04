@@ -3,9 +3,9 @@
 open Parcacao
 open Lexing
 
-let symbol_table = Hashtbl.create 23
+let symbol_table = Hashtbl.create 49
 let _ = List.iter (fun (kwd, tok) -> Hashtbl.add symbol_table kwd tok)
-                  [(";", SYMB1);(";;", SYMB2);("=", SYMB3);("->", SYMB4);("(", SYMB5);(")", SYMB6);("|", SYMB7);("<", SYMB8);(">", SYMB9);("<=", SYMB10);(">=", SYMB11);("/", SYMB12);("+", SYMB13);("*", SYMB14);("::", SYMB15);("-", SYMB16);("<-", SYMB17);("`", SYMB18);("'", SYMB19);("[", SYMB20);("]", SYMB21);("$", SYMB22);(",", SYMB23)]
+                  [(";", SYMB1);(";;", SYMB2);("=", SYMB3);("->", SYMB4);("(", SYMB5);(")", SYMB6);("|", SYMB7);("<", SYMB8);(">", SYMB9);("<=", SYMB10);(">=", SYMB11);("!", SYMB12);("/", SYMB13);("+", SYMB14);("*", SYMB15);("::", SYMB16);("-", SYMB17);("<-", SYMB18);("@Seq", SYMB19);("@App", SYMB20);("@Let", SYMB21);("@Letrec", SYMB22);("@Abs", SYMB23);("@Cond", SYMB24);("@SelectFrom", SYMB25);("@From", SYMB26);("@SelectFromWhere", SYMB27);("@FromWhere", SYMB28);("@Equate", SYMB29);("@CompLT", SYMB30);("@CompGT", SYMB31);("@CompLTE", SYMB32);("@CompGTE", SYMB33);("@Unquote", SYMB34);("@Newprompt", SYMB35);("@Suspend", SYMB36);("@Release", SYMB37);("@SuspendSub", SYMB38);("@Divide", SYMB39);("@Add", SYMB40);("@Multiply", SYMB41);("@Juxtapose", SYMB42);("@Negate", SYMB43);("`", SYMB44);("'", SYMB45);("[", SYMB46);("]", SYMB47);("$", SYMB48);(",", SYMB49)]
 
 let resword_table = Hashtbl.create 15
 let _ = List.iter (fun (kwd, tok) -> Hashtbl.add resword_table kwd tok)
@@ -48,7 +48,7 @@ let d = ['0'-'9']                (*  digit *)
 let i = l | d | ['_' '\'']          (*  identifier character *)
 let u = ['\000'-'\255']           (* universal: any character *)
 let rsyms =    (* reserved words consisting of special symbols *)
-            ";" | ";;" | "=" | "->" | "(" | ")" | "|" | "<" | ">" | "<=" | ">=" | "/" | "+" | "*" | "::" | "-" | "<-" | "`" | "'" | "[" | "]" | "$" | ","
+            ";" | ";;" | "=" | "->" | "(" | ")" | "|" | "<" | ">" | "<=" | ">=" | "!" | "/" | "+" | "*" | "::" | "-" | "<-" | "@Seq" | "@App" | "@Let" | "@Letrec" | "@Abs" | "@Cond" | "@SelectFrom" | "@From" | "@SelectFromWhere" | "@FromWhere" | "@Equate" | "@CompLT" | "@CompGT" | "@CompLTE" | "@CompGTE" | "@Unquote" | "@Newprompt" | "@Suspend" | "@Release" | "@SuspendSub" | "@Divide" | "@Add" | "@Multiply" | "@Juxtapose" | "@Negate" | "`" | "'" | "[" | "]" | "$" | ","
 
 rule token = 
     parse "//" (_ # '\n')*  { token lexbuf } (* Toss single line comments *)

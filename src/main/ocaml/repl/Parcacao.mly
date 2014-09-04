@@ -17,18 +17,44 @@ open Lexing
 %token SYMB9 /* > */
 %token SYMB10 /* <= */
 %token SYMB11 /* >= */
-%token SYMB12 /* / */
-%token SYMB13 /* + */
-%token SYMB14 /* * */
-%token SYMB15 /* :: */
-%token SYMB16 /* - */
-%token SYMB17 /* <- */
-%token SYMB18 /* ` */
-%token SYMB19 /* ' */
-%token SYMB20 /* [ */
-%token SYMB21 /* ] */
-%token SYMB22 /* $ */
-%token SYMB23 /* , */
+%token SYMB12 /* ! */
+%token SYMB13 /* / */
+%token SYMB14 /* + */
+%token SYMB15 /* * */
+%token SYMB16 /* :: */
+%token SYMB17 /* - */
+%token SYMB18 /* <- */
+%token SYMB19 /* @Seq */
+%token SYMB20 /* @App */
+%token SYMB21 /* @Let */
+%token SYMB22 /* @Letrec */
+%token SYMB23 /* @Abs */
+%token SYMB24 /* @Cond */
+%token SYMB25 /* @SelectFrom */
+%token SYMB26 /* @From */
+%token SYMB27 /* @SelectFromWhere */
+%token SYMB28 /* @FromWhere */
+%token SYMB29 /* @Equate */
+%token SYMB30 /* @CompLT */
+%token SYMB31 /* @CompGT */
+%token SYMB32 /* @CompLTE */
+%token SYMB33 /* @CompGTE */
+%token SYMB34 /* @Unquote */
+%token SYMB35 /* @Newprompt */
+%token SYMB36 /* @Suspend */
+%token SYMB37 /* @Release */
+%token SYMB38 /* @SuspendSub */
+%token SYMB39 /* @Divide */
+%token SYMB40 /* @Add */
+%token SYMB41 /* @Multiply */
+%token SYMB42 /* @Juxtapose */
+%token SYMB43 /* @Negate */
+%token SYMB44 /* ` */
+%token SYMB45 /* ' */
+%token SYMB46 /* [ */
+%token SYMB47 /* ] */
+%token SYMB48 /* $ */
+%token SYMB49 /* , */
 
 %token TOK_EOF
 %token <string> TOK_Ident
@@ -123,26 +149,27 @@ expr4 : TOK_if expr4 TOK_then expr5 TOK_else expr5 { Condition ($2, $4, $6) }
   | expr5 {  $1 }
 ;
 
-expr5 : TOK_newP { Acquisition  } 
+expr5 : SYMB12 variation { Reflection $2 } 
+  | TOK_newP { Acquisition  }
   | TOK_pushP expr5 expr5 { Suspension ($2, $3) }
   | TOK_takeSC expr5 expr5 { Release ($2, $3) }
   | TOK_pushSC expr5 expr5 { InnerSuspension ($2, $3) }
   | arithmeticExpr { Calculation $1 }
 ;
 
-arithmeticExpr : arithmeticExpr SYMB12 arithmeticExpr1 { Division ($1, $3) } 
+arithmeticExpr : arithmeticExpr SYMB13 arithmeticExpr1 { Division ($1, $3) } 
 ;
 
-arithmeticExpr1 : arithmeticExpr1 SYMB13 arithmeticExpr2 { Addition ($1, $3) } 
+arithmeticExpr1 : arithmeticExpr1 SYMB14 arithmeticExpr2 { Addition ($1, $3) } 
 ;
 
-arithmeticExpr2 : arithmeticExpr2 SYMB14 arithmeticExpr3 { Multiplication ($1, $3) } 
+arithmeticExpr2 : arithmeticExpr2 SYMB15 arithmeticExpr3 { Multiplication ($1, $3) } 
 ;
 
-arithmeticExpr3 : arithmeticExpr3 SYMB15 arithmeticExpr4 { Juxtaposition ($1, $3) } 
+arithmeticExpr3 : arithmeticExpr3 SYMB16 arithmeticExpr4 { Juxtaposition ($1, $3) } 
 ;
 
-arithmeticExpr4 : SYMB16 arithmeticExpr5 { Negation $2 } 
+arithmeticExpr4 : SYMB17 arithmeticExpr5 { Negation $2 } 
 ;
 
 arithmeticExpr5 : variation { Mention $1 } 
@@ -150,31 +177,56 @@ arithmeticExpr5 : variation { Mention $1 }
   | SYMB5 expr SYMB6 { Aggregation $2 }
 ;
 
-binding : pattern SYMB17 expr5 { Question ($1, $3) } 
+binding : pattern SYMB18 expr5 { Question ($1, $3) } 
 ;
 
 pattern : symbol SYMB5 pattern_list SYMB6 { Element ($1, $3) } 
   | variation { Variable $1 }
   | value { Materialization $1 }
   | lyst { Procession $1 }
+  | SYMB19 variation { PtnSequence $2 }
+  | SYMB20 variation variation { PtnApplication ($2, $3) }
+  | SYMB21 variation variation variation { PtnSupposition ($2, $3, $4) }
+  | SYMB22 variation variation variation { PtnRecurrence ($2, $3, $4) }
+  | SYMB23 variation variation { PtnAbstraction ($2, $3) }
+  | SYMB24 variation variation variation { PtnCondition ($2, $3, $4) }
+  | SYMB25 variation variation { PtnComprehend ($2, $3) }
+  | SYMB26 variation variation { PtnConsolidate ($2, $3) }
+  | SYMB27 variation variation variation { PtnFiltration ($2, $3, $4) }
+  | SYMB28 variation variation variation { PtnConcentrate ($2, $3, $4) }
+  | SYMB29 variation variation { PtnEquation ($2, $3) }
+  | SYMB30 variation variation { PtnCompLT ($2, $3) }
+  | SYMB31 variation variation { PtnCompGT ($2, $3) }
+  | SYMB32 variation variation { PtnCompLTE ($2, $3) }
+  | SYMB33 variation variation { PtnCompGTE ($2, $3) }
+  | SYMB34 variation variation { PtnReflection ($2, $3) }
+  | SYMB35 { PtnAcquisition  }
+  | SYMB36 variation variation { PtnSuspension ($2, $3) }
+  | SYMB37 variation variation { PtnRelease ($2, $3) }
+  | SYMB38 variation variation { PtnInnerSuspend ($2, $3) }
+  | SYMB39 variation variation { PtnDivision ($2, $3) }
+  | SYMB40 variation variation { PtnAddition ($2, $3) }
+  | SYMB41 variation variation { PtnMultiply ($2, $3) }
+  | SYMB42 variation variation { PtnJuxtapose ($2, $3) }
+  | SYMB43 variation variation { PtnNegate ($2, $3) }
 ;
 
 variation : uIdent { Atomic $1 } 
   | wild { Abandon $1 }
-  | SYMB18 expr SYMB19 { Transcription $2 }
+  | SYMB44 expr SYMB45 { Transcription $2 }
 ;
 
-lyst : SYMB20 SYMB21 { Empty  } 
-  | SYMB20 pattern_list SYMB21 { Enum $2 }
-  | SYMB20 pattern_list SYMB7 lyst SYMB21 { Cons ($2, $4) }
-  | SYMB20 pattern_list SYMB7 variation SYMB21 { ConsV ($2, $4) }
+lyst : SYMB46 SYMB47 { Empty  } 
+  | SYMB46 pattern_list SYMB47 { Enum $2 }
+  | SYMB46 pattern_list SYMB7 lyst SYMB47 { Cons ($2, $4) }
+  | SYMB46 pattern_list SYMB7 variation SYMB47 { ConsV ($2, $4) }
 ;
 
 value : duality { BooleanLiteral $1 } 
   | string { StringLiteral $1 }
   | int { IntegerLiteral $1 }
   | float { DoubleLiteral $1 }
-  | SYMB22 expr SYMB22 { Reification $2 }
+  | SYMB48 expr SYMB48 { Reification $2 }
 ;
 
 duality : TOK_true { Verity  } 
@@ -189,12 +241,12 @@ expr2_list : expr2 { (fun x -> [x]) $1 }
 ;
 
 pattern_list : pattern { (fun x -> [x]) $1 } 
-  | pattern SYMB23 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | pattern SYMB49 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 binding_list : /* empty */ { []  } 
   | binding { (fun x -> [x]) $1 }
-  | binding SYMB23 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | binding SYMB49 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 

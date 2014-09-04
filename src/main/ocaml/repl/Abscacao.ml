@@ -20,6 +20,7 @@ and expr =
  | ComparisonGT of expr * expr
  | ComparisonLTE of expr * expr
  | ComparisonGTE of expr * expr
+ | Reflection of variation
  | Acquisition
  | Suspension of expr * expr
  | Release of expr * expr
@@ -44,6 +45,31 @@ and pattern =
  | Variable of variation
  | Materialization of value
  | Procession of lyst
+ | PtnSequence of variation
+ | PtnApplication of variation * variation
+ | PtnSupposition of variation * variation * variation
+ | PtnRecurrence of variation * variation * variation
+ | PtnAbstraction of variation * variation
+ | PtnCondition of variation * variation * variation
+ | PtnComprehend of variation * variation
+ | PtnConsolidate of variation * variation
+ | PtnFiltration of variation * variation * variation
+ | PtnConcentrate of variation * variation * variation
+ | PtnEquation of variation * variation
+ | PtnCompLT of variation * variation
+ | PtnCompGT of variation * variation
+ | PtnCompLTE of variation * variation
+ | PtnCompGTE of variation * variation
+ | PtnReflection of variation * variation
+ | PtnAcquisition
+ | PtnSuspension of variation * variation
+ | PtnRelease of variation * variation
+ | PtnInnerSuspend of variation * variation
+ | PtnDivision of variation * variation
+ | PtnAddition of variation * variation
+ | PtnMultiply of variation * variation
+ | PtnJuxtapose of variation * variation
+ | PtnNegate of variation * variation
 
 and variation =
    Atomic of uIdent

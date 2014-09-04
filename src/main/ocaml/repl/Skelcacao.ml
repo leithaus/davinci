@@ -36,6 +36,7 @@ and transExpr (x : expr) : result = match x with
   | ComparisonGT (expr0, expr) -> failure x
   | ComparisonLTE (expr0, expr) -> failure x
   | ComparisonGTE (expr0, expr) -> failure x
+  | Reflection variation -> failure x
   | Acquisition  -> failure x
   | Suspension (expr0, expr) -> failure x
   | Release (expr0, expr) -> failure x
@@ -63,6 +64,31 @@ and transPattern (x : pattern) : result = match x with
   | Variable variation -> failure x
   | Materialization value -> failure x
   | Procession lyst -> failure x
+  | PtnSequence variation -> failure x
+  | PtnApplication (variation0, variation) -> failure x
+  | PtnSupposition (variation0, variation1, variation) -> failure x
+  | PtnRecurrence (variation0, variation1, variation) -> failure x
+  | PtnAbstraction (variation0, variation) -> failure x
+  | PtnCondition (variation0, variation1, variation) -> failure x
+  | PtnComprehend (variation0, variation) -> failure x
+  | PtnConsolidate (variation0, variation) -> failure x
+  | PtnFiltration (variation0, variation1, variation) -> failure x
+  | PtnConcentrate (variation0, variation1, variation) -> failure x
+  | PtnEquation (variation0, variation) -> failure x
+  | PtnCompLT (variation0, variation) -> failure x
+  | PtnCompGT (variation0, variation) -> failure x
+  | PtnCompLTE (variation0, variation) -> failure x
+  | PtnCompGTE (variation0, variation) -> failure x
+  | PtnReflection (variation0, variation) -> failure x
+  | PtnAcquisition  -> failure x
+  | PtnSuspension (variation0, variation) -> failure x
+  | PtnRelease (variation0, variation) -> failure x
+  | PtnInnerSuspend (variation0, variation) -> failure x
+  | PtnDivision (variation0, variation) -> failure x
+  | PtnAddition (variation0, variation) -> failure x
+  | PtnMultiply (variation0, variation) -> failure x
+  | PtnJuxtapose (variation0, variation) -> failure x
+  | PtnNegate (variation0, variation) -> failure x
 
 
 and transVariation (x : variation) : result = match x with
