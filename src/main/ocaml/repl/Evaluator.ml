@@ -71,6 +71,7 @@ struct
   exception NonFunctionInOpPosition of value 
   exception MatchFailure of pattern * value
   exception RuntimeException of string * term
+  exception UnboundVariable of ident
       
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT 
@@ -304,8 +305,10 @@ struct
       | Mention( n ) ->
           ( match ( n, e ) with
               ( Identifier( v ), ReflectiveValue.Env( renv ) ) ->
-(*                 ( M.m_unit ( apply_k k ( ReflectiveEnv.lookup ( v, renv ) ) ) ) *)
-                raise ( NotYetImplemented "Mention lookup" )
+                ( match ( ReflectiveEnv.lookup ( v, renv ) ) with
+                    Some( rslt ) ->
+                      ( M.m_unit ( apply_k k rslt ) )
+                  | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | Actualization( aterm ) ->
           raise ( NotYetImplemented "Actualization" )
