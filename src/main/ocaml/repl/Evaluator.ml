@@ -323,7 +323,9 @@ struct
           ReflectiveValue.Ground( ReflectiveValue.Reification( t ) )
       | ReflectiveTerm.UNIT -> yunit
   and apply_k k v =
-    raise ( NotYetImplemented "apply_k" )  
+    match ( k, v ) with 
+        ( ReflectiveK.STOP, v ) -> v
+      | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
   and apply_closure op v k =
     match op with
         Closure( c_ptn, c_term, c_env ) ->
