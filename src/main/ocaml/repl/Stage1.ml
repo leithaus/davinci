@@ -151,9 +151,10 @@ struct
           let r_term = ( expr_to_term r_expr ) in 
             ( REval.ReflectiveTerm.ComparisonGTE ( l_term, r_term ) )
       | Reflection( v ) -> 
-          raise ( NotYetImplemented "AST xform: Reflection" )
+          ( REval.ReflectiveTerm.Reflection
+              ( var_to_ident v ) )
       | Acquisition -> 
-          raise ( NotYetImplemented "AST xform: Acquisition" )
+          REval.ReflectiveTerm.Acquisition
       | Suspension( l_expr, r_expr ) -> 
           let l_term = ( expr_to_term l_expr ) in
           let r_term = ( expr_to_term r_expr ) in 
