@@ -27,8 +27,23 @@ struct
   type nominal =
       Transcription of Term.term
       | Symbol of symbol
-  let comparator n1 n2 = raise (NotYetImplemented "comparator")
-  let toString n = raise (NotYetImplemented "toString")
+  let comparator n1 n2 = 
+    match ( n1, n2 ) with 
+        ( Symbol( URL( url1 ) ), Symbol( URL( url2 ) ) ) ->
+          url1 == url2
+      | ( Symbol( Opaque( opq1 ) ), Symbol( Opaque( opq2 ) ) ) ->
+          opq1 == opq2
+      | ( Symbol( Debruijn( ( i1, j1 ) ) ), Symbol( Debruijn( ( i2, j2 ) ) ) ) ->
+          ( ( i1 == i2 ) && ( j1 == j2 ) )
+      | ( Transcription( t1 ), Transcription( t2 ) ) ->
+          raise (NotYetImplemented "Reflective nominal comparison")
+      | _ -> raise ( NotYetImplemented "comparing nominals of different types" )
+  let toString n = 
+    match n with
+        Symbol( URL( url ) ) -> url
+      | Symbol( Opaque( opq ) ) -> opq
+      | Symbol( _ ) -> 
+          raise (NotYetImplemented "Debruijn toString")
   let fresh () = raise (NotYetImplemented "fresh")
 end
 and TERM :
