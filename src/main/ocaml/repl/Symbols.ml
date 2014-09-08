@@ -6,6 +6,8 @@
 (* Description:  *)
 (* ------------------------------------------------------------------------ *)
 
+open Uuidm
+
 module type SYMBOLS =
 sig
   type url = string

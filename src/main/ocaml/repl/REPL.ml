@@ -12,6 +12,7 @@ open Exceptions
 open Evaluator
 open Monad
 open Stage1
+open Cfg
 
 module type REPLS =
 sig
@@ -60,7 +61,10 @@ struct
 
   let read_eval_print_loop () = 
     (* let dbg = ref false in *)
+    ( CacaoScriptConfig.load_config_file "conf.ml" );
     let rslt = ref true in
+    let show_tree = 
+      CacaoScriptConfig.show_parse_tree() in
     let channel =
       if Array.length Sys.argv > 1 then
         open_in Sys.argv.(1)
@@ -68,16 +72,28 @@ struct
         stdin
     in
       print_string " *** Cacao Top Level version 0.01 *** \n";
+      ( print_string 
+        (
+          " show parse tree turned: " 
+          ^ ( match show_tree with 
+              true -> "on"
+            | false -> "off" )
+          ^ "\n"
+        ) );
+
       try
         (while (!rslt)
           do	  
 	    print_string "> ";
 	    flush stdout;
-	    let ast = parse channel in
-            let astStr = showTree ast in          
-              begin	      
+	    let ast = parse channel in            
+              begin	                      
                 print_string "Parsed.\n";
-                print_string ( "ast = " ^ ( astStr ^ ".\n" ) );
+                ( match show_tree with
+                    true ->
+                      let astStr = showTree ast in          
+                        print_string ( "ast = " ^ ( astStr ^ ".\n" ) )
+                  | _ -> () );
                 print_newline ();
                 flush stdout;
                 let desugared_ast = ( Pipeline.desugar ast ) in

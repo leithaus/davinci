@@ -9,6 +9,7 @@
 open Nominals
 open Symbols
 open Terms
+open Uuidm
 open Exceptions
 
 module type REFLECTIVEKNOT =
@@ -154,7 +155,8 @@ struct
       | Symbol( Opaque( opq ) ) -> opq
       | Symbol( _ ) -> 
           raise (NotYetImplemented "Debruijn toString")
-  let fresh () = raise (NotYetImplemented "fresh")
+  let fresh () = 
+    ( Symbol ( Opaque ( Uuidm.to_string ( Uuidm.create `V4 ) ) ) )
 end
 and TERM :
   functor ( Nominal : ( NOMINALS with type symbol = Symbols.symbol ) ) ->

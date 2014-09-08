@@ -1,2 +1,2 @@
 #! /bin/sh
-ocamlmktop -I _build/src/main/ocaml/repl -o cacao Abscacao.cmo BNFC_Util.cmo Lexcacao.cmo Parcacao.cmo Printcacao.cmo Showcacao.cmo Cacao.cmo
+ocamlfind ocamlmktop -linkpkg -package config-file -package delimcc -package uuidm -I /Users/lgm/.opam/system/lib -I _build/src/main/ocaml/repl -o cacao Monad.cmo Cfg.cmo Abscacao.cmo BNFC_Util.cmo Exceptions.cmo Nominals.cmo Environments.cmo Continuations.cmo Symbols.cmo Terms.cmo Knot.cmo Values.cmo Evaluator.cmo Lexcacao.cmo Parcacao.cmo Printcacao.cmo Showcacao.cmo Stage1.cmo REPL.cmo Cacao.cmo
