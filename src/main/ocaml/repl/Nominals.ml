@@ -9,7 +9,10 @@
 module type NOMINALS =
 sig
   type symbol
-  type nominal
+  type term
+  type nominal =
+      Transcription of term
+      | Symbol of symbol
   val comparator : nominal -> nominal -> bool
   val toString : nominal -> string
   val fresh : unit -> nominal

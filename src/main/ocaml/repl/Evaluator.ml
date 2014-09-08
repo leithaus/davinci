@@ -43,7 +43,7 @@ open Symbols
 module type EVAL = 
 sig
   (* Algebraic theory of names, variables, identifiers *)
-  module rec ReflectiveNominal : NOMINALS    
+  module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol )
     (* Algebraic theory of terms *)
   and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal )     
     (* Algebraic theory of values *)
@@ -109,7 +109,7 @@ module type EVALFUNCTOR =
   functor ( M : MONAD ) ->
 sig
   (* Algebraic theory of names, variables, identifiers *)
-  module rec ReflectiveNominal : NOMINALS    
+  module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol )
     (* Algebraic theory of terms *)
   and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
     (* Algebraic theory of values *)
@@ -178,7 +178,8 @@ module ReflectiveEval : EVALFUNCTOR =
   functor ( M : MONAD ) ->
 struct
   (* This gives a simple and effective form of reflection for quasiquote *)
-  module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol )
+  module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
+                                            and type term = ReflectiveTerm.term )
     (* Algebraic theory of names, variables, identifiers *)
     = NOMINAL( ReflectiveTerm )
   and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal) 

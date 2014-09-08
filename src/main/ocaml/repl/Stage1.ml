@@ -9,6 +9,7 @@
 open Abscacao
 open Exceptions
 open Monad
+open Symbols
 open Evaluator
 
 module type ASTXFORMS =
@@ -174,8 +175,10 @@ struct
               ( REval.ReflectiveTerm.Element( fnctr_term, elems_term ) )
           ) 
       | Variable( Atomic( UIdent( v ) ) ) -> 
-(*           ( REval.ReflectiveTerm.Variable v ) *)
-          raise ( NotYetImplemented "ptrn_to_pattern : Variable( Atomic( UIdent( v ) ) )" )
+          ( REval.ReflectiveTerm.Variable
+              ( REval.ReflectiveTerm.Identifier
+                  ( REval.ReflectiveNominal.Symbol ( Symbols.Opaque v ) ) )
+          )
       | Variable( Abandon( Wild( s ) ) ) ->
           (
             REval.ReflectiveTerm.Variable 
