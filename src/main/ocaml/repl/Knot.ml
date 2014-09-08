@@ -7,22 +7,23 @@
 (* ------------------------------------------------------------------------ *)
 
 open Nominals
+open Symbols
 open Terms
 open Exceptions
 
 module rec NOMINAL :
   functor ( Term : TERMS ) ->
-    sig
-      type symbol
-      type nominal =
-          Transcription of Term.term
-          | Symbol of symbol
-      val comparator : nominal -> nominal -> bool
-      val toString : nominal -> string
-      val fresh : unit -> nominal
-    end = functor ( Term : TERMS ) ->
+sig
+  type symbol = Symbols.symbol
+  type nominal =
+      Transcription of Term.term
+      | Symbol of symbol
+  val comparator : nominal -> nominal -> bool
+  val toString : nominal -> string
+  val fresh : unit -> nominal
+end = functor ( Term : TERMS ) ->
 struct
-  type symbol
+  type symbol = Symbols.symbol
   type nominal =
       Transcription of Term.term
       | Symbol of symbol

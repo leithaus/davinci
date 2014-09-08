@@ -15,6 +15,7 @@ open Continuations
 open Exceptions
 open Knot
 open Monad
+open Symbols
 
 (*
   The type of a monadic evaluator dependent on a monad and a collection of
@@ -177,7 +178,7 @@ module ReflectiveEval : EVALFUNCTOR =
   functor ( M : MONAD ) ->
 struct
   (* This gives a simple and effective form of reflection for quasiquote *)
-  module rec ReflectiveNominal : NOMINALS
+  module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol )
     (* Algebraic theory of names, variables, identifiers *)
     = NOMINAL( ReflectiveTerm )
   and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal) 
