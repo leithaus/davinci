@@ -12,13 +12,6 @@ open REPL
 
 module CacaoScriptREPL : REPLS = REPL( Identity_Monad ) ;;
 
-let dummy () =
-  begin
-    print_string "here we go...";
-    print_newline;
-    flush stdout;
-  end;;
-
 match !Sys.interactive with
     true ->
       begin
