@@ -547,8 +547,8 @@ struct
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
 
-  let init_env = raise ( NotYetImplemented "init_env" )
-  let init_k = raise ( NotYetImplemented "init_k" )
+  let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty )
+  let init_k = ReflectiveK.STOP
 end
 
 
