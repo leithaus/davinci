@@ -299,15 +299,7 @@ struct
                   | _ -> raise ( RuntimeException ( "expected Boolean", test ) ) ) ) )
 
       (* monadic desugaring *)
-(*  This has been moved to the syntactic transform stage *)
-(*       | ReflectiveTerm.Comprehension( bindings, eterm ) ->  *)
-(*           raise ( NotYetImplemented "Comprehension" ) *)
-(*       | ReflectiveTerm.Consolidation( bindings, eterm ) -> *)
-(*           raise ( NotYetImplemented "Consolidation" ) *)
-(*       | ReflectiveTerm.Filtration( bindings, conditions, eterm ) -> *)
-(*           raise ( NotYetImplemented "Filtration" ) *)
-(*       | ReflectiveTerm.Concentration( bindings, conditions, eterm ) -> *)
-(*           raise ( NotYetImplemented "Concentration" ) *)
+      (*  This has been moved to the syntactic transform stage *)
 
       (* comparison *)
       | ReflectiveTerm.Equation( lhs, rhs ) ->

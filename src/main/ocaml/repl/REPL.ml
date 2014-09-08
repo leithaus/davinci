@@ -55,7 +55,7 @@ struct
   let eval m_term =
     ( Pipeline.REval.reduce
         m_term
-        Pipeline.REval.init_env
+        Pipeline.REval.init_env (* BUGBUG -- lgm -- this assumes no builtin fns *)
         Pipeline.REval.init_k )
 
   let read_eval_print_loop () = 
@@ -80,7 +80,8 @@ struct
                 print_string ( "ast = " ^ ( astStr ^ ".\n" ) );
                 print_newline ();
                 flush stdout;
-                let term = ( Pipeline.expr_to_term ast ) in
+                let desugared_ast = ( Pipeline.desugar ast ) in
+                let term = ( Pipeline.expr_to_term desugared_ast ) in
                   begin
                     ( M.m_bind
                         ( eval term )
