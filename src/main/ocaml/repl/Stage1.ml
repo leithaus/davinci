@@ -186,12 +186,12 @@ struct
                   ( REval.ReflectiveTerm.Wild s ) ) 
           )
       | Variable( Transcription( expr ) ) ->
-(*           ( *)
-(*             REval.ReflectiveTerm.Variable  *)
-(*               ( REval.ReflectiveTerm.Transcription *)
-(*                   ( expr_to_term expr ) )  *)
-(*           ) *)
-          raise ( NotYetImplemented "ptrn_to_pattern : Variable( Transcription( expr ) )" )
+          (
+            REval.ReflectiveTerm.Variable
+              ( REval.ReflectiveTerm.Identifier
+                  ( REval.ReflectiveNominal.Transcription
+                      ( expr_to_term expr ) ) )
+          )
       | Materialization( literal ) ->
           ( REval.ReflectiveTerm.Materialization ( literal_to_value literal ) )
       | Procession( lst ) ->
