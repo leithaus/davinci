@@ -44,7 +44,7 @@ sig
   (* Algebraic theory of names, variables, identifiers *)
   module rec ReflectiveNominal : NOMINALS    
     (* Algebraic theory of terms *)
-  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal )     
     (* Algebraic theory of values *)
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
@@ -68,6 +68,8 @@ sig
   type arith_term = ReflectiveTerm.arithmeticTerm
       (* The type used for patterns in the language *)
   type pattern = ReflectiveTerm.pattern
+      (* The type used for list patterns in the language *)
+  type lyst = ReflectiveTerm.lyst
       (* The type used for binding declarations in the language *)
   type binding = ReflectiveTerm.binding
       (* The type of literals *)
@@ -129,6 +131,8 @@ sig
   type arith_term = ReflectiveTerm.arithmeticTerm
       (* The type used for patterns in the language *)
   type pattern = ReflectiveTerm.pattern
+      (* The type used for list patterns in the language *)
+  type lyst = ReflectiveTerm.lyst
       (* The type used for binding declarations in the language *)
   type binding = ReflectiveTerm.binding
       (* The type of literals *)
@@ -198,6 +202,7 @@ struct
   type term = ReflectiveTerm.term
   type arith_term = ReflectiveTerm.arithmeticTerm
   type pattern = ReflectiveTerm.pattern
+  type lyst = ReflectiveTerm.lyst
   type binding = ReflectiveTerm.binding
   type literal = ReflectiveTerm.value
   type value = ReflectiveValue.value
