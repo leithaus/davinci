@@ -310,15 +310,126 @@ struct
 
       (* comparison *)
       | ReflectiveTerm.Equation( lhs, rhs ) ->
-          raise ( NotYetImplemented "Equation" )
+          ( M.m_bind 
+              ( reduce lhs e k )
+              ( fun l ->
+                ( M.m_bind
+                    ( reduce rhs e k )
+                    ( fun r ->
+                      ( M.m_unit
+                          ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( l == r ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonLT( lhs, rhs ) ->
-          raise ( NotYetImplemented "ComparisonLT" )
+          ( M.m_bind 
+              ( reduce lhs e k )
+              ( fun l ->
+                ( M.m_bind
+                    ( reduce rhs e k )
+                    ( fun r ->
+                      match ( l, r ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) < d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < float( d2 ) ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonGT( lhs, rhs ) ->
-          raise ( NotYetImplemented "ComparisonGT" )
+          ( M.m_bind 
+              ( reduce lhs e k )
+              ( fun l ->
+                ( M.m_bind
+                    ( reduce rhs e k )
+                    ( fun r ->
+                      match ( l, r ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) > d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > float( d2 ) ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonLTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "ComparisonLTE" )
+          ( M.m_bind 
+              ( reduce lhs e k )
+              ( fun l ->
+                ( M.m_bind
+                    ( reduce rhs e k )
+                    ( fun r ->
+                      match ( l, r ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) <= d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= float( d2 ) ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonGTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "ComparisonGTE" )
+          ( M.m_bind 
+              ( reduce lhs e k )
+              ( fun l ->
+                ( M.m_bind
+                    ( reduce rhs e k )
+                    ( fun r ->
+                      match ( l, r ) with
+                          (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) >= d2 ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= float( d2 ) ) ) ) ) )
+                        | (
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
+                            ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
+                          ) -> ( M.m_unit
+                                   ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= d2 ) ) ) ) ) ) ) ) )
 
       (* reflection -- dual to reification *)
       | ReflectiveTerm.Reflection( v ) ->
