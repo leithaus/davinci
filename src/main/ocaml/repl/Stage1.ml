@@ -18,6 +18,7 @@ sig
 
   type model_ident = REval.ident
   type model_term = REval.term
+  type model_arith_term = REval.arith_term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
   type model_literal = REval.literal
@@ -30,6 +31,7 @@ sig
   val lptrn_to_lpattern : lyst -> model_lyst
   val literal_to_value : value -> model_literal
   val var_to_ident : variation -> model_ident
+  val calc_to_calculation : arithmeticExpr -> model_arith_term 
 end
 
 module type ASTXFORMFUNCTOR =
@@ -39,6 +41,7 @@ sig
 
   type model_ident = REval.ident
   type model_term = REval.term
+  type model_arith_term = REval.arith_term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
   type model_literal = REval.literal
@@ -51,6 +54,7 @@ sig
   val lptrn_to_lpattern : lyst -> model_lyst
   val literal_to_value : value -> model_literal
   val var_to_ident : variation -> model_ident
+  val calc_to_calculation : arithmeticExpr -> model_arith_term 
 end
 
 module ASTXFORM : ASTXFORMFUNCTOR =
@@ -61,6 +65,7 @@ struct
 
   type model_ident = REval.ident
   type model_term = REval.term
+  type model_arith_term = REval.arith_term
   type model_pattern = REval.pattern
   type model_binding = REval.binding
   type model_literal = REval.literal
@@ -162,7 +167,52 @@ struct
           let r_term = ( expr_to_term r_expr ) in 
             ( REval.ReflectiveTerm.InnerSuspension ( l_term, r_term ) )
       | Calculation( a_expr ) -> 
-          raise ( NotYetImplemented "AST xform: Calculation" ) )
+          ( REval.ReflectiveTerm.Calculation
+              ( calc_to_calculation a_expr ) ) )
+    and calc_to_calculation a_expr =
+        match a_expr with
+            Division( a1_expr, a2_expr ) ->
+              ( REval.ReflectiveTerm.Division
+                  (
+                    ( calc_to_calculation a1_expr ),
+                    ( calc_to_calculation a2_expr )
+                  )
+              )                  
+          | Addition( a1_expr, a2_expr ) ->
+              ( REval.ReflectiveTerm.Addition
+                  (
+                    ( calc_to_calculation a1_expr ),
+                    ( calc_to_calculation a2_expr )
+                  )
+              )
+          | Multiplication( a1_expr, a2_expr ) ->
+              ( REval.ReflectiveTerm.Multiplication
+                  (
+                    ( calc_to_calculation a1_expr ),
+                    ( calc_to_calculation a2_expr )
+                  )
+              )
+          | Juxtaposition( a1_expr, a2_expr ) ->
+              ( REval.ReflectiveTerm.Juxtaposition
+                  (
+                    ( calc_to_calculation a1_expr ),
+                    ( calc_to_calculation a2_expr )
+                  )
+              )
+          | Negation( a_expr ) ->
+              ( REval.ReflectiveTerm.Negation
+                  ( calc_to_calculation a_expr )
+              )
+          | Mention( v ) ->
+              ( REval.ReflectiveTerm.Mention
+                  ( REval.ReflectiveTerm.Identifier
+                      ( var_to_ident v ) )
+              )
+          | Actualization( lit ) ->
+              ( REval.ReflectiveTerm.Actualization
+                  ( literal_to_value lit ) )
+          | Aggregation( expr ) ->
+              ( REval.ReflectiveTerm.Aggregation ( expr_to_term expr ) )
   and ptrn_to_pattern ptn = 
     ( match ptn with 
         Element( Tag( LIdent( fnctr ) ), elems_expr ) -> 
@@ -408,5 +458,13 @@ struct
       | Reification( e ) -> 
           ( REval.ReflectiveTerm.Reification ( expr_to_term e ) ) )     
   and var_to_ident v =
-    raise ( NotYetImplemented "var_to_ident" )
+    match v with
+        Atomic( UIdent( s ) ) ->
+          ( REval.ReflectiveNominal.Symbol ( Symbols.Opaque s ) )
+            (* BUGBUG -- lgm -- this doesn't line up with term Wild *)
+      | Abandon( Wild( s ) ) -> 
+          ( REval.ReflectiveNominal.Symbol ( Symbols.Opaque s ) )
+      | Transcription( expr ) ->
+          ( REval.ReflectiveNominal.Transcription
+              ( expr_to_term expr ) )
 end
