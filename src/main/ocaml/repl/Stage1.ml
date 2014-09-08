@@ -32,6 +32,8 @@ sig
   val literal_to_value : value -> model_literal
   val var_to_ident : variation -> model_ident
   val calc_to_calculation : arithmeticExpr -> model_arith_term 
+
+  val desugar : expr -> expr
 end
 
 module type ASTXFORMFUNCTOR =
@@ -55,6 +57,8 @@ sig
   val literal_to_value : value -> model_literal
   val var_to_ident : variation -> model_ident
   val calc_to_calculation : arithmeticExpr -> model_arith_term 
+
+  val desugar : expr -> expr
 end
 
 module ASTXFORM : ASTXFORMFUNCTOR =
@@ -107,29 +111,13 @@ struct
           let f_term = ( expr_to_term f_expr ) in 
             ( REval.ReflectiveTerm.Condition ( test_term, t_term, f_term ) ) 
       | Comprehension( binds, e_expr ) -> 
-          let bindings =
-            ( List.map ( fun b -> ( bind_to_binding b ) ) binds ) in 
-          let e_term = ( expr_to_term e_expr ) in 
-            ( REval.ReflectiveTerm.Comprehension ( bindings, e_term ) ) 
+          ( expr_to_term ( desugar e ) )
       | Consolidation( binds, e_expr ) -> 
-          let bindings = 
-            ( List.map ( fun b -> ( bind_to_binding b ) ) binds ) in 
-          let e_term = ( expr_to_term e_expr ) in 
-            ( REval.ReflectiveTerm.Consolidation ( bindings, e_term ) ) 
+          ( expr_to_term ( desugar e ) )
       | Filtration( binds, ptns, e_expr ) -> 
-          let bindings = 
-            ( List.map ( fun b -> ( bind_to_binding b ) ) binds ) in 
-          let patterns = 
-            ( List.map ( fun ptn -> ( ptrn_to_pattern ptn ) ) ptns ) in 
-          let e_term = ( expr_to_term e_expr ) in 
-            ( REval.ReflectiveTerm.Filtration ( bindings, patterns, e_term ) ) 
+          ( expr_to_term ( desugar e ) )
       | Concentration( binds, ptns, e_expr ) -> 
-          let bindings = 
-            ( List.map ( fun b -> ( bind_to_binding b ) ) binds ) in 
-          let patterns = 
-            ( List.map ( fun ptn -> ( ptrn_to_pattern ptn ) ) ptns ) in 
-          let e_term = ( expr_to_term e_expr ) in 
-            ( REval.ReflectiveTerm.Concentration ( bindings, patterns, e_term ) )
+          ( expr_to_term ( desugar e ) )
       | Equation( l_expr, r_expr ) -> 
           let l_term = ( expr_to_term l_expr ) in 
           let r_term = ( expr_to_term r_expr ) in 
@@ -468,4 +456,265 @@ struct
       | Transcription( expr ) ->
           ( REval.ReflectiveNominal.Transcription
               ( expr_to_term expr ) )
+  and desugar e = 
+    match e with 
+
+(*     base case: *)
+(*     [| from( ptn <- e ) return e_rslt |]  *)
+(*         = *)
+(*     ( map ( fun x -> ( let ptn = x in [| e_rslt |] ) ) [| e |] ) *)
+
+(*     a simple example: *)
+(*     [| from( ptn1 <- e1; ptn2 <- e2 ) return e_rslt |]  *)
+(*     = *)
+(*     ( bind *)
+(*         [| e1 |] *)
+(*         ( fun y -> *)
+(*           match y with *)
+(*               ptn -> *)
+(*                 ( map ( fun x -> ( let ptn2 = x in [| e_rslt |] ) ) [| e2 |] ) *)
+(*             | _ -> ( fail y ) ) *)
+(*     ) *)
+
+(*     general case: *)
+(*     [| from( ptn <- e; bindings ) return e_rslt |]  *)
+(*     = *)
+(*     ( bind [| e |] *)
+(*         ( fun y -> *)
+(*           match y with *)
+(*               ptn -> [| from( bindings ) return e_rslt |]  *)
+(*             | _ -> ( fail y ) ) ) *)
+
+(*     from( ptn <- e; bindings ; if cond ) return e_rslt *)
+(*     = *)
+(*     ( bind [| e |] *\) *)
+(*       ( fun y -> *)
+(*         match ( filter ( fun a -> ( cond a ) ) y ) with *)
+(*             ptn -> [| from( bindings ) return e_rslt |] *)
+(*           | _ -> ( fail y ) ) ) *)
+
+        Comprehension( [], e_expr ) -> ( desugar e_expr )
+      | Comprehension( Question( ptrn, expr ) :: [], e_expr ) ->  
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in
+          let map_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+          let map_expr_actls = 
+            [
+              ( Abstraction
+                  ( x_fml, ( Supposition ( ptrn, x_mtn, ( desugar e_expr ) ) ) ) );
+              ( desugar expr )
+            ] in 
+            ( Application ( map_expr_op, map_expr_actls ) )
+      | Comprehension( Question( ptrn, expr ) :: binds, e_expr ) ->  
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in
+          let n_expr = Comprehension( binds, e_expr ) in
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+            ( Application
+                (
+                  bind_expr_op,
+                  [
+                    ( Abstraction
+                        ( x_fml, ( Supposition ( ptrn, x_mtn, ( desugar n_expr ) ) ) ) );
+                    ( desugar expr )
+                  ]
+                )
+            )
+              (* BUGBUG -- lgm -- remember to return unit *)
+      | Consolidation( [], e_expr ) -> ( desugar e_expr )
+      | Consolidation( Question( ptrn, expr ) :: [], e_expr ) ->  
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let map_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+            ( Application
+                (
+                  map_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar e_expr ) ) ) ) );
+                    ( desugar expr )
+                  ]
+                )
+            )
+      | Consolidation( Question( ptrn, expr ) :: binds, e_expr ) ->  
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let n_expr = Consolidation( binds, e_expr ) in
+            ( Application
+                (
+                  bind_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar n_expr ) ) ) ) );
+                    ( desugar expr )
+                  ]
+                )
+            )
+              (* BUGBUG -- lgm -- ptns need to be lifted to exprs *)
+      | Filtration( Question( ptrn, expr ) :: [], ptns, e_expr ) ->   
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in          
+          let map_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+          let fltr_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Application
+                (
+                  map_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar e_expr ) ) )
+                        )
+                    );
+                    ( Application
+                        (
+                          fltr_expr_op,
+                          [
+                            ( Abstraction
+                                (
+                                  y_fml,
+                                  ( Supposition ( ptrn, y_mtn, y_mtn ) ) (* BUGBUG -- lgm -- this is where the cond should be called *)
+                                ) 
+                            );
+                            ( desugar expr )
+                          ]
+                        )
+                    )
+                  ]
+                )
+            )
+      | Filtration( Question( ptrn, expr ) :: binds, ptns, e_expr ) ->   
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in          
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let fltr_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+          let n_expr = Filtration( binds, ptns, e_expr ) in
+            ( Application
+                (
+                  bind_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar n_expr ) ) )
+                        )
+                    );
+                    ( Application
+                        (
+                          fltr_expr_op,
+                          [
+                            ( Abstraction
+                                (
+                                  y_fml,
+                                  ( Supposition ( ptrn, y_mtn, y_mtn ) ) (* BUGBUG -- lgm -- this is where the cond should be called *)
+                                ) 
+                            );
+                            ( desugar expr )
+                          ]
+                        )
+                    )
+                  ]
+                )
+            )
+              
+      (* BUGBUG -- lgm -- ptns need to be lifted to exprs *)
+      (* BUGBUG -- lgm -- remember to return unit *)
+      | Concentration( Question( ptrn, expr ) :: [], ptns, e_expr ) ->   
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in                    
+          let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in                    
+          let map_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+          let fltr_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Application
+                (
+                  map_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar e_expr ) ) )
+                        )
+                    );
+                    ( Application
+                        (
+                          fltr_expr_op,
+                          [
+                            ( Abstraction
+                                (
+                                  y_fml,
+                                  ( Supposition ( ptrn, y_mtn, y_mtn ) ) (* BUGBUG -- lgm -- this is where the cond should be called *)
+                                ) 
+                            );
+                            ( desugar expr )
+                          ]
+                        )
+                    )
+                  ]
+                )
+            )
+      | Concentration( Question( ptrn, expr ) :: binds, ptns, e_expr ) ->   
+          let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in                    
+          let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
+          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in                    
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let fltr_expr_op = 
+            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+          let n_expr = Concentration( binds, ptns, e_expr ) in
+            ( Application
+                (
+                  bind_expr_op,
+                  [
+                    ( Abstraction
+                        (
+                          x_fml,
+                          ( Supposition ( ptrn, x_mtn, ( desugar n_expr ) ) )
+                        )
+                    );
+                    ( Application
+                        (
+                          fltr_expr_op,
+                          [
+                            ( Abstraction
+                                (
+                                  y_fml,
+                                  ( Supposition ( ptrn, y_mtn, y_mtn ) ) (* BUGBUG -- lgm -- this is where the cond should be called *)
+                                ) 
+                            );
+                            ( desugar expr )
+                          ]
+                        )
+                    )
+                  ]
+                )
+            )
 end
