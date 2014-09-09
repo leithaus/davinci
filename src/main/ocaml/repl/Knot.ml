@@ -156,7 +156,7 @@ struct
       | Symbol( _ ) -> 
           raise (NotYetImplemented "Debruijn toString")
   let fresh () = 
-    ( Symbol ( Opaque ( Uuidm.to_string ( Uuidm.create `V4 ) ) ) )
+    ( Symbol ( Symbols.Opaque ( Uuidm.to_string ( Uuidm.create `V4 ) ) ) )
 end
 and TERM :
   functor ( Nominal : ( NOMINALS with type symbol = Symbols.symbol ) ) ->
