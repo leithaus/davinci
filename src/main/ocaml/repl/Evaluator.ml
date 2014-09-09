@@ -546,7 +546,7 @@ struct
           raise ( NotYetImplemented "Negation" )
       | ReflectiveTerm.Mention( n ) ->
           ( match ( n, e ) with
-              ( Identifier( v ), ReflectiveValue.Env( renv ) ) ->
+              ( ReflectiveTerm.Identifier( v ), ReflectiveValue.Env( renv ) ) ->
                 ( match ( ReflectiveEnv.lookup ( v, renv ) ) with
                     Some( rslt ) ->
                       ( M.m_unit ( apply_k k rslt ) )
