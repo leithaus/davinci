@@ -6,7 +6,6 @@
 (* Description:  *)
 (* ------------------------------------------------------------------------ *)
 
-(* open Abscacao *)
 open Environments
 open Nominals
 open Terms
@@ -577,7 +576,7 @@ struct
       | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
   and apply_closure op v k =
     match op with
-        Closure( c_ptn, c_term, c_env ) ->
+        ReflectiveValue.Closure( c_ptn, c_term, c_env ) ->
           let nc_ptn : pattern = c_ptn in
           ( match ( ( unify nc_ptn v ), c_env ) with
               ( Some( ReflectiveValue.Env( c_ptn_env ) ), ReflectiveValue.Env( c_renv ) ) ->
