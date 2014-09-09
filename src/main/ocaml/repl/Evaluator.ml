@@ -6,7 +6,7 @@
 (* Description:  *)
 (* ------------------------------------------------------------------------ *)
 
-open Abscacao
+(* open Abscacao *)
 open Environments
 open Nominals
 open Terms
@@ -443,7 +443,7 @@ struct
           ( calculate aterm e k )
   and calculate a e k =
     match a with 
-        Division( aterm1, aterm2 ) ->
+        ReflectiveTerm.Division( aterm1, aterm2 ) ->
           ( M.m_bind
               ( calculate aterm1 e k )
               ( fun a ->
@@ -476,7 +476,7 @@ struct
               )
           )
             
-      | Addition( aterm1, aterm2 ) ->
+      | ReflectiveTerm.Addition( aterm1, aterm2 ) ->
           ( M.m_bind
               ( calculate aterm1 e k )
               ( fun a ->
@@ -508,7 +508,7 @@ struct
                 )
               )
           )
-      | Multiplication( aterm1, aterm2 ) ->
+      | ReflectiveTerm.Multiplication( aterm1, aterm2 ) ->
           ( M.m_bind
               ( calculate aterm1 e k )
               ( fun a ->
@@ -540,11 +540,11 @@ struct
                 )
               )
           )
-      | Juxtaposition( aterm1, aterm2 ) ->
+      | ReflectiveTerm.Juxtaposition( aterm1, aterm2 ) ->
           raise ( NotYetImplemented "Juxtaposition" )
-      | Negation( aterm ) ->
+      | ReflectiveTerm.Negation( aterm ) ->
           raise ( NotYetImplemented "Negation" )
-      | Mention( n ) ->
+      | ReflectiveTerm.Mention( n ) ->
           ( match ( n, e ) with
               ( Identifier( v ), ReflectiveValue.Env( renv ) ) ->
                 ( match ( ReflectiveEnv.lookup ( v, renv ) ) with
@@ -552,9 +552,9 @@ struct
                       ( M.m_unit ( apply_k k rslt ) )
                   | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
-      | Actualization( aterm ) ->
+      | ReflectiveTerm.Actualization( aterm ) ->
           raise ( NotYetImplemented "Actualization" )
-      | Aggregation( aterm ) ->
+      | ReflectiveTerm.Aggregation( aterm ) ->
           raise ( NotYetImplemented "Aggregation" )
   and materialize lit = 
     match lit with
