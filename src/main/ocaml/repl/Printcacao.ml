@@ -192,7 +192,7 @@ and prtValue (i:int) (e:value) : doc = match e with
   |    StringLiteral str -> prPrec i 0 (concatD [prtString 0 str])
   |    IntegerLiteral n -> prPrec i 0 (concatD [prtInt 0 n])
   |    DoubleLiteral d -> prPrec i 0 (concatD [prtFloat 0 d])
-  |    Reification expr -> prPrec i 0 (concatD [render "$" ; prtExpr 0 expr ; render "$"])
+  |    Reification expr -> prPrec i 0 (concatD [render "<<" ; prtExpr 0 expr ; render ">>"])
 
 
 and prtDuality (i:int) (e:duality) : doc = match e with

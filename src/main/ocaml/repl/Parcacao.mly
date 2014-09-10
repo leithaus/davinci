@@ -58,18 +58,18 @@ open Lexing
 %token SYMB50 /* ' */
 %token SYMB51 /* [ */
 %token SYMB52 /* ] */
-%token SYMB53 /* $ */
-%token SYMB54 /* & */
-%token SYMB55 /* => */
-%token SYMB56 /* ~ */
-%token SYMB57 /* :pwd */
-%token SYMB58 /* :cd */
-%token SYMB59 /* :exit */
-%token SYMB60 /* :type */
-%token SYMB61 /* :desugar */
-%token SYMB62 /* :parse */
-%token SYMB63 /* , */
-%token SYMB64 /* . */
+%token SYMB53 /* << */
+%token SYMB54 /* >> */
+%token SYMB55 /* & */
+%token SYMB56 /* => */
+%token SYMB57 /* ~ */
+%token SYMB58 /* :pwd */
+%token SYMB59 /* :cd */
+%token SYMB60 /* :exit */
+%token SYMB61 /* :type */
+%token SYMB62 /* :desugar */
+%token SYMB63 /* :parse */
+%token SYMB64 /* , */
 
 %token TOK_EOF
 %token <string> TOK_Ident
@@ -81,13 +81,8 @@ open Lexing
 %token <string> TOK_LIdent
 %token <string> TOK_Wild
 
-%start pRequest /* pExpr pArithmeticExpr pBinding pPattern pVariation
-%pLyst pValue pDuality pSymbol pTypeT pTypeAbstraction
-%pTypeApplication pTypeVar pStructureType pGType pForm pFormFormals
-%pFormVar pGForm pOuterShellRequest pInnerShellRequest pExpr_list
-%pPattern_list pBinding_list pTypeVar_list pTypeT_list pFormVar_list */
+%start pRequest pExpr pArithmeticExpr pBinding pPattern pVariation pLyst pValue pDuality pSymbol pTypeT pTypeAbstraction pTypeApplication pTypeVar pStructureType pGType pForm pFormFormals pFormVar pGForm pOuterShellRequest pInnerShellRequest pExpr_list pPattern_list pBinding_list pTypeVar_list pTypeT_list pFormVar_list
 %type <Abscacao.request> pRequest
-/*
 %type <Abscacao.expr> pExpr
 %type <Abscacao.arithmeticExpr> pArithmeticExpr
 %type <Abscacao.binding> pBinding
@@ -115,14 +110,12 @@ open Lexing
 %type <Abscacao.typeVar list> pTypeVar_list
 %type <Abscacao.typeT list> pTypeT_list
 %type <Abscacao.formVar list> pFormVar_list
-*/
+
 
 %%
-pRequest : request SYMB64 { $1 }
-    | TOK_EOF { ( InnerShell ExitRequest ) }
-    | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+pRequest : request TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
-/*
 pExpr : expr TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
@@ -203,7 +196,7 @@ pTypeT_list : type1_list TOK_EOF { $1 }
 
 pFormVar_list : formVar_list TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
-*/
+
 
 request : expr { Evaluation $1 } 
   | SYMB1 expr SYMB2 typeT { TypeCheck ($2, $4) }
@@ -251,18 +244,23 @@ expr5 : SYMB17 variation { Reflection $2 }
 ;
 
 arithmeticExpr : arithmeticExpr SYMB18 arithmeticExpr1 { Division ($1, $3) } 
+  | arithmeticExpr1 {  $1 }
 ;
 
 arithmeticExpr1 : arithmeticExpr1 SYMB19 arithmeticExpr2 { Addition ($1, $3) } 
+  | arithmeticExpr2 {  $1 }
 ;
 
 arithmeticExpr2 : arithmeticExpr2 SYMB20 arithmeticExpr3 { Multiplication ($1, $3) } 
+  | arithmeticExpr3 {  $1 }
 ;
 
 arithmeticExpr3 : arithmeticExpr3 SYMB21 arithmeticExpr4 { Juxtaposition ($1, $3) } 
+  | arithmeticExpr4 {  $1 }
 ;
 
 arithmeticExpr4 : SYMB22 arithmeticExpr5 { Negation $2 } 
+  | arithmeticExpr5 {  $1 }
 ;
 
 arithmeticExpr5 : variation { Mention $1 } 
@@ -319,7 +317,7 @@ value : duality { BooleanLiteral $1 }
   | string { StringLiteral $1 }
   | int { IntegerLiteral $1 }
   | float { DoubleLiteral $1 }
-  | SYMB53 expr SYMB53 { Reification $2 }
+  | SYMB53 expr SYMB54 { Reification $2 }
 ;
 
 duality : TOK_true { Verity  } 
@@ -370,7 +368,7 @@ gType : TOK_bool { BooleanType  }
   | TOK_float { FloatType  }
 ;
 
-form : form SYMB54 form1 { ConjunctiveForm ($1, $3) } 
+form : form SYMB55 form1 { ConjunctiveForm ($1, $3) } 
   | form1 {  $1 }
 ;
 
@@ -378,7 +376,7 @@ form1 : form1 SYMB19 form2 { DisjunctiveForm ($1, $3) }
   | form2 {  $1 }
 ;
 
-form2 : form2 SYMB55 form3 { ImplicativeForm ($1, $3) } 
+form2 : form2 SYMB56 form3 { ImplicativeForm ($1, $3) } 
   | SYMB10 form SYMB11 {  $2 }
 ;
 
@@ -393,7 +391,7 @@ form5 : SYMB13 form5 SYMB14 form6 { ProbativeForm ($2, $4) }
 
 form6 : TOK_rec uIdent SYMB9 form6 { RecursiveForm ($2, $4) } 
   | SYMB17 form6 { ReflectionForm $2 }
-  | SYMB56 form6 { NegativeForm $2 }
+  | SYMB57 form6 { NegativeForm $2 }
   | uIdent { ReferentialForm $1 }
   | lIdent { UserDefinedForm $1 }
   | gForm { GroundForm $1 }
@@ -416,14 +414,14 @@ gForm : TOK_T { VerityForm  }
 ;
 
 outerShellRequest : string { EscapeRequest $1 } 
-  | SYMB57 { PwdRequest  }
-  | SYMB58 { CdRequest  }
+  | SYMB58 { PwdRequest  }
+  | SYMB59 { CdRequest  }
 ;
 
-innerShellRequest : SYMB59 { ExitRequest  } 
-  | SYMB60 { TypeRequest  }
-  | SYMB61 { DesugarRequest  }
-  | SYMB62 { ParseRequest  }
+innerShellRequest : SYMB60 { ExitRequest  } 
+  | SYMB61 { TypeRequest  }
+  | SYMB62 { DesugarRequest  }
+  | SYMB63 { ParseRequest  }
 ;
 
 expr2_list : expr2 { (fun x -> [x]) $1 } 
@@ -431,24 +429,24 @@ expr2_list : expr2 { (fun x -> [x]) $1 }
 ;
 
 pattern_list : pattern { (fun x -> [x]) $1 } 
-  | pattern SYMB63 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | pattern SYMB64 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 binding_list : /* empty */ { []  } 
   | binding { (fun x -> [x]) $1 }
-  | binding SYMB63 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | binding SYMB64 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 typeVar_list : typeVar { (fun x -> [x]) $1 } 
-  | typeVar SYMB63 typeVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | typeVar SYMB64 typeVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 type1_list : type1 { (fun x -> [x]) $1 } 
-  | type1 SYMB63 type1_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | type1 SYMB64 type1_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 formVar_list : formVar { (fun x -> [x]) $1 } 
-  | formVar SYMB63 formVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | formVar SYMB64 formVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 

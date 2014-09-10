@@ -552,9 +552,9 @@ struct
                   | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | ReflectiveTerm.Actualization( aterm ) ->
-          raise ( NotYetImplemented "Actualization" )
+          ( M.m_unit ( materialize aterm ) )
       | ReflectiveTerm.Aggregation( aterm ) ->
-          raise ( NotYetImplemented "Aggregation" )
+          ( reduce aterm e k )
   and materialize lit = 
     match lit with
         ReflectiveTerm.BooleanLiteral( ReflectiveTerm.Verity ) ->

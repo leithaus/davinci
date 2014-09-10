@@ -51,7 +51,25 @@ struct
       "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtRequest t ^ "\n"
 
   let print_rslt v =
-    raise ( NotYetImplemented "print_rslt" )
+    match v with 
+        Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Boolean( true ) ) ->
+          "true"
+      | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Boolean( false ) ) ->
+          "false"
+      | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.String( s ) ) ->
+          ( "\"" ^ s ^ "\"" )
+      | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Integer( i ) ) ->
+          ( string_of_int i )
+      | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Double( d ) ) ->
+          ( string_of_float d )
+      | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Reification( t ) ) ->
+          raise ( NotYetImplemented "render reification" )
+      | Pipeline.REval.ReflectiveValue.Closure( p, t, e ) ->
+          raise ( NotYetImplemented "render closure" )
+      | Pipeline.REval.ReflectiveValue.BOTTOM ->
+          raise ( NotYetImplemented "render bottom" )
+      | Pipeline.REval.ReflectiveValue.UNIT ->
+          raise ( NotYetImplemented "render unit" )
 
   let eval m_term =
     ( Pipeline.REval.reduce
