@@ -10,15 +10,15 @@ Prerequisites for build:
 
 To build:
 
- git clone https://github.com/leithaus/davinci.git
- cd davinci
- edit setup.data to point to your ocaml executables; making sure ocamlfind points to the opam ocamlfind
- ocaml setup.ml configure
- make
+* git clone https://github.com/leithaus/davinci.git
+* cd davinci
+* edit setup.data to point to your ocaml executables; making sure ocamlfind points to the opam ocamlfind
+* ocaml setup.ml configure
+* make
  
 If you have any problems feel free to contact lgreg.meredith@gmail.com
 
-bash-3.2$ cacao
+```bash-3.2$ cacao
  *** Cacao Top Level version 0.01 *** 
 > ( fun x -> x )
 
@@ -38,4 +38,4 @@ bash-3.2$ cacao
 > :exit
 
 bash-3.2$ 
-
+```
