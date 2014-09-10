@@ -18,25 +18,24 @@ To build:
  
 If you have any problems feel free to contact lgreg.meredith@gmail.com
 
->bash-3.2$ cacao
->*** Cacao Top Level version 0.01 *** 
->> ( fun x -> x )
->
->#<closure>
->> let x = 1 in x
->
->1
->> ( fun x -> x ) 1 ;;
->
->1
->> ( fun x -> ( x * 2.0 ) ) 2 ;; 
->
->4.
->> ( fun x -> x ) ( fun x -> x ) ;; 
->
->#<closure>
->
->> :exit
->
->bash-3.2$ 
+    bash-3.2$ cacao
+    *** Cacao Top Level version 0.01 *** 
+    > ( fun x -> x )
+    
+    #<closure>
+    > let x = 1 in x
+    
+    1
+    > ( fun x -> x ) 1 ;;
+    
+    1
+    > ( fun x -> ( x * 2.0 ) ) 2 ;; 
+    
+    >4.
+    > ( fun x -> x ) ( fun x -> x ) ;; 
+    
+    #<closure>
+    > :exit
+    
+    bash-3.2$ 
 
