@@ -22,7 +22,7 @@ Evaluation      . Request         ::= Expr                                      
 TypeCheck       . Request         ::= "|-" Expr ":" Type                           ;
 ModelCheck      . Request         ::= "|=" Expr ":" Form                           ;
 OuterShell      . Request         ::= ":!" OuterShellRequest                       ;
-InnerShell      . Request         ::= ":?" InnerShellRequest                       ;
+InnerShell      . Request         ::= InnerShellRequest                            ;
 
 -- --------------------------------------------------------------------------------
 -- Terms
@@ -87,6 +87,12 @@ Mention         . ArithmeticExpr5 ::= Variation                                 
 Actualization   . ArithmeticExpr5 ::= Value                                        ;
 Aggregation     . ArithmeticExpr5 ::= "(" Expr ")"                                 ;
 
+_               . ArithmeticExpr  ::= ArithmeticExpr1                              ;
+_               . ArithmeticExpr1 ::= ArithmeticExpr2                              ;
+_               . ArithmeticExpr2 ::= ArithmeticExpr3                              ;
+_               . ArithmeticExpr3 ::= ArithmeticExpr4                              ;
+_               . ArithmeticExpr4 ::= ArithmeticExpr5                              ;
+
 -- Bindings
 
 Question        . Binding         ::= Pattern "<-" Expr5                           ;
@@ -142,7 +148,7 @@ BooleanLiteral  . Value           ::= Duality                                   
 StringLiteral   . Value           ::= String                                       ;
 IntegerLiteral  . Value           ::= Integer                                      ;
 DoubleLiteral   . Value           ::= Double                                       ;
-Reification     . Value           ::= "$" Expr "$"                                 ;
+Reification     . Value           ::= "<<" Expr ">>"                               ;
 
 Verity          . Duality         ::= "true"                                       ;
 Absurdity       . Duality         ::= "false"                                      ;
@@ -227,9 +233,9 @@ PwdRequest      . OuterShellRequest ::= ":pwd"                                  
 CdRequest       . OuterShellRequest ::= ":cd"                                      ;
 
 ExitRequest     . InnerShellRequest ::= ":exit"                                    ;
-TypeRequest     . InnerShellRequest ::= ":type"                                    ;
-DesugarRequest  . InnerShellRequest ::= ":desugar"                                 ;
-ParseRequest    . InnerShellRequest ::= ":parse"                                   ;
+TypeRequest     . InnerShellRequest ::= ":type" Expr                               ;
+DesugarRequest  . InnerShellRequest ::= ":desugar" Expr                            ;
+ParseRequest    . InnerShellRequest ::= ":parse" Expr                              ;
 
 -- --------------------------------------------------------------------------------
 -- Lists
