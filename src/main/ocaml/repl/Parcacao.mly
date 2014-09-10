@@ -301,7 +301,7 @@ pattern : symbol SYMB8 pattern_list SYMB9 { Element ($1, $3) }
   | SYMB46 variation variation { PtnNegate ($2, $3) }
 ;
 
-variation : uIdent { Atomic $1 } 
+variation : lIdent { Atomic $1 } 
   | wild { Abandon $1 }
   | SYMB47 expr SYMB48 { Transcription $2 }
 ;

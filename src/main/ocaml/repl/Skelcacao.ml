@@ -100,7 +100,7 @@ and transPattern (x : pattern) : result = match x with
 
 
 and transVariation (x : variation) : result = match x with
-    Atomic uident -> failure x
+    Atomic lident -> failure x
   | Abandon wild -> failure x
   | Transcription expr -> failure x
 

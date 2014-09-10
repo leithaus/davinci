@@ -13,6 +13,7 @@ open Evaluator
 open Monad
 open Stage1
 open Cfg
+open BatChar
 
 module type REPLS =
 sig
@@ -69,11 +70,11 @@ struct
       | Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Reification( t ) ) ->
           raise ( NotYetImplemented "render reification" )
       | Pipeline.REval.ReflectiveValue.Closure( p, t, e ) ->
-          raise ( NotYetImplemented "render closure" )
+          "#<closure>"
       | Pipeline.REval.ReflectiveValue.BOTTOM ->
           raise ( NotYetImplemented "render bottom" )
       | Pipeline.REval.ReflectiveValue.UNIT ->
-          raise ( NotYetImplemented "render unit" )
+          "()"
 
   let eval m_term =
     ( Pipeline.REval.reduce

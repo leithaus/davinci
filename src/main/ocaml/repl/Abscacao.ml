@@ -79,7 +79,7 @@ and pattern =
  | PtnNegate of variation * variation
 
 and variation =
-   Atomic of uIdent
+   Atomic of lIdent
  | Abandon of wild
  | Transcription of expr
 

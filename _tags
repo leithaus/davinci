@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: d7f9520c7309c5cb721e1e3f35e2eb42)
+# DO NOT EDIT (digest: e88d3923a5d822e9a54d12a9c4387090)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -14,9 +14,11 @@
 "_darcs": -traverse
 "_darcs": not_hygienic
 # Executable davinci
+"src/main/ocaml/repl/Cacao.byte": pkg_batteries
 "src/main/ocaml/repl/Cacao.byte": pkg_uuidm
 "src/main/ocaml/repl/Cacao.byte": pkg_config-file
 "src/main/ocaml/repl/Cacao.byte": pkg_delimcc
+<src/main/ocaml/repl/*.ml{,i}>: pkg_batteries
 <src/main/ocaml/repl/*.ml{,i}>: pkg_uuidm
 <src/main/ocaml/repl/*.ml{,i}>: pkg_config-file
 <src/main/ocaml/repl/*.ml{,i}>: pkg_delimcc

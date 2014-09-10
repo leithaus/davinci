@@ -213,7 +213,7 @@ struct
               ( List.map ptrn_to_pattern elems_expr ) in 
               ( REval.ReflectiveTerm.Element( fnctr_term, elems_term ) )
           ) 
-      | Variable( Atomic( UIdent( v ) ) ) -> 
+      | Variable( Atomic( LIdent( v ) ) ) -> 
           ( REval.ReflectiveTerm.Variable
               ( REval.ReflectiveTerm.Identifier
                   ( REval.ReflectiveNominal.Symbol ( Symbols.Opaque v ) ) )
@@ -448,7 +448,7 @@ struct
           ( REval.ReflectiveTerm.Reification ( expr_to_term e ) ) )     
   and var_to_ident v =
     match v with
-        Atomic( UIdent( s ) ) ->
+        Atomic( LIdent( s ) ) ->
           ( REval.ReflectiveNominal.Symbol ( Symbols.Opaque s ) )
             (* BUGBUG -- lgm -- this doesn't line up with term Wild *)
       | Abandon( Wild( s ) ) -> 
@@ -496,10 +496,10 @@ struct
         Comprehension( [], e_expr ) -> ( desugar e_expr )
       | Comprehension( Question( ptrn, expr ) :: [], e_expr ) ->  
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in
           let map_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "map" ) ) ) ) in
           let map_expr_actls = 
             [
               ( Abstraction
@@ -509,10 +509,10 @@ struct
             ( Application ( map_expr_op, map_expr_actls ) )
       | Comprehension( Question( ptrn, expr ) :: binds, e_expr ) ->  
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in
           let n_expr = Comprehension( binds, e_expr ) in
-          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( LIdent "bind" ) ) ) ) in
             ( Application
                 (
                   bind_expr_op,
@@ -527,10 +527,10 @@ struct
       | Consolidation( [], e_expr ) -> ( desugar e_expr )
       | Consolidation( Question( ptrn, expr ) :: [], e_expr ) ->  
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in          
           let map_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "map" ) ) ) ) in
             ( Application
                 (
                   map_expr_op,
@@ -545,9 +545,9 @@ struct
             )
       | Consolidation( Question( ptrn, expr ) :: binds, e_expr ) ->  
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
-          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in          
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( LIdent "bind" ) ) ) ) in
           let n_expr = Consolidation( binds, e_expr ) in
             ( Application
                 (
@@ -564,15 +564,15 @@ struct
               (* BUGBUG -- lgm -- ptns need to be lifted to exprs *)
       | Filtration( Question( ptrn, expr ) :: [], ptns, e_expr ) ->   
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in          
           let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
-          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in          
+          let y_fml = ( Variable ( Atomic ( LIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( LIdent y_str ) ) ) ) in          
           let map_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "map" ) ) ) ) in
           let fltr_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "filter" ) ) ) ) in
             ( Application
                 (
                   map_expr_op,
@@ -602,14 +602,14 @@ struct
             )
       | Filtration( Question( ptrn, expr ) :: binds, ptns, e_expr ) ->   
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in          
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in          
           let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
-          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in          
-          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let y_fml = ( Variable ( Atomic ( LIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( LIdent y_str ) ) ) ) in          
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( LIdent "bind" ) ) ) ) in
           let fltr_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "filter" ) ) ) ) in
           let n_expr = Filtration( binds, ptns, e_expr ) in
             ( Application
                 (
@@ -643,15 +643,15 @@ struct
       (* BUGBUG -- lgm -- remember to return unit *)
       | Concentration( Question( ptrn, expr ) :: [], ptns, e_expr ) ->   
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in                    
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in                    
           let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
-          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in                    
+          let y_fml = ( Variable ( Atomic ( LIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( LIdent y_str ) ) ) ) in                    
           let map_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "map" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "map" ) ) ) ) in
           let fltr_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "filter" ) ) ) ) in
             ( Application
                 (
                   map_expr_op,
@@ -681,14 +681,14 @@ struct
             )
       | Concentration( Question( ptrn, expr ) :: binds, ptns, e_expr ) ->   
           let x_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let x_fml = ( Variable ( Atomic ( UIdent x_str ) ) ) in
-          let x_mtn = ( Calculation ( Mention ( Atomic ( UIdent x_str ) ) ) ) in                    
+          let x_fml = ( Variable ( Atomic ( LIdent x_str ) ) ) in
+          let x_mtn = ( Calculation ( Mention ( Atomic ( LIdent x_str ) ) ) ) in                    
           let y_str = ( REval.ReflectiveNominal.toString ( REval.ReflectiveNominal.fresh() ) ) in
-          let y_fml = ( Variable ( Atomic ( UIdent y_str ) ) ) in
-          let y_mtn = ( Calculation ( Mention ( Atomic ( UIdent y_str ) ) ) ) in                    
-          let bind_expr_op = ( Calculation ( Mention ( Atomic ( UIdent "bind" ) ) ) ) in
+          let y_fml = ( Variable ( Atomic ( LIdent y_str ) ) ) in
+          let y_mtn = ( Calculation ( Mention ( Atomic ( LIdent y_str ) ) ) ) in                    
+          let bind_expr_op = ( Calculation ( Mention ( Atomic ( LIdent "bind" ) ) ) ) in
           let fltr_expr_op = 
-            ( Calculation ( Mention ( Atomic ( UIdent "filter" ) ) ) ) in
+            ( Calculation ( Mention ( Atomic ( LIdent "filter" ) ) ) ) in
           let n_expr = Concentration( binds, ptns, e_expr ) in
             ( Application
                 (

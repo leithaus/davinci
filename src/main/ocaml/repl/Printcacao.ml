@@ -175,7 +175,7 @@ and prtPatternListBNFC _ es : doc = match es with
   | x::xs -> (concatD [prtPattern 0 x ; render "," ; prtPatternListBNFC 0 xs])
 
 and prtVariation (i:int) (e:variation) : doc = match e with
-       Atomic uident -> prPrec i 0 (concatD [prtUIdent 0 uident])
+       Atomic lident -> prPrec i 0 (concatD [prtLIdent 0 lident])
   |    Abandon wild -> prPrec i 0 (concatD [prtWild 0 wild])
   |    Transcription expr -> prPrec i 0 (concatD [render "`" ; prtExpr 0 expr ; render "'"])
 

@@ -2,6 +2,7 @@
 {
 open Parcacao
 open Lexing
+open BatChar
 
 let symbol_table = Hashtbl.create 63
 let _ = List.iter (fun (kwd, tok) -> Hashtbl.add symbol_table kwd tok)
@@ -56,7 +57,7 @@ rule token =
 
         | "(*" ((u # ['*']) | '*' (u # [')']))* ('*')+ ')' { token lexbuf } 
 
-        | l i* {let id = lexeme lexbuf in try Hashtbl.find resword_table id with Not_found -> TOK_Ident id}
+        | l i* {let id = lexeme lexbuf in try Hashtbl.find resword_table id with Not_found -> ( if ( is_uppercase id.[0] ) then ( TOK_UIdent id ) else ( TOK_LIdent id ) )} 
         | rsyms {let id = lexeme lexbuf in try Hashtbl.find symbol_table id with Not_found -> failwith ("internal lexer error: reserved symbol " ^ id ^ " not found in hashtable")}
         | d+ {let i = lexeme lexbuf in TOK_Integer (int_of_string i)}
         | d+ '.' d+ ('e' ('-')? d+)? {let f = lexeme lexbuf in TOK_Double (float_of_string f)}

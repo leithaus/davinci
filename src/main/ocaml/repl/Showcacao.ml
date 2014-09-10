@@ -125,7 +125,7 @@ and showPattern (e:pattern) : showable = match e with
 
 
 and showVariation (e:variation) : showable = match e with
-       Atomic uident -> s2s "Atomic" >> c2s ' ' >> c2s '(' >> showUIdent uident >> c2s ')'
+       Atomic lident -> s2s "Atomic" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
   |    Abandon wild -> s2s "Abandon" >> c2s ' ' >> c2s '(' >> showWild wild >> c2s ')'
   |    Transcription expr -> s2s "Transcription" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
 
