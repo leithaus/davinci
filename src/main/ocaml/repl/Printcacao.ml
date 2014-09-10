@@ -90,7 +90,7 @@ let rec prtRequest (i:int) (e:request) : doc = match e with
   |    TypeCheck (expr, type') -> prPrec i 0 (concatD [render "|-" ; prtExpr 0 expr ; render ":" ; prtTypeT 0 type'])
   |    ModelCheck (expr, form) -> prPrec i 0 (concatD [render "|=" ; prtExpr 0 expr ; render ":" ; prtForm 0 form])
   |    OuterShell outershellrequest -> prPrec i 0 (concatD [render ":!" ; prtOuterShellRequest 0 outershellrequest])
-  |    InnerShell innershellrequest -> prPrec i 0 (concatD [render ":?" ; prtInnerShellRequest 0 innershellrequest])
+  |    InnerShell innershellrequest -> prPrec i 0 (concatD [prtInnerShellRequest 0 innershellrequest])
 
 
 and prtExpr (i:int) (e:expr) : doc = match e with
@@ -290,9 +290,9 @@ and prtOuterShellRequest (i:int) (e:outerShellRequest) : doc = match e with
 
 and prtInnerShellRequest (i:int) (e:innerShellRequest) : doc = match e with
        ExitRequest  -> prPrec i 0 (concatD [render ":exit"])
-  |    TypeRequest  -> prPrec i 0 (concatD [render ":type"])
-  |    DesugarRequest  -> prPrec i 0 (concatD [render ":desugar"])
-  |    ParseRequest  -> prPrec i 0 (concatD [render ":parse"])
+  |    TypeRequest expr -> prPrec i 0 (concatD [render ":type" ; prtExpr 0 expr])
+  |    DesugarRequest expr -> prPrec i 0 (concatD [render ":desugar" ; prtExpr 0 expr])
+  |    ParseRequest expr -> prPrec i 0 (concatD [render ":parse" ; prtExpr 0 expr])
 
 
 

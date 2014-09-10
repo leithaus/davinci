@@ -23,11 +23,11 @@ let load_config_and_begin_repl () =
       ( CacaoScriptConfig.load_config_file config_file_name ); 
 
       let bctl = CacaoScriptConfig.begin_cacao_top_level() in
-      let ftr = CacaoScriptConfig.file_to_read() in
+      let ftr = CacaoScriptConfig.file_to_read() in      
         match bctl with
             true ->
               begin
-                CacaoScriptREPL.read_eval_print_loop ();
+                CacaoScriptREPL.read_eval_print_loop ();                
               end
           | _ -> ()
   end;;
@@ -35,7 +35,16 @@ let load_config_and_begin_repl () =
 match !Sys.interactive with
     true ->
       begin      
-        ( load_config_and_begin_repl () )
+        ( load_config_and_begin_repl () );
+        let ec = CacaoScriptConfig.exit_completely() in
+          match ec with
+              true -> exit( 0 )
+            | _ ->
+                begin
+                  print_string "Dropping to ocaml top level.";
+                  print_newline ();
+                  flush stdout;
+                end
       end
   | _ -> () ;;
     

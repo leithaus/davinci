@@ -104,14 +104,6 @@ struct
         | None -> stdin )
     in
       print_string " *** Cacao Top Level version 0.01 *** \n";
-      ( print_string 
-        (
-          " show parse tree turned: " 
-          ^ ( match show_tree with 
-              true -> "on"
-            | false -> "off" )
-          ^ "\n"
-        ) );
 
       try
         (while (!rslt)
@@ -120,7 +112,6 @@ struct
 	    flush stdout;
 	    let ast = parse channel in            
               begin	                      
-                print_string "Parsed.\n";
                 ( match show_tree with
                     true ->
                       let astStr = showTree ast in          
@@ -140,7 +131,7 @@ struct
                       raise ( NotYetImplemented "OuterShell" )
                   | InnerShell( isreq ) ->
                       match isreq with
-                          ExitRequest -> rslt := true
+                          ExitRequest -> rslt := false
                         | _ -> raise ( NotYetImplemented "other inner shell requests" ) )
               end
           done)

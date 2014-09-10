@@ -206,9 +206,9 @@ and transOuterShellRequest (x : outerShellRequest) : result = match x with
 
 and transInnerShellRequest (x : innerShellRequest) : result = match x with
     ExitRequest  -> failure x
-  | TypeRequest  -> failure x
-  | DesugarRequest  -> failure x
-  | ParseRequest  -> failure x
+  | TypeRequest expr -> failure x
+  | DesugarRequest expr -> failure x
+  | ParseRequest expr -> failure x
 
 
 

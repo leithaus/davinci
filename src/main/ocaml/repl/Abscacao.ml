@@ -169,7 +169,7 @@ and outerShellRequest =
 
 and innerShellRequest =
    ExitRequest
- | TypeRequest
- | DesugarRequest
- | ParseRequest
+ | TypeRequest of expr
+ | DesugarRequest of expr
+ | ParseRequest of expr
 

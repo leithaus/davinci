@@ -231,9 +231,9 @@ and showOuterShellRequest (e:outerShellRequest) : showable = match e with
 
 and showInnerShellRequest (e:innerShellRequest) : showable = match e with
        ExitRequest  -> s2s "ExitRequest" 
-  |    TypeRequest  -> s2s "TypeRequest" 
-  |    DesugarRequest  -> s2s "DesugarRequest" 
-  |    ParseRequest  -> s2s "ParseRequest" 
+  |    TypeRequest expr -> s2s "TypeRequest" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
+  |    DesugarRequest expr -> s2s "DesugarRequest" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
+  |    ParseRequest expr -> s2s "ParseRequest" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
 
 
 
