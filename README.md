@@ -15,6 +15,7 @@ To build:
 * edit setup.data to point to your ocaml executables; making sure ocamlfind points to the opam ocamlfind
 * ocaml setup.ml configure
 * make
+* ./cacaotop.sh
  
 If you have any problems feel free to contact lgreg.meredith@gmail.com
 
