@@ -20,6 +20,14 @@ and transWild (x : wild) : result = match x with
     Wild str -> failure x
 
 
+and transRequest (x : request) : result = match x with
+    Evaluation expr -> failure x
+  | TypeCheck (expr, type') -> failure x
+  | ModelCheck (expr, form) -> failure x
+  | OuterShell outershellrequest -> failure x
+  | InnerShell innershellrequest -> failure x
+
+
 and transExpr (x : expr) : result = match x with
     Sequence (expr0, expr) -> failure x
   | Application (expr, exprs) -> failure x
@@ -119,6 +127,88 @@ and transDuality (x : duality) : result = match x with
 
 and transSymbol (x : symbol) : result = match x with
     Tag lident -> failure x
+
+
+and transType (x : typeT) : result = match x with
+    ProductType (type'0, type') -> failure x
+  | AbstractionType typeabstraction -> failure x
+  | ApplicationType typeapplication -> failure x
+  | FunctionType (type'0, type') -> failure x
+  | UserDefinedType lident -> failure x
+  | GroundType gtype -> failure x
+  | StructuralType structuretype -> failure x
+
+
+and transTypeAbstraction (x : typeAbstraction) : result = match x with
+    TypeListFormals (typevars, type') -> failure x
+
+
+and transTypeApplication (x : typeApplication) : result = match x with
+    TypeListActuals (types, type') -> failure x
+
+
+and transTypeVar (x : typeVar) : result = match x with
+    AtomicTypeVar lident -> failure x
+  | TermTypeVar type' -> failure x
+
+
+and transStructureType (x : structureType) : result = match x with
+    ReflectionType type' -> failure x
+  | AggregationType type' -> failure x
+
+
+and transGType (x : gType) : result = match x with
+    BooleanType  -> failure x
+  | StringType  -> failure x
+  | IntegerType  -> failure x
+  | FloatType  -> failure x
+
+
+and transForm (x : form) : result = match x with
+    ConjunctiveForm (form0, form) -> failure x
+  | DisjunctiveForm (form0, form) -> failure x
+  | ImplicativeForm (form0, form) -> failure x
+  | ProductiveForm (form0, form) -> failure x
+  | AbstractionForm (formformals, form) -> failure x
+  | ProbativeForm (form0, form) -> failure x
+  | RecursiveForm (uident, form) -> failure x
+  | ReflectionForm form -> failure x
+  | NegativeForm form -> failure x
+  | ReferentialForm uident -> failure x
+  | UserDefinedForm lident -> failure x
+  | GroundForm gform -> failure x
+
+
+and transFormFormals (x : formFormals) : result = match x with
+    FormOneFormal formvar -> failure x
+  | FormListFormals formvars -> failure x
+
+
+and transFormVar (x : formVar) : result = match x with
+    AtomicFormVar lident -> failure x
+  | TermFormVar form -> failure x
+
+
+and transGForm (x : gForm) : result = match x with
+    VerityForm  -> failure x
+  | AbsurdityForm  -> failure x
+  | BooleanForm  -> failure x
+  | StringForm  -> failure x
+  | IntegerForm  -> failure x
+  | FloatForm  -> failure x
+
+
+and transOuterShellRequest (x : outerShellRequest) : result = match x with
+    EscapeRequest str -> failure x
+  | PwdRequest  -> failure x
+  | CdRequest  -> failure x
+
+
+and transInnerShellRequest (x : innerShellRequest) : result = match x with
+    ExitRequest  -> failure x
+  | TypeRequest  -> failure x
+  | DesugarRequest  -> failure x
+  | ParseRequest  -> failure x
 
 
 

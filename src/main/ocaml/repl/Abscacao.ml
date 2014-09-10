@@ -4,6 +4,13 @@
 type uIdent = UIdent of string
 and lIdent = LIdent of string
 and wild = Wild of string
+and request =
+   Evaluation of expr
+ | TypeCheck of expr * typeT
+ | ModelCheck of expr * form
+ | OuterShell of outerShellRequest
+ | InnerShell of innerShellRequest
+
 and expr =
    Sequence of expr * expr
  | Application of expr * expr list
@@ -95,4 +102,74 @@ and duality =
 
 and symbol =
    Tag of lIdent
+
+and typeT =
+   ProductType of typeT * typeT
+ | AbstractionType of typeAbstraction
+ | ApplicationType of typeApplication
+ | FunctionType of typeT * typeT
+ | UserDefinedType of lIdent
+ | GroundType of gType
+ | StructuralType of structureType
+
+and typeAbstraction =
+   TypeListFormals of typeVar list * typeT
+
+and typeApplication =
+   TypeListActuals of typeT list * typeT
+
+and typeVar =
+   AtomicTypeVar of lIdent
+ | TermTypeVar of typeT
+
+and structureType =
+   ReflectionType of typeT
+ | AggregationType of typeT
+
+and gType =
+   BooleanType
+ | StringType
+ | IntegerType
+ | FloatType
+
+and form =
+   ConjunctiveForm of form * form
+ | DisjunctiveForm of form * form
+ | ImplicativeForm of form * form
+ | ProductiveForm of form * form
+ | AbstractionForm of formFormals * form
+ | ProbativeForm of form * form
+ | RecursiveForm of uIdent * form
+ | ReflectionForm of form
+ | NegativeForm of form
+ | ReferentialForm of uIdent
+ | UserDefinedForm of lIdent
+ | GroundForm of gForm
+
+and formFormals =
+   FormOneFormal of formVar
+ | FormListFormals of formVar list
+
+and formVar =
+   AtomicFormVar of lIdent
+ | TermFormVar of form
+
+and gForm =
+   VerityForm
+ | AbsurdityForm
+ | BooleanForm
+ | StringForm
+ | IntegerForm
+ | FloatForm
+
+and outerShellRequest =
+   EscapeRequest of string
+ | PwdRequest
+ | CdRequest
+
+and innerShellRequest =
+   ExitRequest
+ | TypeRequest
+ | DesugarRequest
+ | ParseRequest
 

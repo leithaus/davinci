@@ -85,7 +85,15 @@ let rec prtWild _ (Wild i) : doc = render i
 
 
 
-let rec prtExpr (i:int) (e:expr) : doc = match e with
+let rec prtRequest (i:int) (e:request) : doc = match e with
+       Evaluation expr -> prPrec i 0 (concatD [prtExpr 0 expr])
+  |    TypeCheck (expr, type') -> prPrec i 0 (concatD [render "|-" ; prtExpr 0 expr ; render ":" ; prtTypeT 0 type'])
+  |    ModelCheck (expr, form) -> prPrec i 0 (concatD [render "|=" ; prtExpr 0 expr ; render ":" ; prtForm 0 form])
+  |    OuterShell outershellrequest -> prPrec i 0 (concatD [render ":!" ; prtOuterShellRequest 0 outershellrequest])
+  |    InnerShell innershellrequest -> prPrec i 0 (concatD [render ":?" ; prtInnerShellRequest 0 innershellrequest])
+
+
+and prtExpr (i:int) (e:expr) : doc = match e with
        Sequence (expr0, expr) -> prPrec i 0 (concatD [prtExpr 0 expr0 ; render ";" ; prtExpr 1 expr])
   |    Application (expr, exprs) -> prPrec i 1 (concatD [prtExpr 1 expr ; prtExprListBNFC 2 exprs ; render ";;"])
   |    Supposition (pattern, expr0, expr) -> prPrec i 2 (concatD [render "let" ; prtPattern 0 pattern ; render "=" ; prtExpr 2 expr0 ; render "in" ; prtExpr 3 expr])
@@ -194,6 +202,97 @@ and prtDuality (i:int) (e:duality) : doc = match e with
 
 and prtSymbol (i:int) (e:symbol) : doc = match e with
        Tag lident -> prPrec i 0 (concatD [prtLIdent 0 lident])
+
+
+and prtTypeT (i:int) (e:typeT) : doc = match e with
+       ProductType (type'0, type') -> prPrec i 0 (concatD [prtTypeT 0 type'0 ; render "*" ; prtTypeT 1 type'])
+  |    AbstractionType typeabstraction -> prPrec i 1 (concatD [prtTypeAbstraction 0 typeabstraction])
+  |    ApplicationType typeapplication -> prPrec i 1 (concatD [prtTypeApplication 0 typeapplication])
+  |    FunctionType (type'0, type') -> prPrec i 2 (concatD [prtTypeT 2 type'0 ; render "->" ; prtTypeT 3 type'])
+  |    UserDefinedType lident -> prPrec i 4 (concatD [prtLIdent 0 lident])
+  |    GroundType gtype -> prPrec i 4 (concatD [prtGType 0 gtype])
+  |    StructuralType structuretype -> prPrec i 4 (concatD [prtStructureType 0 structuretype])
+
+and prtTypeTListBNFC _ es : doc = match es with
+  | [x]   -> (concatD [prtTypeT 1 x])
+  | x::xs -> (concatD [prtTypeT 1 x ; render "," ; prtTypeTListBNFC 1 xs])
+
+and prtTypeAbstraction (i:int) (e:typeAbstraction) : doc = match e with
+       TypeListFormals (typevars, type') -> prPrec i 0 (concatD [render "(" ; prtTypeVarListBNFC 0 typevars ; render ")" ; prtTypeT 4 type'])
+
+
+and prtTypeApplication (i:int) (e:typeApplication) : doc = match e with
+       TypeListActuals (types, type') -> prPrec i 0 (concatD [render "[" ; prtTypeTListBNFC 1 types ; render "]" ; prtTypeT 4 type'])
+
+
+and prtTypeVar (i:int) (e:typeVar) : doc = match e with
+       AtomicTypeVar lident -> prPrec i 0 (concatD [render "'" ; prtLIdent 0 lident])
+  |    TermTypeVar type' -> prPrec i 0 (concatD [render "`" ; prtTypeT 2 type'])
+
+and prtTypeVarListBNFC _ es : doc = match es with
+  | [x]   -> (concatD [prtTypeVar 0 x])
+  | x::xs -> (concatD [prtTypeVar 0 x ; render "," ; prtTypeVarListBNFC 0 xs])
+
+and prtStructureType (i:int) (e:structureType) : doc = match e with
+       ReflectionType type' -> prPrec i 0 (concatD [render "!" ; prtTypeT 4 type'])
+  |    AggregationType type' -> prPrec i 0 (concatD [render "(" ; prtTypeT 0 type' ; render ")"])
+
+
+and prtGType (i:int) (e:gType) : doc = match e with
+       BooleanType  -> prPrec i 0 (concatD [render "bool"])
+  |    StringType  -> prPrec i 0 (concatD [render "string"])
+  |    IntegerType  -> prPrec i 0 (concatD [render "int"])
+  |    FloatType  -> prPrec i 0 (concatD [render "float"])
+
+
+and prtForm (i:int) (e:form) : doc = match e with
+       ConjunctiveForm (form0, form) -> prPrec i 0 (concatD [prtForm 0 form0 ; render "&" ; prtForm 1 form])
+  |    DisjunctiveForm (form0, form) -> prPrec i 1 (concatD [prtForm 1 form0 ; render "+" ; prtForm 2 form])
+  |    ImplicativeForm (form0, form) -> prPrec i 2 (concatD [prtForm 2 form0 ; render "=>" ; prtForm 3 form])
+  |    ProductiveForm (form0, form) -> prPrec i 3 (concatD [prtForm 3 form0 ; render "*" ; prtForm 4 form])
+  |    AbstractionForm (formformals, form) -> prPrec i 4 (concatD [prtFormFormals 0 formformals ; prtForm 5 form])
+  |    ProbativeForm (form0, form) -> prPrec i 5 (concatD [render "<" ; prtForm 5 form0 ; render ">" ; prtForm 6 form])
+  |    RecursiveForm (uident, form) -> prPrec i 6 (concatD [render "rec" ; prtUIdent 0 uident ; render "->" ; prtForm 6 form])
+  |    ReflectionForm form -> prPrec i 6 (concatD [render "!" ; prtForm 6 form])
+  |    NegativeForm form -> prPrec i 6 (concatD [render "~" ; prtForm 6 form])
+  |    ReferentialForm uident -> prPrec i 6 (concatD [prtUIdent 0 uident])
+  |    UserDefinedForm lident -> prPrec i 6 (concatD [prtLIdent 0 lident])
+  |    GroundForm gform -> prPrec i 6 (concatD [prtGForm 0 gform])
+
+
+and prtFormFormals (i:int) (e:formFormals) : doc = match e with
+       FormOneFormal formvar -> prPrec i 0 (concatD [prtFormVar 0 formvar])
+  |    FormListFormals formvars -> prPrec i 0 (concatD [render "(" ; prtFormVarListBNFC 0 formvars ; render ")"])
+
+
+and prtFormVar (i:int) (e:formVar) : doc = match e with
+       AtomicFormVar lident -> prPrec i 0 (concatD [render "'" ; prtLIdent 0 lident])
+  |    TermFormVar form -> prPrec i 0 (concatD [render "`" ; prtForm 2 form])
+
+and prtFormVarListBNFC _ es : doc = match es with
+  | [x]   -> (concatD [prtFormVar 0 x])
+  | x::xs -> (concatD [prtFormVar 0 x ; render "," ; prtFormVarListBNFC 0 xs])
+
+and prtGForm (i:int) (e:gForm) : doc = match e with
+       VerityForm  -> prPrec i 0 (concatD [render "T"])
+  |    AbsurdityForm  -> prPrec i 0 (concatD [render "F"])
+  |    BooleanForm  -> prPrec i 0 (concatD [render "bool"])
+  |    StringForm  -> prPrec i 0 (concatD [render "string"])
+  |    IntegerForm  -> prPrec i 0 (concatD [render "int"])
+  |    FloatForm  -> prPrec i 0 (concatD [render "float"])
+
+
+and prtOuterShellRequest (i:int) (e:outerShellRequest) : doc = match e with
+       EscapeRequest str -> prPrec i 0 (concatD [prtString 0 str])
+  |    PwdRequest  -> prPrec i 0 (concatD [render ":pwd"])
+  |    CdRequest  -> prPrec i 0 (concatD [render ":cd"])
+
+
+and prtInnerShellRequest (i:int) (e:innerShellRequest) : doc = match e with
+       ExitRequest  -> prPrec i 0 (concatD [render ":exit"])
+  |    TypeRequest  -> prPrec i 0 (concatD [render ":type"])
+  |    DesugarRequest  -> prPrec i 0 (concatD [render ":desugar"])
+  |    ParseRequest  -> prPrec i 0 (concatD [render ":parse"])
 
 
 

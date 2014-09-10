@@ -4,57 +4,71 @@ open Abscacao
 open Lexing
 %}
 
-%token TOK_else TOK_false TOK_from TOK_fun TOK_if TOK_in TOK_let TOK_newP TOK_pushP TOK_pushSC TOK_rec TOK_takeSC TOK_then TOK_true TOK_yield
+%token TOK_F TOK_T TOK_bool TOK_else TOK_false TOK_float TOK_from TOK_fun TOK_if TOK_in TOK_int TOK_let TOK_newP TOK_pushP TOK_pushSC TOK_rec TOK_string TOK_takeSC TOK_then TOK_true TOK_yield
 
-%token SYMB1 /* ; */
-%token SYMB2 /* ;; */
-%token SYMB3 /* = */
-%token SYMB4 /* -> */
-%token SYMB5 /* ( */
-%token SYMB6 /* ) */
-%token SYMB7 /* | */
-%token SYMB8 /* < */
-%token SYMB9 /* > */
-%token SYMB10 /* <= */
-%token SYMB11 /* >= */
-%token SYMB12 /* ! */
-%token SYMB13 /* / */
-%token SYMB14 /* + */
-%token SYMB15 /* * */
-%token SYMB16 /* :: */
-%token SYMB17 /* - */
-%token SYMB18 /* <- */
-%token SYMB19 /* @Seq */
-%token SYMB20 /* @App */
-%token SYMB21 /* @Let */
-%token SYMB22 /* @Letrec */
-%token SYMB23 /* @Abs */
-%token SYMB24 /* @Cond */
-%token SYMB25 /* @SelectFrom */
-%token SYMB26 /* @From */
-%token SYMB27 /* @SelectFromWhere */
-%token SYMB28 /* @FromWhere */
-%token SYMB29 /* @Equate */
-%token SYMB30 /* @CompLT */
-%token SYMB31 /* @CompGT */
-%token SYMB32 /* @CompLTE */
-%token SYMB33 /* @CompGTE */
-%token SYMB34 /* @Unquote */
-%token SYMB35 /* @Newprompt */
-%token SYMB36 /* @Suspend */
-%token SYMB37 /* @Release */
-%token SYMB38 /* @SuspendSub */
-%token SYMB39 /* @Divide */
-%token SYMB40 /* @Add */
-%token SYMB41 /* @Multiply */
-%token SYMB42 /* @Juxtapose */
-%token SYMB43 /* @Negate */
-%token SYMB44 /* ` */
-%token SYMB45 /* ' */
-%token SYMB46 /* [ */
-%token SYMB47 /* ] */
-%token SYMB48 /* $ */
-%token SYMB49 /* , */
+%token SYMB1 /* |- */
+%token SYMB2 /* : */
+%token SYMB3 /* |= */
+%token SYMB4 /* :! */
+%token SYMB5 /* :? */
+%token SYMB6 /* ; */
+%token SYMB7 /* ;; */
+%token SYMB8 /* = */
+%token SYMB9 /* -> */
+%token SYMB10 /* ( */
+%token SYMB11 /* ) */
+%token SYMB12 /* | */
+%token SYMB13 /* < */
+%token SYMB14 /* > */
+%token SYMB15 /* <= */
+%token SYMB16 /* >= */
+%token SYMB17 /* ! */
+%token SYMB18 /* / */
+%token SYMB19 /* + */
+%token SYMB20 /* * */
+%token SYMB21 /* :: */
+%token SYMB22 /* - */
+%token SYMB23 /* <- */
+%token SYMB24 /* @Seq */
+%token SYMB25 /* @App */
+%token SYMB26 /* @Let */
+%token SYMB27 /* @Letrec */
+%token SYMB28 /* @Abs */
+%token SYMB29 /* @Cond */
+%token SYMB30 /* @SelectFrom */
+%token SYMB31 /* @From */
+%token SYMB32 /* @SelectFromWhere */
+%token SYMB33 /* @FromWhere */
+%token SYMB34 /* @Equate */
+%token SYMB35 /* @CompLT */
+%token SYMB36 /* @CompGT */
+%token SYMB37 /* @CompLTE */
+%token SYMB38 /* @CompGTE */
+%token SYMB39 /* @Unquote */
+%token SYMB40 /* @Newprompt */
+%token SYMB41 /* @Suspend */
+%token SYMB42 /* @Release */
+%token SYMB43 /* @SuspendSub */
+%token SYMB44 /* @Divide */
+%token SYMB45 /* @Add */
+%token SYMB46 /* @Multiply */
+%token SYMB47 /* @Juxtapose */
+%token SYMB48 /* @Negate */
+%token SYMB49 /* ` */
+%token SYMB50 /* ' */
+%token SYMB51 /* [ */
+%token SYMB52 /* ] */
+%token SYMB53 /* $ */
+%token SYMB54 /* & */
+%token SYMB55 /* => */
+%token SYMB56 /* ~ */
+%token SYMB57 /* :pwd */
+%token SYMB58 /* :cd */
+%token SYMB59 /* :exit */
+%token SYMB60 /* :type */
+%token SYMB61 /* :desugar */
+%token SYMB62 /* :parse */
+%token SYMB63 /* , */
 
 %token TOK_EOF
 %token <string> TOK_Ident
@@ -66,7 +80,8 @@ open Lexing
 %token <string> TOK_LIdent
 %token <string> TOK_Wild
 
-%start pExpr pArithmeticExpr pBinding pPattern pVariation pLyst pValue pDuality pSymbol pExpr_list pPattern_list pBinding_list
+%start pRequest pExpr pArithmeticExpr pBinding pPattern pVariation pLyst pValue pDuality pSymbol pTypeT pTypeAbstraction pTypeApplication pTypeVar pStructureType pGType pForm pFormFormals pFormVar pGForm pOuterShellRequest pInnerShellRequest pExpr_list pPattern_list pBinding_list pTypeVar_list pTypeT_list pFormVar_list
+%type <Abscacao.request> pRequest
 %type <Abscacao.expr> pExpr
 %type <Abscacao.arithmeticExpr> pArithmeticExpr
 %type <Abscacao.binding> pBinding
@@ -76,12 +91,30 @@ open Lexing
 %type <Abscacao.value> pValue
 %type <Abscacao.duality> pDuality
 %type <Abscacao.symbol> pSymbol
+%type <Abscacao.typeT> pTypeT
+%type <Abscacao.typeAbstraction> pTypeAbstraction
+%type <Abscacao.typeApplication> pTypeApplication
+%type <Abscacao.typeVar> pTypeVar
+%type <Abscacao.structureType> pStructureType
+%type <Abscacao.gType> pGType
+%type <Abscacao.form> pForm
+%type <Abscacao.formFormals> pFormFormals
+%type <Abscacao.formVar> pFormVar
+%type <Abscacao.gForm> pGForm
+%type <Abscacao.outerShellRequest> pOuterShellRequest
+%type <Abscacao.innerShellRequest> pInnerShellRequest
 %type <Abscacao.expr list> pExpr_list
 %type <Abscacao.pattern list> pPattern_list
 %type <Abscacao.binding list> pBinding_list
+%type <Abscacao.typeVar list> pTypeVar_list
+%type <Abscacao.typeT list> pTypeT_list
+%type <Abscacao.formVar list> pFormVar_list
 
 
 %%
+pRequest : request TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
 pExpr : expr TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
@@ -109,6 +142,42 @@ pDuality : duality TOK_EOF { $1 }
 pSymbol : symbol TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
+pTypeT : typeT TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pTypeAbstraction : typeAbstraction TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pTypeApplication : typeApplication TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pTypeVar : typeVar TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pStructureType : structureType TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pGType : gType TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pForm : form TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pFormFormals : formFormals TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pFormVar : formVar TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pGForm : gForm TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pOuterShellRequest : outerShellRequest TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pInnerShellRequest : innerShellRequest TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
 pExpr_list : expr2_list TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
@@ -118,38 +187,54 @@ pPattern_list : pattern_list TOK_EOF { $1 }
 pBinding_list : binding_list TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
+pTypeVar_list : typeVar_list TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
-expr : expr SYMB1 expr1 { Sequence ($1, $3) } 
+pTypeT_list : type1_list TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+pFormVar_list : formVar_list TOK_EOF { $1 }
+  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+
+
+request : expr { Evaluation $1 } 
+  | SYMB1 expr SYMB2 typeT { TypeCheck ($2, $4) }
+  | SYMB3 expr SYMB2 form { ModelCheck ($2, $4) }
+  | SYMB4 outerShellRequest { OuterShell $2 }
+  | SYMB5 innerShellRequest { InnerShell $2 }
+;
+
+expr : expr SYMB6 expr1 { Sequence ($1, $3) } 
   | expr1 {  $1 }
 ;
 
-expr1 : expr1 expr2_list SYMB2 { Application ($1, $2) } 
+expr1 : expr1 expr2_list SYMB7 { Application ($1, $2) } 
   | expr2 {  $1 }
 ;
 
-expr2 : TOK_let pattern SYMB3 expr2 TOK_in expr3 { Supposition ($2, $4, $6) } 
-  | TOK_let TOK_rec pattern SYMB3 expr2 TOK_in expr3 { Recurrence ($3, $5, $7) }
+expr2 : TOK_let pattern SYMB8 expr2 TOK_in expr3 { Supposition ($2, $4, $6) } 
+  | TOK_let TOK_rec pattern SYMB8 expr2 TOK_in expr3 { Recurrence ($3, $5, $7) }
   | expr3 {  $1 }
 ;
 
-expr3 : TOK_fun pattern SYMB4 expr4 { Abstraction ($2, $4) } 
+expr3 : TOK_fun pattern SYMB9 expr4 { Abstraction ($2, $4) } 
   | expr4 {  $1 }
 ;
 
 expr4 : TOK_if expr4 TOK_then expr5 TOK_else expr5 { Condition ($2, $4, $6) } 
-  | TOK_from SYMB5 binding_list SYMB6 TOK_yield expr5 { Comprehension ($3, $6) }
-  | TOK_from SYMB5 binding_list SYMB6 expr5 { Consolidation ($3, $5) }
-  | TOK_from SYMB5 binding_list SYMB7 pattern_list SYMB6 TOK_yield expr5 { Filtration ($3, $5, $8) }
-  | TOK_from SYMB5 binding_list SYMB7 pattern_list SYMB6 expr5 { Concentration ($3, $5, $7) }
-  | expr5 SYMB3 expr5 { Equation ($1, $3) }
-  | expr5 SYMB8 expr5 { ComparisonLT ($1, $3) }
-  | expr5 SYMB9 expr5 { ComparisonGT ($1, $3) }
-  | expr5 SYMB10 expr5 { ComparisonLTE ($1, $3) }
-  | expr5 SYMB11 expr5 { ComparisonGTE ($1, $3) }
+  | TOK_from SYMB10 binding_list SYMB11 TOK_yield expr5 { Comprehension ($3, $6) }
+  | TOK_from SYMB10 binding_list SYMB11 expr5 { Consolidation ($3, $5) }
+  | TOK_from SYMB10 binding_list SYMB12 pattern_list SYMB11 TOK_yield expr5 { Filtration ($3, $5, $8) }
+  | TOK_from SYMB10 binding_list SYMB12 pattern_list SYMB11 expr5 { Concentration ($3, $5, $7) }
+  | expr5 SYMB8 expr5 { Equation ($1, $3) }
+  | expr5 SYMB13 expr5 { ComparisonLT ($1, $3) }
+  | expr5 SYMB14 expr5 { ComparisonGT ($1, $3) }
+  | expr5 SYMB15 expr5 { ComparisonLTE ($1, $3) }
+  | expr5 SYMB16 expr5 { ComparisonGTE ($1, $3) }
   | expr5 {  $1 }
 ;
 
-expr5 : SYMB12 variation { Reflection $2 } 
+expr5 : SYMB17 variation { Reflection $2 } 
   | TOK_newP { Acquisition  }
   | TOK_pushP expr5 expr5 { Suspension ($2, $3) }
   | TOK_takeSC expr5 expr5 { Release ($2, $3) }
@@ -157,76 +242,76 @@ expr5 : SYMB12 variation { Reflection $2 }
   | arithmeticExpr { Calculation $1 }
 ;
 
-arithmeticExpr : arithmeticExpr SYMB13 arithmeticExpr1 { Division ($1, $3) } 
+arithmeticExpr : arithmeticExpr SYMB18 arithmeticExpr1 { Division ($1, $3) } 
 ;
 
-arithmeticExpr1 : arithmeticExpr1 SYMB14 arithmeticExpr2 { Addition ($1, $3) } 
+arithmeticExpr1 : arithmeticExpr1 SYMB19 arithmeticExpr2 { Addition ($1, $3) } 
 ;
 
-arithmeticExpr2 : arithmeticExpr2 SYMB15 arithmeticExpr3 { Multiplication ($1, $3) } 
+arithmeticExpr2 : arithmeticExpr2 SYMB20 arithmeticExpr3 { Multiplication ($1, $3) } 
 ;
 
-arithmeticExpr3 : arithmeticExpr3 SYMB16 arithmeticExpr4 { Juxtaposition ($1, $3) } 
+arithmeticExpr3 : arithmeticExpr3 SYMB21 arithmeticExpr4 { Juxtaposition ($1, $3) } 
 ;
 
-arithmeticExpr4 : SYMB17 arithmeticExpr5 { Negation $2 } 
+arithmeticExpr4 : SYMB22 arithmeticExpr5 { Negation $2 } 
 ;
 
 arithmeticExpr5 : variation { Mention $1 } 
   | value { Actualization $1 }
-  | SYMB5 expr SYMB6 { Aggregation $2 }
+  | SYMB10 expr SYMB11 { Aggregation $2 }
 ;
 
-binding : pattern SYMB18 expr5 { Question ($1, $3) } 
+binding : pattern SYMB23 expr5 { Question ($1, $3) } 
 ;
 
-pattern : symbol SYMB5 pattern_list SYMB6 { Element ($1, $3) } 
+pattern : symbol SYMB10 pattern_list SYMB11 { Element ($1, $3) } 
   | variation { Variable $1 }
   | value { Materialization $1 }
   | lyst { Procession $1 }
-  | SYMB19 variation { PtnSequence $2 }
-  | SYMB20 variation variation { PtnApplication ($2, $3) }
-  | SYMB21 variation variation variation { PtnSupposition ($2, $3, $4) }
-  | SYMB22 variation variation variation { PtnRecurrence ($2, $3, $4) }
-  | SYMB23 variation variation { PtnAbstraction ($2, $3) }
-  | SYMB24 variation variation variation { PtnCondition ($2, $3, $4) }
-  | SYMB25 variation variation { PtnComprehend ($2, $3) }
-  | SYMB26 variation variation { PtnConsolidate ($2, $3) }
-  | SYMB27 variation variation variation { PtnFiltration ($2, $3, $4) }
-  | SYMB28 variation variation variation { PtnConcentrate ($2, $3, $4) }
-  | SYMB29 variation variation { PtnEquation ($2, $3) }
-  | SYMB30 variation variation { PtnCompLT ($2, $3) }
-  | SYMB31 variation variation { PtnCompGT ($2, $3) }
-  | SYMB32 variation variation { PtnCompLTE ($2, $3) }
-  | SYMB33 variation variation { PtnCompGTE ($2, $3) }
-  | SYMB34 variation variation { PtnReflection ($2, $3) }
-  | SYMB35 { PtnAcquisition  }
-  | SYMB36 variation variation { PtnSuspension ($2, $3) }
-  | SYMB37 variation variation { PtnRelease ($2, $3) }
-  | SYMB38 variation variation { PtnInnerSuspend ($2, $3) }
-  | SYMB39 variation variation { PtnDivision ($2, $3) }
-  | SYMB40 variation variation { PtnAddition ($2, $3) }
-  | SYMB41 variation variation { PtnMultiply ($2, $3) }
-  | SYMB42 variation variation { PtnJuxtapose ($2, $3) }
-  | SYMB43 variation variation { PtnNegate ($2, $3) }
+  | SYMB24 variation { PtnSequence $2 }
+  | SYMB25 variation variation { PtnApplication ($2, $3) }
+  | SYMB26 variation variation variation { PtnSupposition ($2, $3, $4) }
+  | SYMB27 variation variation variation { PtnRecurrence ($2, $3, $4) }
+  | SYMB28 variation variation { PtnAbstraction ($2, $3) }
+  | SYMB29 variation variation variation { PtnCondition ($2, $3, $4) }
+  | SYMB30 variation variation { PtnComprehend ($2, $3) }
+  | SYMB31 variation variation { PtnConsolidate ($2, $3) }
+  | SYMB32 variation variation variation { PtnFiltration ($2, $3, $4) }
+  | SYMB33 variation variation variation { PtnConcentrate ($2, $3, $4) }
+  | SYMB34 variation variation { PtnEquation ($2, $3) }
+  | SYMB35 variation variation { PtnCompLT ($2, $3) }
+  | SYMB36 variation variation { PtnCompGT ($2, $3) }
+  | SYMB37 variation variation { PtnCompLTE ($2, $3) }
+  | SYMB38 variation variation { PtnCompGTE ($2, $3) }
+  | SYMB39 variation variation { PtnReflection ($2, $3) }
+  | SYMB40 { PtnAcquisition  }
+  | SYMB41 variation variation { PtnSuspension ($2, $3) }
+  | SYMB42 variation variation { PtnRelease ($2, $3) }
+  | SYMB43 variation variation { PtnInnerSuspend ($2, $3) }
+  | SYMB44 variation variation { PtnDivision ($2, $3) }
+  | SYMB45 variation variation { PtnAddition ($2, $3) }
+  | SYMB46 variation variation { PtnMultiply ($2, $3) }
+  | SYMB47 variation variation { PtnJuxtapose ($2, $3) }
+  | SYMB48 variation variation { PtnNegate ($2, $3) }
 ;
 
 variation : uIdent { Atomic $1 } 
   | wild { Abandon $1 }
-  | SYMB44 expr SYMB45 { Transcription $2 }
+  | SYMB49 expr SYMB50 { Transcription $2 }
 ;
 
-lyst : SYMB46 SYMB47 { Empty  } 
-  | SYMB46 pattern_list SYMB47 { Enum $2 }
-  | SYMB46 pattern_list SYMB7 lyst SYMB47 { Cons ($2, $4) }
-  | SYMB46 pattern_list SYMB7 variation SYMB47 { ConsV ($2, $4) }
+lyst : SYMB51 SYMB52 { Empty  } 
+  | SYMB51 pattern_list SYMB52 { Enum $2 }
+  | SYMB51 pattern_list SYMB12 lyst SYMB52 { Cons ($2, $4) }
+  | SYMB51 pattern_list SYMB12 variation SYMB52 { ConsV ($2, $4) }
 ;
 
 value : duality { BooleanLiteral $1 } 
   | string { StringLiteral $1 }
   | int { IntegerLiteral $1 }
   | float { DoubleLiteral $1 }
-  | SYMB48 expr SYMB48 { Reification $2 }
+  | SYMB53 expr SYMB53 { Reification $2 }
 ;
 
 duality : TOK_true { Verity  } 
@@ -236,17 +321,126 @@ duality : TOK_true { Verity  }
 symbol : lIdent { Tag $1 } 
 ;
 
+typeT : typeT SYMB20 type1 { ProductType ($1, $3) } 
+  | type1 {  $1 }
+;
+
+type1 : typeAbstraction { AbstractionType $1 } 
+  | typeApplication { ApplicationType $1 }
+  | type2 {  $1 }
+;
+
+type2 : type2 SYMB9 type3 { FunctionType ($1, $3) } 
+  | type3 {  $1 }
+;
+
+type4 : lIdent { UserDefinedType $1 } 
+  | gType { GroundType $1 }
+  | structureType { StructuralType $1 }
+;
+
+type3 : type4 {  $1 } 
+;
+
+typeAbstraction : SYMB10 typeVar_list SYMB11 type4 { TypeListFormals ($2, $4) } 
+;
+
+typeApplication : SYMB51 type1_list SYMB52 type4 { TypeListActuals ($2, $4) } 
+;
+
+typeVar : SYMB50 lIdent { AtomicTypeVar $2 } 
+  | SYMB49 type2 { TermTypeVar $2 }
+;
+
+structureType : SYMB17 type4 { ReflectionType $2 } 
+  | SYMB10 typeT SYMB11 { AggregationType $2 }
+;
+
+gType : TOK_bool { BooleanType  } 
+  | TOK_string { StringType  }
+  | TOK_int { IntegerType  }
+  | TOK_float { FloatType  }
+;
+
+form : form SYMB54 form1 { ConjunctiveForm ($1, $3) } 
+  | form1 {  $1 }
+;
+
+form1 : form1 SYMB19 form2 { DisjunctiveForm ($1, $3) } 
+  | form2 {  $1 }
+;
+
+form2 : form2 SYMB55 form3 { ImplicativeForm ($1, $3) } 
+  | SYMB10 form SYMB11 {  $2 }
+;
+
+form3 : form3 SYMB20 form4 { ProductiveForm ($1, $3) } 
+;
+
+form4 : formFormals form5 { AbstractionForm ($1, $2) } 
+;
+
+form5 : SYMB13 form5 SYMB14 form6 { ProbativeForm ($2, $4) } 
+;
+
+form6 : TOK_rec uIdent SYMB9 form6 { RecursiveForm ($2, $4) } 
+  | SYMB17 form6 { ReflectionForm $2 }
+  | SYMB56 form6 { NegativeForm $2 }
+  | uIdent { ReferentialForm $1 }
+  | lIdent { UserDefinedForm $1 }
+  | gForm { GroundForm $1 }
+;
+
+formFormals : formVar { FormOneFormal $1 } 
+  | SYMB10 formVar_list SYMB11 { FormListFormals $2 }
+;
+
+formVar : SYMB50 lIdent { AtomicFormVar $2 } 
+  | SYMB49 form2 { TermFormVar $2 }
+;
+
+gForm : TOK_T { VerityForm  } 
+  | TOK_F { AbsurdityForm  }
+  | TOK_bool { BooleanForm  }
+  | TOK_string { StringForm  }
+  | TOK_int { IntegerForm  }
+  | TOK_float { FloatForm  }
+;
+
+outerShellRequest : string { EscapeRequest $1 } 
+  | SYMB57 { PwdRequest  }
+  | SYMB58 { CdRequest  }
+;
+
+innerShellRequest : SYMB59 { ExitRequest  } 
+  | SYMB60 { TypeRequest  }
+  | SYMB61 { DesugarRequest  }
+  | SYMB62 { ParseRequest  }
+;
+
 expr2_list : expr2 { (fun x -> [x]) $1 } 
   | expr2 expr2_list { (fun (x,xs) -> x::xs) ($1, $2) }
 ;
 
 pattern_list : pattern { (fun x -> [x]) $1 } 
-  | pattern SYMB49 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | pattern SYMB63 pattern_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 binding_list : /* empty */ { []  } 
   | binding { (fun x -> [x]) $1 }
-  | binding SYMB49 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
+  | binding SYMB63 binding_list { (fun (x,xs) -> x::xs) ($1, $3) }
+;
+
+typeVar_list : typeVar { (fun x -> [x]) $1 } 
+  | typeVar SYMB63 typeVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
+;
+
+type1_list : type1 { (fun x -> [x]) $1 } 
+  | type1 SYMB63 type1_list { (fun (x,xs) -> x::xs) ($1, $3) }
+;
+
+formVar_list : formVar { (fun x -> [x]) $1 } 
+  | formVar SYMB63 formVar_list { (fun (x,xs) -> x::xs) ($1, $3) }
 ;
 
 

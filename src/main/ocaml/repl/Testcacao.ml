@@ -2,13 +2,13 @@
 
 open Lexing
 
-let parse (c : in_channel) : Abscacao.expr = 
-    Parcacao.pExpr Lexcacao.token (Lexing.from_channel c)
+let parse (c : in_channel) : Abscacao.request = 
+    Parcacao.pRequest Lexcacao.token (Lexing.from_channel c)
 ;;
 
-let showTree (t : Abscacao.expr) : string = 
-    "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showExpr x)) t ^ "\n\n" ^
-    "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtExpr t ^ "\n"
+let showTree (t : Abscacao.request) : string = 
+    "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showRequest x)) t ^ "\n\n" ^
+    "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtRequest t ^ "\n"
 ;;
 
 let main () =

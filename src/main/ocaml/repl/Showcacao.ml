@@ -45,7 +45,15 @@ let rec showLIdent (LIdent i) : showable = s2s "LIdent " >> showString i
 let rec showWild (Wild i) : showable = s2s "Wild " >> showString i
 
 
-let rec showExpr (e:expr) : showable = match e with
+let rec showRequest (e:request) : showable = match e with
+       Evaluation expr -> s2s "Evaluation" >> c2s ' ' >> c2s '(' >> showExpr expr >> c2s ')'
+  |    TypeCheck (expr, type') -> s2s "TypeCheck" >> c2s ' ' >> c2s '(' >> showExpr expr  >> s2s ", " >>  showTypeT type' >> c2s ')'
+  |    ModelCheck (expr, form) -> s2s "ModelCheck" >> c2s ' ' >> c2s '(' >> showExpr expr  >> s2s ", " >>  showForm form >> c2s ')'
+  |    OuterShell outershellrequest -> s2s "OuterShell" >> c2s ' ' >> c2s '(' >> showOuterShellRequest outershellrequest >> c2s ')'
+  |    InnerShell innershellrequest -> s2s "InnerShell" >> c2s ' ' >> c2s '(' >> showInnerShellRequest innershellrequest >> c2s ')'
+
+
+and showExpr (e:expr) : showable = match e with
        Sequence (expr0, expr) -> s2s "Sequence" >> c2s ' ' >> c2s '(' >> showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
   |    Application (expr, exprs) -> s2s "Application" >> c2s ' ' >> c2s '(' >> showExpr expr  >> s2s ", " >>  showList showExpr exprs >> c2s ')'
   |    Supposition (pattern, expr0, expr) -> s2s "Supposition" >> c2s ' ' >> c2s '(' >> showPattern pattern  >> s2s ", " >>  showExpr expr0  >> s2s ", " >>  showExpr expr >> c2s ')'
@@ -144,6 +152,88 @@ and showDuality (e:duality) : showable = match e with
 
 and showSymbol (e:symbol) : showable = match e with
        Tag lident -> s2s "Tag" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
+
+
+and showTypeT (e:typeT) : showable = match e with
+       ProductType (type'0, type') -> s2s "ProductType" >> c2s ' ' >> c2s '(' >> showTypeT type'0  >> s2s ", " >>  showTypeT type' >> c2s ')'
+  |    AbstractionType typeabstraction -> s2s "AbstractionType" >> c2s ' ' >> c2s '(' >> showTypeAbstraction typeabstraction >> c2s ')'
+  |    ApplicationType typeapplication -> s2s "ApplicationType" >> c2s ' ' >> c2s '(' >> showTypeApplication typeapplication >> c2s ')'
+  |    FunctionType (type'0, type') -> s2s "FunctionType" >> c2s ' ' >> c2s '(' >> showTypeT type'0  >> s2s ", " >>  showTypeT type' >> c2s ')'
+  |    UserDefinedType lident -> s2s "UserDefinedType" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
+  |    GroundType gtype -> s2s "GroundType" >> c2s ' ' >> c2s '(' >> showGType gtype >> c2s ')'
+  |    StructuralType structuretype -> s2s "StructuralType" >> c2s ' ' >> c2s '(' >> showStructureType structuretype >> c2s ')'
+
+
+and showTypeAbstraction (e:typeAbstraction) : showable = match e with
+       TypeListFormals (typevars, type') -> s2s "TypeListFormals" >> c2s ' ' >> c2s '(' >> showList showTypeVar typevars  >> s2s ", " >>  showTypeT type' >> c2s ')'
+
+
+and showTypeApplication (e:typeApplication) : showable = match e with
+       TypeListActuals (types, type') -> s2s "TypeListActuals" >> c2s ' ' >> c2s '(' >> showList showTypeT types  >> s2s ", " >>  showTypeT type' >> c2s ')'
+
+
+and showTypeVar (e:typeVar) : showable = match e with
+       AtomicTypeVar lident -> s2s "AtomicTypeVar" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
+  |    TermTypeVar type' -> s2s "TermTypeVar" >> c2s ' ' >> c2s '(' >> showTypeT type' >> c2s ')'
+
+
+and showStructureType (e:structureType) : showable = match e with
+       ReflectionType type' -> s2s "ReflectionType" >> c2s ' ' >> c2s '(' >> showTypeT type' >> c2s ')'
+  |    AggregationType type' -> s2s "AggregationType" >> c2s ' ' >> c2s '(' >> showTypeT type' >> c2s ')'
+
+
+and showGType (e:gType) : showable = match e with
+       BooleanType  -> s2s "BooleanType" 
+  |    StringType  -> s2s "StringType" 
+  |    IntegerType  -> s2s "IntegerType" 
+  |    FloatType  -> s2s "FloatType" 
+
+
+and showForm (e:form) : showable = match e with
+       ConjunctiveForm (form0, form) -> s2s "ConjunctiveForm" >> c2s ' ' >> c2s '(' >> showForm form0  >> s2s ", " >>  showForm form >> c2s ')'
+  |    DisjunctiveForm (form0, form) -> s2s "DisjunctiveForm" >> c2s ' ' >> c2s '(' >> showForm form0  >> s2s ", " >>  showForm form >> c2s ')'
+  |    ImplicativeForm (form0, form) -> s2s "ImplicativeForm" >> c2s ' ' >> c2s '(' >> showForm form0  >> s2s ", " >>  showForm form >> c2s ')'
+  |    ProductiveForm (form0, form) -> s2s "ProductiveForm" >> c2s ' ' >> c2s '(' >> showForm form0  >> s2s ", " >>  showForm form >> c2s ')'
+  |    AbstractionForm (formformals, form) -> s2s "AbstractionForm" >> c2s ' ' >> c2s '(' >> showFormFormals formformals  >> s2s ", " >>  showForm form >> c2s ')'
+  |    ProbativeForm (form0, form) -> s2s "ProbativeForm" >> c2s ' ' >> c2s '(' >> showForm form0  >> s2s ", " >>  showForm form >> c2s ')'
+  |    RecursiveForm (uident, form) -> s2s "RecursiveForm" >> c2s ' ' >> c2s '(' >> showUIdent uident  >> s2s ", " >>  showForm form >> c2s ')'
+  |    ReflectionForm form -> s2s "ReflectionForm" >> c2s ' ' >> c2s '(' >> showForm form >> c2s ')'
+  |    NegativeForm form -> s2s "NegativeForm" >> c2s ' ' >> c2s '(' >> showForm form >> c2s ')'
+  |    ReferentialForm uident -> s2s "ReferentialForm" >> c2s ' ' >> c2s '(' >> showUIdent uident >> c2s ')'
+  |    UserDefinedForm lident -> s2s "UserDefinedForm" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
+  |    GroundForm gform -> s2s "GroundForm" >> c2s ' ' >> c2s '(' >> showGForm gform >> c2s ')'
+
+
+and showFormFormals (e:formFormals) : showable = match e with
+       FormOneFormal formvar -> s2s "FormOneFormal" >> c2s ' ' >> c2s '(' >> showFormVar formvar >> c2s ')'
+  |    FormListFormals formvars -> s2s "FormListFormals" >> c2s ' ' >> c2s '(' >> showList showFormVar formvars >> c2s ')'
+
+
+and showFormVar (e:formVar) : showable = match e with
+       AtomicFormVar lident -> s2s "AtomicFormVar" >> c2s ' ' >> c2s '(' >> showLIdent lident >> c2s ')'
+  |    TermFormVar form -> s2s "TermFormVar" >> c2s ' ' >> c2s '(' >> showForm form >> c2s ')'
+
+
+and showGForm (e:gForm) : showable = match e with
+       VerityForm  -> s2s "VerityForm" 
+  |    AbsurdityForm  -> s2s "AbsurdityForm" 
+  |    BooleanForm  -> s2s "BooleanForm" 
+  |    StringForm  -> s2s "StringForm" 
+  |    IntegerForm  -> s2s "IntegerForm" 
+  |    FloatForm  -> s2s "FloatForm" 
+
+
+and showOuterShellRequest (e:outerShellRequest) : showable = match e with
+       EscapeRequest str -> s2s "EscapeRequest" >> c2s ' ' >> c2s '(' >> showString str >> c2s ')'
+  |    PwdRequest  -> s2s "PwdRequest" 
+  |    CdRequest  -> s2s "CdRequest" 
+
+
+and showInnerShellRequest (e:innerShellRequest) : showable = match e with
+       ExitRequest  -> s2s "ExitRequest" 
+  |    TypeRequest  -> s2s "TypeRequest" 
+  |    DesugarRequest  -> s2s "DesugarRequest" 
+  |    ParseRequest  -> s2s "ParseRequest" 
 
 
 
