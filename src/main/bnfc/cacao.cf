@@ -4,105 +4,271 @@
 -- Creation:    Wed Jul 23 17:00:01 2014 
 -- Copyright:   Not supplied 
 -- Description: 
--- Inspired by MiniCaml
 --
--- e ::= x                   
---   | let x = e in e        
---   | let rec f x = e in e  
---   | fun x -> e            
---   | e e			  
---   | true                  
---   | false                 
---   | if e then e else e    
---   | n                     
---   | - e                   
---   | e + e                 
---   | e * e                 
---   | e / e                 
---   | e = e                 
---   | e > e                 
---   | e < e                 
-
---   | []                   
---   | e :: e               
---   | List.tl e
+--  Cacaoscript is a functional language sporting a few modern capabilities
+--    * typed reflection
+--    * monadic comprehensions
+--    * delimited continuatons
+--  The REPL offers a few modern capabilities as well, including
+--    * model checking a term against a formula
 --
 -- ------------------------------------------------------------------------
 
-Sequence        . Expr            ::= Expr ";" Expr1                              ;
-Application     . Expr1           ::= Expr1 [Expr2] ";;"                          ;
-Supposition     . Expr2           ::= "let" Pattern "=" Expr2 "in" Expr3          ;
-Recurrence      . Expr2           ::= "let" "rec" Pattern "=" Expr2 "in" Expr3    ;
-Abstraction     . Expr3           ::= "fun" Pattern "->" Expr4                    ;
-Condition       . Expr4           ::= "if" Expr4 "then" Expr5 "else" Expr5        ;
-Comprehension   . Expr4           ::= "for" "(" [Binding] ")" Expr5               ;
-Filtration      . Expr4           ::= "for" "(" [Binding] "|" [Pattern] ")" Expr5 ;
-Equation        . Expr4           ::= Expr5 "=" Expr5                             ;
-ComparisonLT    . Expr4           ::= Expr5 "<" Expr5                             ;
-ComparisonGT    . Expr4           ::= Expr5 ">" Expr5                             ;
-ComparisonLTE   . Expr4           ::= Expr5 "<=" Expr5                            ;
-ComparisonGTE   . Expr4           ::= Expr5 ">=" Expr5                            ;
-Calculation     . Expr5           ::= ArithmeticExpr                              ;
+-- --------------------------------------------------------------------------------
+-- REPL Commands
+-- --------------------------------------------------------------------------------
 
-_               . Expr            ::= Expr1                                       ;
-_               . Expr1           ::= Expr2                                       ;
-_               . Expr2           ::= Expr3                                       ;
-_               . Expr3           ::= Expr4                                       ;
-_               . Expr4           ::= Expr5                                       ;
-_               . Expr5           ::= "(" Expr ")"                                ;
+Evaluation      . Request         ::= Expr                                         ;
+TypeCheck       . Request         ::= "|-" Expr ":" Type                           ;
+ModelCheck      . Request         ::= "|=" Expr ":" Form                           ;
+OuterShell      . Request         ::= ":!" OuterShellRequest                       ;
+InnerShell      . Request         ::= ":?" InnerShellRequest                       ;
 
-Division        . ArithmeticExpr  ::= ArithmeticExpr "/" ArithmeticExpr1          ;
-Addition        . ArithmeticExpr1 ::= ArithmeticExpr1 "+" ArithmeticExpr2         ;
-Multiplication  . ArithmeticExpr2 ::= ArithmeticExpr2 "*" ArithmeticExpr3         ;
-Juxtaposition   . ArithmeticExpr3 ::= ArithmeticExpr3 "::" ArithmeticExpr4        ;
-Negation        . ArithmeticExpr4 ::= "-" ArithmeticExpr5                         ;
-Mention         . ArithmeticExpr5 ::= Variation                                   ;
-Actualization   . ArithmeticExpr5 ::= Value                                       ;
+-- --------------------------------------------------------------------------------
+-- Terms
+-- --------------------------------------------------------------------------------
 
-Question        . Binding         ::= Pattern "<-" Expr5                          ;
+-- Lambda calculus core
 
-Element         . Pattern         ::= Symbol "(" [Pattern] ")"                    ;
-Variable        . Pattern         ::= Variation                                   ;
-Materialization . Pattern         ::= Value                                       ;
-Procession      . Pattern         ::= Lyst                                        ;
+Sequence        . Expr            ::= Expr ";" Expr1                               ;
+Application     . Expr1           ::= Expr1 [Expr2] ";;"                           ;
+Supposition     . Expr2           ::= "let" Pattern "=" Expr2 "in" Expr3           ;
+Recurrence      . Expr2           ::= "let" "rec" Pattern "=" Expr2 "in" Expr3     ;
+Abstraction     . Expr3           ::= "fun" Pattern "->" Expr4                     ;
+Condition       . Expr4           ::= "if" Expr4 "then" Expr5 "else" Expr5         ;
 
-Atomic          . Variation       ::= UIdent                                      ;
-Abandon         . Variation       ::= Wild                                        ;
-Transcription   . Variation       ::= "`" Expr "'"                                ;
+-- Monadic comprehensions
 
-Empty           . Lyst            ::= "[" "]"                                     ;
-Enum            . Lyst            ::= "[" [Pattern] "]"                           ;
-Cons            . Lyst            ::= "[" [Pattern] "|" Lyst "]"                  ;
-ConsV           . Lyst            ::= "[" [Pattern] "|" Variation "]"             ;
+-- Breaking out distinct syntactic categories for each flavor of
+-- comprehension allows us to know syntactically early whether the
+-- computation yields a value without yet introducing the expression
+-- versus statement distinction
 
-BooleanLiteral  . Value           ::= Duality                                     ;
-StringLiteral   . Value           ::= String                                      ;
-IntegerLiteral  . Value           ::= Integer                                     ;
-DoubleLiteral   . Value           ::= Double                                      ;
-Reification     . Value           ::= "$" Expr "$"                                ;
+Comprehension   . Expr4           ::= "from" "(" [Binding] ")" "yield" Expr5       ;
+Consolidation   . Expr4           ::= "from" "(" [Binding] ")" Expr5               ;
+Filtration      . Expr4           ::= "from" "(" [Binding] "|" [Pattern] ")" "yield" Expr5 ;
+Concentration   . Expr4           ::= "from" "(" [Binding] "|" [Pattern] ")" Expr5 ;
 
-Verity          . Duality         ::= "true"                                      ;
-Absurdity       . Duality         ::= "false"                                     ;
+-- Comparisons
 
-Tag             . Symbol          ::= LIdent                                      ;
+Equation        . Expr4           ::= Expr5 "=" Expr5                              ;
+ComparisonLT    . Expr4           ::= Expr5 "<" Expr5                              ;
+ComparisonGT    . Expr4           ::= Expr5 ">" Expr5                              ;
+ComparisonLTE   . Expr4           ::= Expr5 "<=" Expr5                             ;
+ComparisonGTE   . Expr4           ::= Expr5 ">=" Expr5                             ;
+
+-- Reflection and delimited continuations
+
+Reflection      . Expr5           ::= "!" Variation                                ;
+Acquisition     . Expr5           ::= "newP"                                       ;
+Suspension      . Expr5           ::= "pushP" Expr5 Expr5                          ;
+Release         . Expr5           ::= "takeSC" Expr5 Expr5                         ;
+InnerSuspension . Expr5           ::= "pushSC" Expr5 Expr5                         ;
+
+-- Arithmetic calculations
+
+Calculation     . Expr5           ::= ArithmeticExpr                               ;
+
+_               . Expr            ::= Expr1                                        ;
+_               . Expr1           ::= Expr2                                        ;
+_               . Expr2           ::= Expr3                                        ;
+_               . Expr3           ::= Expr4                                        ;
+_               . Expr4           ::= Expr5                                        ;
+--_               . Expr5           ::= ArithmeticExpr                               ;
+
+-- Arithmetic calculations
+
+Division        . ArithmeticExpr  ::= ArithmeticExpr "/" ArithmeticExpr1           ;
+Addition        . ArithmeticExpr1 ::= ArithmeticExpr1 "+" ArithmeticExpr2          ;
+Multiplication  . ArithmeticExpr2 ::= ArithmeticExpr2 "*" ArithmeticExpr3          ;
+Juxtaposition   . ArithmeticExpr3 ::= ArithmeticExpr3 "::" ArithmeticExpr4         ;
+Negation        . ArithmeticExpr4 ::= "-" ArithmeticExpr5                          ;
+Mention         . ArithmeticExpr5 ::= Variation                                    ;
+Actualization   . ArithmeticExpr5 ::= Value                                        ;
+Aggregation     . ArithmeticExpr5 ::= "(" Expr ")"                                 ;
+
+-- Bindings
+
+Question        . Binding         ::= Pattern "<-" Expr5                           ;
+
+-- Patterns
+
+Element         . Pattern         ::= Symbol "(" [Pattern] ")"                     ;
+Variable        . Pattern         ::= Variation                                    ;
+Materialization . Pattern         ::= Value                                        ;
+Procession      . Pattern         ::= Lyst                                         ;
+PtnSequence     . Pattern         ::= "@Seq" Variation                             ;
+PtnApplication  . Pattern         ::= "@App" Variation Variation                   ;
+PtnSupposition  . Pattern         ::= "@Let" Variation Variation Variation         ;
+PtnRecurrence   . Pattern         ::= "@Letrec" Variation Variation Variation      ;
+PtnAbstraction  . Pattern         ::= "@Abs" Variation Variation                   ;
+PtnCondition    . Pattern         ::= "@Cond" Variation Variation Variation        ;
+PtnComprehend   . Pattern         ::= "@SelectFrom" Variation Variation            ;
+PtnConsolidate  . Pattern         ::= "@From" Variation Variation                  ;
+PtnFiltration   . Pattern         ::= "@SelectFromWhere" Variation Variation Variation ;
+PtnConcentrate  . Pattern         ::= "@FromWhere" Variation Variation Variation   ;
+PtnEquation     . Pattern         ::= "@Equate" Variation Variation                ;
+PtnCompLT       . Pattern         ::= "@CompLT" Variation Variation                ;
+PtnCompGT       . Pattern         ::= "@CompGT" Variation Variation                ;
+PtnCompLTE      . Pattern         ::= "@CompLTE" Variation Variation               ;
+PtnCompGTE      . Pattern         ::= "@CompGTE" Variation Variation               ;
+PtnReflection   . Pattern         ::= "@Unquote" Variation Variation               ;
+PtnAcquisition  . Pattern         ::= "@Newprompt"                                 ;
+PtnSuspension   . Pattern         ::= "@Suspend" Variation Variation               ;
+PtnRelease      . Pattern         ::= "@Release" Variation Variation               ;
+PtnInnerSuspend . Pattern         ::= "@SuspendSub" Variation Variation            ;
+PtnDivision     . Pattern         ::= "@Divide" Variation Variation                ;
+PtnAddition     . Pattern         ::= "@Add" Variation Variation                   ;
+PtnMultiply     . Pattern         ::= "@Multiply" Variation Variation              ;
+PtnJuxtapose    . Pattern         ::= "@Juxtapose" Variation Variation             ;
+PtnNegate       . Pattern         ::= "@Negate" Variation Variation                ;
+
+-- Variables
+
+Atomic          . Variation       ::= UIdent                                       ;
+Abandon         . Variation       ::= Wild                                         ;
+Transcription   . Variation       ::= "`" Expr "'"                                 ;
+
+-- List patterns
+
+Empty           . Lyst            ::= "[" "]"                                      ;
+Enum            . Lyst            ::= "[" [Pattern] "]"                            ;
+Cons            . Lyst            ::= "[" [Pattern] "|" Lyst "]"                   ;
+ConsV           . Lyst            ::= "[" [Pattern] "|" Variation "]"              ;
+
+-- Literals
+
+BooleanLiteral  . Value           ::= Duality                                      ;
+StringLiteral   . Value           ::= String                                       ;
+IntegerLiteral  . Value           ::= Integer                                      ;
+DoubleLiteral   . Value           ::= Double                                       ;
+Reification     . Value           ::= "$" Expr "$"                                 ;
+
+Verity          . Duality         ::= "true"                                       ;
+Absurdity       . Duality         ::= "false"                                      ;
+
+Tag             . Symbol          ::= LIdent                                       ;
+
+-- --------------------------------------------------------------------------------
+-- Types
+-- --------------------------------------------------------------------------------
+
+ProductType     . Type            ::= Type "*" Type1                               ;
+AbstractionType . Type1           ::= TypeAbstraction                              ;
+ApplicationType . Type1           ::= TypeApplication                              ;
+FunctionType    . Type2           ::= Type2 "->" Type3                             ;
+UserDefinedType . Type4           ::= LIdent                                       ;
+GroundType      . Type4           ::= GType                                        ;
+StructuralType  . Type4           ::= StructureType                                ;
+
+_               . Type            ::= Type1                                        ;
+_               . Type1           ::= Type2                                        ;
+_               . Type2           ::= Type3                                        ;
+_               . Type3           ::= Type4                                        ;
+--_               . Type4           ::= "(" Type ")"                                 ;
+
+--TypeOneFormal   . TypeAbstraction ::= TypeVar Type4                                ;
+TypeListFormals . TypeAbstraction ::= "(" [TypeVar] ")" Type4                      ;
+--TypeOneActual   . TypeApplication ::= Type4 Type                                   ;
+TypeListActuals . TypeApplication ::= "[" [Type1] "]" Type4                        ;
+
+AtomicTypeVar   . TypeVar         ::= "'" LIdent                                   ;
+TermTypeVar     . TypeVar         ::= "`" Type2                                    ;
+
+ReflectionType  . StructureType   ::= "!" Type4                                    ;
+AggregationType . StructureType   ::= "(" Type ")"                                 ;
+
+BooleanType     . GType           ::= "bool"                                       ;
+StringType      . GType           ::= "string"                                     ;
+IntegerType     . GType           ::= "int"                                        ;
+FloatType       . GType           ::= "float"                                      ;
+
+-- --------------------------------------------------------------------------------
+-- Formulae
+-- --------------------------------------------------------------------------------
+
+ConjunctiveForm . Form            ::= Form "&" Form1                               ;
+DisjunctiveForm . Form1           ::= Form1 "+" Form2                              ;
+ImplicativeForm . Form2           ::= Form2 "=>" Form3                             ;
+
+ProductiveForm  . Form3           ::= Form3 "*" Form4                              ;
+AbstractionForm . Form4           ::= FormFormals Form5                            ;
+ProbativeForm   . Form5           ::= "<" Form5 ">" Form6                          ;
+RecursiveForm   . Form6           ::= "rec" UIdent "->" Form6                      ;
+ReflectionForm  . Form6           ::= "!" Form6                                    ;
+NegativeForm    . Form6           ::= "~" Form6                                    ;
+ReferentialForm . Form6           ::= UIdent                                       ;
+UserDefinedForm . Form6           ::= LIdent                                       ;
+GroundForm      . Form6           ::= GForm                                        ;
+
+_               . Form            ::= Form1                                        ;
+_               . Form1           ::= Form2                                        ;
+_               . Form2           ::= "(" Form ")"                                 ;
+
+FormOneFormal   . FormFormals     ::= FormVar                                      ;
+FormListFormals . FormFormals     ::= "(" [FormVar] ")"                            ;
+
+AtomicFormVar   . FormVar         ::= "'" LIdent                                   ;
+TermFormVar     . FormVar         ::= "`" Form2                                    ;
+
+VerityForm      . GForm           ::= "T"                                          ;
+AbsurdityForm   . GForm           ::= "F"                                          ;
+BooleanForm     . GForm           ::= "bool"                                       ;
+StringForm      . GForm           ::= "string"                                     ;
+IntegerForm     . GForm           ::= "int"                                        ;
+FloatForm       . GForm           ::= "float"                                      ;
+
+-- --------------------------------------------------------------------------------
+-- Shell requests
+-- --------------------------------------------------------------------------------
+
+EscapeRequest   . OuterShellRequest ::= String                                     ;
+PwdRequest      . OuterShellRequest ::= ":pwd"                                     ;
+CdRequest       . OuterShellRequest ::= ":cd"                                      ;
+
+ExitRequest     . InnerShellRequest ::= ":exit"                                    ;
+TypeRequest     . InnerShellRequest ::= ":type"                                    ;
+DesugarRequest  . InnerShellRequest ::= ":desugar"                                 ;
+ParseRequest    . InnerShellRequest ::= ":parse"                                   ;
+
+-- --------------------------------------------------------------------------------
+-- Lists
+-- --------------------------------------------------------------------------------
 
 --[]              . [Expr2]         ::=                                            ;
-(: [])          . [Expr2]         ::= Expr2                                       ;
-(:)             . [Expr2]         ::= Expr2 [Expr2]                               ;
+(: [])          . [Expr2]         ::= Expr2                                        ;
+(:)             . [Expr2]         ::= Expr2 [Expr2]                                ;
 
 --[]              . [Pattern]        ::=                                           ;
-(: [])          . [Pattern]       ::= Pattern                                     ;
-(:)             . [Pattern]       ::= Pattern "," [Pattern]                       ;
+(: [])          . [Pattern]       ::= Pattern                                      ;
+(:)             . [Pattern]       ::= Pattern "," [Pattern]                        ;
 
-[]              . [Binding]       ::=                                             ;
-(: [])          . [Binding]       ::= Binding                                     ;
+[]              . [Binding]       ::=                                              ;
+(: [])          . [Binding]       ::= Binding                                      ;
 --(:)             . [Binding]       ::= Binding ";" [Binding]                       ;
-(:)             . [Binding]       ::= Binding "," [Binding]                       ;
+(:)             . [Binding]       ::= Binding "," [Binding]                        ;
+
+(: [])          . [TypeVar]       ::= TypeVar                                      ;
+(:)             . [TypeVar]       ::= TypeVar "," [TypeVar]                        ;
+
+(: [])          . [Type1]         ::= Type1                                        ;
+(:)             . [Type1]         ::= Type1  "," [Type1]                           ;
+
+(: [])          . [FormVar]       ::= FormVar                                      ;
+(:)             . [FormVar]       ::= FormVar "," [FormVar]                        ;
+
+-- --------------------------------------------------------------------------------
+-- Comments
+-- --------------------------------------------------------------------------------
 
 comment "//" ;
 comment "/*" "*/" ;
 
 comment "(*" "*)" ;
+
+-- --------------------------------------------------------------------------------
+-- Tokens
+-- --------------------------------------------------------------------------------
 
 token UIdent (upper (letter | digit | '_')*) ;
 token LIdent (lower (letter | digit | '_')*) ;
