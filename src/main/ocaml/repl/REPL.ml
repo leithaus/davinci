@@ -76,8 +76,7 @@ struct
     end
 
   let read_eval_print_loop () = 
-    (* let dbg = ref false in *)
-    ( CacaoScriptConfig.load_config_file "conf.ml" );
+    (* let dbg = ref false in *)    
     let rslt = ref true in
     let show_tree = 
       CacaoScriptConfig.show_parse_tree() in
