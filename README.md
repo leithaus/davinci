@@ -1,7 +1,7 @@
 Cacaoscript
 =======
 
-Language and runtime cacaoweb
+Language and runtime for the cacaoweb platform
 
 Prerequisites for build: 
 * ocaml 4.01.0 or greater; 
