@@ -69,6 +69,7 @@ open Lexing
 %token SYMB61 /* :desugar */
 %token SYMB62 /* :parse */
 %token SYMB63 /* , */
+%token SYMB64 /* . */
 
 %token TOK_EOF
 %token <string> TOK_Ident
@@ -80,8 +81,13 @@ open Lexing
 %token <string> TOK_LIdent
 %token <string> TOK_Wild
 
-%start pRequest pExpr pArithmeticExpr pBinding pPattern pVariation pLyst pValue pDuality pSymbol pTypeT pTypeAbstraction pTypeApplication pTypeVar pStructureType pGType pForm pFormFormals pFormVar pGForm pOuterShellRequest pInnerShellRequest pExpr_list pPattern_list pBinding_list pTypeVar_list pTypeT_list pFormVar_list
+%start pRequest /* pExpr pArithmeticExpr pBinding pPattern pVariation
+%pLyst pValue pDuality pSymbol pTypeT pTypeAbstraction
+%pTypeApplication pTypeVar pStructureType pGType pForm pFormFormals
+%pFormVar pGForm pOuterShellRequest pInnerShellRequest pExpr_list
+%pPattern_list pBinding_list pTypeVar_list pTypeT_list pFormVar_list */
 %type <Abscacao.request> pRequest
+/*
 %type <Abscacao.expr> pExpr
 %type <Abscacao.arithmeticExpr> pArithmeticExpr
 %type <Abscacao.binding> pBinding
@@ -109,12 +115,14 @@ open Lexing
 %type <Abscacao.typeVar list> pTypeVar_list
 %type <Abscacao.typeT list> pTypeT_list
 %type <Abscacao.formVar list> pFormVar_list
-
+*/
 
 %%
-pRequest : request TOK_EOF { $1 }
-  | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
+pRequest : request SYMB64 { $1 }
+    | TOK_EOF { ( InnerShell ExitRequest ) }
+    | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
+/*
 pExpr : expr TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
 
@@ -195,7 +203,7 @@ pTypeT_list : type1_list TOK_EOF { $1 }
 
 pFormVar_list : formVar_list TOK_EOF { $1 }
   | error { raise (BNFC_Util.Parse_error (Parsing.symbol_start_pos (), Parsing.symbol_end_pos ())) };
-
+*/
 
 request : expr { Evaluation $1 } 
   | SYMB1 expr SYMB2 typeT { TypeCheck ($2, $4) }

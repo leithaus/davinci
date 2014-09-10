@@ -18,8 +18,8 @@ module type REPLS =
 sig
   module Pipeline : ASTXFORMS
 
-  val parse : in_channel -> Abscacao.expr
-  val showTree : Abscacao.expr -> string
+  val parse : in_channel -> Abscacao.request
+  val showTree : Abscacao.request -> string
   val print_rslt : Pipeline.model_value -> string
   val eval : Pipeline.model_term -> Pipeline.model_value Pipeline.REval.monad
   val read_eval_print_loop : unit -> unit
@@ -30,8 +30,8 @@ module type REPLFUNCTOR =
 sig
   module Pipeline : ( ASTXFORMS with type 'a REval.monad = 'a M.monad )
 
-  val parse : in_channel -> Abscacao.expr
-  val showTree : Abscacao.expr -> string
+  val parse : in_channel -> Abscacao.request
+  val showTree : Abscacao.request -> string
   val print_rslt : Pipeline.model_value -> string
   val eval : Pipeline.model_term -> Pipeline.model_value Pipeline.REval.monad
   val read_eval_print_loop : unit -> unit
@@ -43,12 +43,12 @@ struct
   module Pipeline : ( ASTXFORMS with type 'a REval.monad = 'a M.monad )
     = ASTXFORM( M )
 
-  let parse (c : in_channel) : Abscacao.expr = 
-    Parcacao.pExpr Lexcacao.token (Lexing.from_channel c)
+  let parse (c : in_channel) : Abscacao.request = 
+    Parcacao.pRequest Lexcacao.token (Lexing.from_channel c)
 
-  let showTree (t : Abscacao.expr) : string = 
-    "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showExpr x)) t ^ "\n\n" ^
-      "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtExpr t ^ "\n"
+  let showTree (t : Abscacao.request) : string = 
+    "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showRequest x)) t ^ "\n\n" ^
+      "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtRequest t ^ "\n"
 
   let print_rslt v =
     raise ( NotYetImplemented "print_rslt" )
@@ -58,6 +58,22 @@ struct
         m_term
         Pipeline.REval.init_env (* BUGBUG -- lgm -- this assumes no builtin fns *)
         Pipeline.REval.init_k )
+
+  let evaluate_expression ast =
+    let desugared_ast = ( Pipeline.desugar ast ) in
+    let term = ( Pipeline.expr_to_term desugared_ast ) in
+      ( eval term )
+
+  let report v =
+    begin
+      ( M.m_bind
+          v
+          ( fun nrml ->
+            print_string ( print_rslt nrml );
+            ( M.m_unit nrml ) ) );
+      print_newline ();
+      flush stdout
+    end
 
   let read_eval_print_loop () = 
     (* let dbg = ref false in *)
@@ -96,17 +112,20 @@ struct
                   | _ -> () );
                 print_newline ();
                 flush stdout;
-                let desugared_ast = ( Pipeline.desugar ast ) in
-                let term = ( Pipeline.expr_to_term desugared_ast ) in
-                  begin
-                    ( M.m_bind
-                        ( eval term )
-                        ( fun nrml ->
-                          print_string ( print_rslt nrml );
-                          ( M.m_unit nrml ) ) );
-                    print_newline ();
-                    flush stdout
-                  end
+                ( match ast with 
+                    Evaluation( expr_ast ) ->
+                      let v = ( evaluate_expression expr_ast ) in
+                        ( report v )
+                  | TypeCheck( expr_ast, type_ast ) ->
+                      raise ( NotYetImplemented "TypeCheck" )
+                  | ModelCheck( expr_ast, form_ast ) ->
+                      raise ( NotYetImplemented "ModelCheck" )
+                  | OuterShell( osreq ) ->
+                      raise ( NotYetImplemented "OuterShell" )
+                  | InnerShell( isreq ) ->
+                      match isreq with
+                          ExitRequest -> rslt := true
+                        | _ -> raise ( NotYetImplemented "other inner shell requests" ) )
               end
           done)
       with e ->
