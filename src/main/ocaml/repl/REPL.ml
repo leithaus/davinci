@@ -50,6 +50,10 @@ struct
     "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showRequest x)) t ^ "\n\n" ^
       "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtRequest t ^ "\n"
 
+  let showAST (t : Abscacao.expr) : string = 
+    "[Abstract syntax]\n\n" ^ (fun x -> Showcacao.show (Showcacao.showExpr x)) t ^ "\n\n" ^
+      "[Linearized tree]\n\n" ^ Printcacao.printTree Printcacao.prtExpr t ^ "\n"
+
   let print_rslt v =
     match v with 
         Pipeline.REval.ReflectiveValue.Ground( Pipeline.REval.ReflectiveValue.Boolean( true ) ) ->
@@ -132,6 +136,10 @@ struct
                   | InnerShell( isreq ) ->
                       match isreq with
                           ExitRequest -> rslt := false
+                        | DesugarRequest( ast ) ->
+                            ( print_string ( showAST ( Pipeline.desugar ast ) ) )
+                        | ParseRequest( s ) ->
+                            raise ( NotYetImplemented "inner shell parse request" )
                         | _ -> raise ( NotYetImplemented "other inner shell requests" ) )
               end
           done)

@@ -21,7 +21,7 @@
 Evaluation      . Request         ::= Expr                                         ;
 TypeCheck       . Request         ::= "|-" Expr ":" Type                           ;
 ModelCheck      . Request         ::= "|=" Expr ":" Form                           ;
-OuterShell      . Request         ::= ":!" OuterShellRequest                       ;
+OuterShell      . Request         ::= OuterShellRequest                            ;
 InnerShell      . Request         ::= InnerShellRequest                            ;
 
 -- --------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ FloatForm       . GForm           ::= "float"                                   
 -- Shell requests
 -- --------------------------------------------------------------------------------
 
-EscapeRequest   . OuterShellRequest ::= String                                     ;
+EscapeRequest   . OuterShellRequest ::= ":!" String                                ;
 PwdRequest      . OuterShellRequest ::= ":pwd"                                     ;
 CdRequest       . OuterShellRequest ::= ":cd"                                      ;
 

@@ -89,7 +89,7 @@ let rec prtRequest (i:int) (e:request) : doc = match e with
        Evaluation expr -> prPrec i 0 (concatD [prtExpr 0 expr])
   |    TypeCheck (expr, type') -> prPrec i 0 (concatD [render "|-" ; prtExpr 0 expr ; render ":" ; prtTypeT 0 type'])
   |    ModelCheck (expr, form) -> prPrec i 0 (concatD [render "|=" ; prtExpr 0 expr ; render ":" ; prtForm 0 form])
-  |    OuterShell outershellrequest -> prPrec i 0 (concatD [render ":!" ; prtOuterShellRequest 0 outershellrequest])
+  |    OuterShell outershellrequest -> prPrec i 0 (concatD [prtOuterShellRequest 0 outershellrequest])
   |    InnerShell innershellrequest -> prPrec i 0 (concatD [prtInnerShellRequest 0 innershellrequest])
 
 
@@ -283,7 +283,7 @@ and prtGForm (i:int) (e:gForm) : doc = match e with
 
 
 and prtOuterShellRequest (i:int) (e:outerShellRequest) : doc = match e with
-       EscapeRequest str -> prPrec i 0 (concatD [prtString 0 str])
+       EscapeRequest str -> prPrec i 0 (concatD [render ":!" ; prtString 0 str])
   |    PwdRequest  -> prPrec i 0 (concatD [render ":pwd"])
   |    CdRequest  -> prPrec i 0 (concatD [render ":cd"])
 
