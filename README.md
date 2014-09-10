@@ -12,7 +12,7 @@ To build:
 
 * git clone https://github.com/leithaus/davinci.git
 * cd davinci
-* edit setup.data to point to your ocaml executables; making sure ocamlfind points to the opam ocamlfind
+* edit setup.data to point to your ocaml executables, making sure ocamlfind points to the opam ocamlfind
 * ocaml setup.ml configure
 * make
 * ./cacaotop.sh
