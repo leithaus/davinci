@@ -13,24 +13,32 @@ open Cfg
 
 module CacaoScriptREPL : REPLS = REPL( Identity_Monad ) ;;
 
-( CacaoScriptConfig.load_config_file "conf.ml" );;
+let load_config_and_begin_repl () = 
+  begin
+    let config_file_name =
+      ( match ( Array.length Sys.argv ) with
+          2 -> Sys.argv.(1)
+        | _ -> "conf.ml" ) in 
 
+      ( CacaoScriptConfig.load_config_file config_file_name ); 
+
+      let bctl = CacaoScriptConfig.begin_cacao_top_level() in
+      let ftr = CacaoScriptConfig.file_to_read() in
+        match bctl with
+            true ->
+              begin
+                CacaoScriptREPL.read_eval_print_loop ();
+              end
+          | _ -> ()
+  end;;
+   
 match !Sys.interactive with
     true ->
-      match CacaoScriptConfig.begin_cacao_top_level() with
-          true ->
-            begin
-              CacaoScriptREPL.read_eval_print_loop ();
-              exit 0
-            end
-        | _ -> ()
+      begin      
+        ( load_config_and_begin_repl () )
+      end
   | _ -> () ;;
-      
+    
 let main () = 
-  match CacaoScriptConfig.begin_cacao_top_level() with
-      true ->
-        begin
-          CacaoScriptREPL.read_eval_print_loop ();
-        end
-    | _ -> ()
+  ( load_config_and_begin_repl () )
 ;;

@@ -24,6 +24,12 @@ struct
     
   let begin_cacao_top_level () = begin_cacao_top_level_param#get
 
+  (* We create a cp file_to_read of type string option. Its default value is None *)
+  let file_to_read_param =
+    new option_cp string_wrappers ~group ["section1";"file_to_read"] None "file to read on commencement of top level."
+    
+  let file_to_read () = file_to_read_param#get
+
     (* We read cacaoscript toplevel config from file "conf.ml" *)
   let load_config_file fname = group#read fname    
 end

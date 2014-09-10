@@ -81,10 +81,9 @@ struct
     let show_tree = 
       CacaoScriptConfig.show_parse_tree() in
     let channel =
-      if Array.length Sys.argv > 1 then
-        open_in Sys.argv.(1)
-      else
-        stdin
+      ( match CacaoScriptConfig.file_to_read() with
+          Some( file_name ) -> ( open_in file_name )
+        | None -> stdin )
     in
       print_string " *** Cacao Top Level version 0.01 *** \n";
       ( print_string 

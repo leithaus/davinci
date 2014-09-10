@@ -1,3 +1,4 @@
 #directory "_build/src/main/ocaml/repl" ;;
 open Cacao;;
-read_eval_print_loop () ;;
+open REPL;;
+(* CacaoScriptREPL.read_eval_print_loop () ;; *)
