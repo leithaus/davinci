@@ -82,14 +82,25 @@ sig
       (* The type of continuations *)
   type ktn = ( value, term ) ReflectiveK.cont
 
+  (* The type of prompts *)
+  type prompt = int
+      
+  (* The type of contexts *)
+  type k_ctxt =
+      Prompt of prompt
+      | K of ktn
+
+  (* The type of meta-continuations *)
+  type meta_ktn = k_ctxt list
+
   (* The reduction of terms and/or the transitions of the abstract machine *)
-  val reduce : term -> env -> ktn -> value monad
+  val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* The primitive arithmetic operations *)
-  val calculate : arith_term -> env -> ktn -> value monad
+  val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
   val apply_k : ktn -> value -> value
   (* Application of closures *)
-  val apply_closure : value -> value -> ktn -> value monad
+  val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
 
   (* Pattern-matching *)
   val unify : pattern -> value -> env option
@@ -101,7 +112,16 @@ sig
   val yunit : value
     
   val init_env : env
-  val init_k : ktn
+  val init_k : ktn  
+
+  val initial_prompt : unit -> prompt
+  val the_prompt : prompt ref
+  val initial_meta_ktn : unit -> meta_ktn
+
+  val new_prompt : ktn -> meta_ktn -> prompt -> value
+  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value 
+  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value 
+  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value 
 end 
 
 (* The type of an abstract machine derived from a monadic evaluator *)
@@ -146,14 +166,23 @@ sig
       (* The type of continuations *)
   type ktn = ( value, term ) ReflectiveK.cont
 
+  (* The type of prompts *)
+  type prompt = int
+  (* The type of contexts *)
+  type k_ctxt = 
+      Prompt of prompt
+      | K of ktn
+  (* The type of meta-continuations *)
+  type meta_ktn = k_ctxt list
+
   (* The reduction of terms and/or the transitions of the abstract machine *)
-  val reduce : term -> env -> ktn -> value monad
+  val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* The primitive arithmetic operations *)
-  val calculate : arith_term -> env -> ktn -> value monad
+  val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
   val apply_k : ktn -> value -> value
   (* Application of closures *)
-  val apply_closure : value -> value -> ktn -> value monad
+  val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
 
   (* Pattern-matching *)
   val unify : pattern -> value -> env option
@@ -167,6 +196,15 @@ sig
   (* Initial configurations *)
   val init_env : env
   val init_k : ktn 
+
+  val initial_prompt : unit -> prompt
+  val the_prompt : prompt ref
+  val initial_meta_ktn : unit -> meta_ktn
+
+  val new_prompt : ktn -> meta_ktn -> prompt -> value
+  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value
+  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value
+  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value
 end 
 
 (*
@@ -212,26 +250,35 @@ struct
   type env = ReflectiveValue.v_env
   type ktn = ( value, term ) ReflectiveK.cont
 
+  (* The type of prompts *)
+  type prompt = int
+  (* The type of contexts *)
+  type k_ctxt = 
+      Prompt of prompt
+      | K of ktn
+  (* The type of meta-continuations *)
+  type meta_ktn = k_ctxt list
+
   exception NonFunctionInOpPosition of value 
   exception MatchFailure of pattern * value
   exception RuntimeException of string * term
   exception UnboundVariable of ident
       
   let bottom = ReflectiveValue.BOTTOM
-  let yunit = ReflectiveValue.UNIT 
+  let yunit = ReflectiveValue.UNIT     
 
-  let rec reduce t e k =
+  let rec reduce t e k m q =
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
           ( M.m_unit ( apply_k k yunit )  )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
-          let _ = (reduce thd e k ) in 
+          let _ = ( reduce thd e k m q ) in 
           let rec loop ts =
             match ts with
-                tshd :: [] -> (reduce tshd e k )
+                tshd :: [] -> ( reduce tshd e k m q )
               | tshd :: tstl ->
-                  let _ = (reduce tshd e k ) in
+                  let _ = ( reduce tshd e k m q ) in
                     ( loop tstl )          
               | _ -> raise NotEnough
           in ( loop ttl )
@@ -239,42 +286,44 @@ struct
       (* application *)
       | ReflectiveTerm.Application( op, [] ) ->
           ( M.m_bind
-              ( reduce op e k )
+              ( reduce op e k m q )
               ( fun clsr ->
                 match clsr with
                     ReflectiveValue.Closure( _, _, _ ) ->
-                      ( apply_closure clsr ReflectiveValue.UNIT k )
+                      ( apply_closure clsr ReflectiveValue.UNIT k m q )
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
           )
       | ReflectiveTerm.Application( op, actls ) ->
           let bind_reduce acc actual =
             ( M.m_bind 
-                ( reduce actual e k )
+                ( reduce actual e k m q )
                 ( fun a ->  
                   ( M.m_bind acc
                       ( fun clsr ->
                         match clsr with 
                             ReflectiveValue.Closure( _, _, _ ) ->
-                              ( apply_closure clsr a k )
+                              ( apply_closure clsr a k m q )
                           | _ -> raise ( NonFunctionInOpPosition clsr )
                       )
                   )
                 ) 
             ) in
-            ( List.fold_left bind_reduce ( reduce op e k ) actls )
+            ( List.fold_left bind_reduce ( reduce op e k m q ) actls )
 
       (* let *)
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->
           ( M.m_bind
-              ( reduce pterm e k )
+              ( reduce pterm e k m q )
               ( fun a ->                
                 match ( ( unify ptn a ), e ) with
                     ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
                       ( reduce
                           eterm
                           ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                          k )
+                          k 
+                          m
+                          q )
                   | _ -> raise ( MatchFailure ( ptn, a ) )
               )
           )
@@ -290,11 +339,11 @@ struct
       (* condition *)            
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           ( M.m_bind
-              ( reduce test e k )
+              ( reduce test e k m q )
               ( fun a ->
                 ( match a with
-                    ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) ) -> ( reduce tbranch e k )
-                  | ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) ) -> ( reduce fbranch e k )
+                    ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) ) -> ( reduce tbranch e k m q )
+                  | ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) ) -> ( reduce fbranch e k m q )
                   | _ -> raise ( RuntimeException ( "expected Boolean", test ) ) ) ) )
 
       (* monadic desugaring *)
@@ -303,19 +352,19 @@ struct
       (* comparison *)
       | ReflectiveTerm.Equation( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k )
+              ( reduce lhs e k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k )
+                    ( reduce rhs e k m q )
                     ( fun r ->
                       ( M.m_unit
                           ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( l == r ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonLT( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k )
+              ( reduce lhs e k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k )
+                    ( reduce rhs e k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -340,10 +389,10 @@ struct
                                    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonGT( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k )
+              ( reduce lhs e k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k )
+                    ( reduce rhs e k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -368,10 +417,10 @@ struct
                                    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonLTE( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k )
+              ( reduce lhs e k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k )
+                    ( reduce rhs e k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -396,10 +445,10 @@ struct
                                    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= d2 ) ) ) ) ) ) ) ) )
       | ReflectiveTerm.ComparisonGTE( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k )
+              ( reduce lhs e k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k )
+                    ( reduce rhs e k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -439,15 +488,15 @@ struct
 
       (* primitive arithmetic calculation *)
       | ReflectiveTerm.Calculation( aterm ) -> 
-          ( calculate aterm e k )
-  and calculate a e k =
+          ( calculate aterm e k m q )
+  and calculate a e k m q =
     match a with 
         ReflectiveTerm.Division( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k )
+              ( calculate aterm1 e k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k )
+                    ( calculate aterm2 e k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -477,10 +526,10 @@ struct
             
       | ReflectiveTerm.Addition( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k )
+              ( calculate aterm1 e k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k )
+                    ( calculate aterm2 e k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -509,10 +558,10 @@ struct
           )
       | ReflectiveTerm.Multiplication( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k )
+              ( calculate aterm1 e k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k )
+                    ( calculate aterm2 e k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -554,7 +603,7 @@ struct
       | ReflectiveTerm.Actualization( aterm ) ->
           ( M.m_unit ( materialize aterm ) )
       | ReflectiveTerm.Aggregation( aterm ) ->
-          ( reduce aterm e k )
+          ( reduce aterm e k m q )
   and materialize lit = 
     match lit with
         ReflectiveTerm.BooleanLiteral( ReflectiveTerm.Verity ) ->
@@ -574,7 +623,7 @@ struct
     match ( k, v ) with 
         ( ReflectiveK.STOP, v ) -> v
       | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
-  and apply_closure op v k =
+  and apply_closure op v k m q =
     match op with
         ReflectiveValue.Closure( c_ptn, c_term, c_env ) ->
           let nc_ptn : pattern = c_ptn in
@@ -583,7 +632,7 @@ struct
                 let nc_k : ktn = k in
                 let nc_term : term = c_term in
                 let nc_env : env = ( ReflectiveValue.Env( ReflectiveEnv.sum c_ptn_env c_renv ) ) in
-                  ( reduce nc_term nc_env nc_k )
+                  ( reduce nc_term nc_env nc_k m q )
             | _ -> raise ( MatchFailure ( c_ptn, v ) ) )
       | _ -> raise ( NonFunctionInOpPosition op )
   and unify p t = 
@@ -649,9 +698,21 @@ struct
           raise ( NotYetImplemented "unify PtnJuxtaposition" ) 
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
+  and new_prompt k m q =
+    raise ( NotYetImplemented "new_prompt" )   
+  and push_prompt t1 t2 k m q = 
+    raise ( NotYetImplemented "push_prompt" )   
+  and with_sub_cont t1 t2 k m q =
+    raise ( NotYetImplemented "push_prompt" )   
+  and push_sub_cont t1 t2 k m q = 
+    raise ( NotYetImplemented "push_prompt" )    
 
-  let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty )
+  let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
   let init_k = ReflectiveK.STOP
+
+  let initial_prompt () = 0
+  let the_prompt = ref ( initial_prompt() )
+  let initial_meta_ktn () = []
 end
 
 

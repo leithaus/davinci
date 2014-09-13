@@ -80,7 +80,9 @@ struct
     ( Pipeline.REval.reduce
         m_term
         Pipeline.REval.init_env (* BUGBUG -- lgm -- this assumes no builtin fns *)
-        Pipeline.REval.init_k )
+        Pipeline.REval.init_k
+        ( Pipeline.REval.initial_meta_ktn() )
+        ( Pipeline.REval.initial_prompt() ) )
 
   let evaluate_expression ast =
     let desugared_ast = ( Pipeline.desugar ast ) in
