@@ -814,13 +814,13 @@ struct
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
   and new_prompt k m q =
-    raise ( NotYetImplemented "new_prompt" )   
+    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) m ( q + 1 ) )
   and push_prompt t1 t2 k m q = 
     raise ( NotYetImplemented "push_prompt" )   
   and with_sub_cont t1 t2 k m q =
-    raise ( NotYetImplemented "push_prompt" )   
+    raise ( NotYetImplemented "with_sub_cont" )   
   and push_sub_cont t1 t2 k m q = 
-    raise ( NotYetImplemented "push_prompt" )    
+    raise ( NotYetImplemented "push_sub_cont" )    
 
   let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
   let init_k = ReflectiveK.STOP
