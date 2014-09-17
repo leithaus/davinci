@@ -83,15 +83,9 @@ sig
   type ktn = ( value, term ) ReflectiveK.cont
 
   (* The type of prompts *)
-  type prompt = int
+  type prompt = ReflectiveK.prompt
       
-  (* The type of contexts *)
-  type k_ctxt =
-      Prompt of prompt
-      | K of ktn
-
-  (* The type of meta-continuations *)
-  type meta_ktn = k_ctxt list
+  type meta_ktn = ( value, term ) ReflectiveK.meta_cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
   val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
@@ -167,13 +161,10 @@ sig
   type ktn = ( value, term ) ReflectiveK.cont
 
   (* The type of prompts *)
-  type prompt = int
-  (* The type of contexts *)
-  type k_ctxt = 
-      Prompt of prompt
-      | K of ktn
+  type prompt = ReflectiveK.prompt
+
   (* The type of meta-continuations *)
-  type meta_ktn = k_ctxt list
+  type meta_ktn = ( value, term ) ReflectiveK.meta_cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
   val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
@@ -251,13 +242,9 @@ struct
   type ktn = ( value, term ) ReflectiveK.cont
 
   (* The type of prompts *)
-  type prompt = int
-  (* The type of contexts *)
-  type k_ctxt = 
-      Prompt of prompt
-      | K of ktn
+  type prompt = ReflectiveK.prompt
   (* The type of meta-continuations *)
-  type meta_ktn = k_ctxt list
+  type meta_ktn = ( value, term ) ReflectiveK.meta_cont
 
   exception NonFunctionInOpPosition of value 
   exception MatchFailure of pattern * value
