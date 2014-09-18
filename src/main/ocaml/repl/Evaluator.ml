@@ -277,7 +277,7 @@ struct
               ( fun clsr ->
                 match clsr with
                     ReflectiveValue.Closure( _, _, _ ) ->
-                      ( apply_closure clsr ReflectiveValue.UNIT k m q )
+                      ( apply_closure clsr yunit k m q )
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
           )

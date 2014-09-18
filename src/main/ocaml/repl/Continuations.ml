@@ -21,6 +21,9 @@ sig
       STOP
       | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
@@ -42,6 +45,9 @@ sig
       STOP
       | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ('v, 't) cont * ('v, 't) meta_cont * prompt          
+      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
@@ -63,6 +69,9 @@ struct
       STOP
       | ARG of 't * ( Nominal.nominal, 'v ) k_env * ( 'v, 't ) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ( 'v, 't ) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
