@@ -92,7 +92,7 @@ sig
   (* The primitive arithmetic operations *)
   val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
-  val apply_k : ktn -> value -> meta_ktn -> prompt -> value
+  val apply_k : ktn -> value monad -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
   val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
 
@@ -112,10 +112,10 @@ sig
   val the_prompt : prompt ref
   val initial_meta_ktn : unit -> meta_ktn
 
-  val new_prompt : ktn -> meta_ktn -> prompt -> value
-  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value 
-  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value 
-  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value 
+  val new_prompt : ktn -> meta_ktn -> prompt -> value monad
+  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
 end 
 
 (* The type of an abstract machine derived from a monadic evaluator *)
@@ -171,7 +171,7 @@ sig
   (* The primitive arithmetic operations *)
   val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
-  val apply_k : ktn -> value -> meta_ktn -> prompt -> value
+  val apply_k : ktn -> value monad -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
   val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
 
@@ -192,10 +192,10 @@ sig
   val the_prompt : prompt ref
   val initial_meta_ktn : unit -> meta_ktn
 
-  val new_prompt : ktn -> meta_ktn -> prompt -> value
-  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value
-  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value
-  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value
+  val new_prompt : ktn -> meta_ktn -> prompt -> value monad
+  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
 end 
 
 (*
@@ -258,7 +258,7 @@ struct
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
-          ( M.m_unit ( apply_k k yunit m q )  )
+          ( apply_k k ( M.m_unit yunit ) m q )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
           let _ = ( reduce thd e k m q ) in 
           let rec loop ts =
@@ -281,22 +281,18 @@ struct
                   | _ -> raise ( NonFunctionInOpPosition clsr )
               )
           )
-      | ReflectiveTerm.Application( op, actls ) ->
-          let bind_reduce acc actual =
-            ( M.m_bind 
-                ( reduce actual e k m q )
-                ( fun a ->  
-                  ( M.m_bind acc
-                      ( fun clsr ->
-                        match clsr with 
-                            ReflectiveValue.Closure( _, _, _ ) ->
-                              ( apply_closure clsr a k m q )
-                          | _ -> raise ( NonFunctionInOpPosition clsr )
-                      )
-                  )
-                ) 
-            ) in
-            ( List.fold_left bind_reduce ( reduce op e k m q ) actls )
+      | ReflectiveTerm.Application( op, actls ) ->          
+          ( match e with
+            ReflectiveValue.Env( renv ) ->
+              let rv_actls : term list = ( List.rev actls ) in
+              let actl_lst : term = ( List.hd rv_actls ) in
+              let actls_no_lst : term list = ( List.rev ( List.tl rv_actls ) ) in
+              let arg_reduce actual acc =
+                ( ReflectiveK.ARG ( actual, renv, acc, m, q ) ) in
+              let nk : ktn =
+                ( List.fold_right
+                    arg_reduce actls_no_lst ( ReflectiveK.ARG ( actl_lst, renv, k, m, q ) ) ) in
+                ( reduce op e nk m q ) )
 
       (* let *)
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->
@@ -321,7 +317,7 @@ struct
 
       (* abstraction *)
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
-          ( M.m_unit ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) m q ) )
+          ( apply_k k ( M.m_unit ( ReflectiveValue.Closure( ptn, eterm, e ) ) ) m q )
             
       (* condition *)            
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
@@ -344,12 +340,12 @@ struct
                 ( M.m_bind
                     ( reduce rhs e k m q )
                     ( fun r ->
-                      ( M.m_unit
-                          ( apply_k
-                              k
-                              ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( l == r ) ) )
+                      ( apply_k
+                          k
+                          ( M.m_unit
+                              ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( l == r ) ) ) )
                               m
-                              q ) ) ) ) ) )
+                              q ) ) ) ) )
       | ReflectiveTerm.ComparisonLT( lhs, rhs ) ->
           ( M.m_bind 
               ( reduce lhs e k m q )
@@ -361,39 +357,44 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) )
+                          ) -> ( apply_k
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) ) )
                                        m 
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) < d2 ) ) )
+                          ) -> ( apply_k
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean ( ( float d1 ) < d2 ) ) ) )
                                        m 
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < float( d2 ) ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                    ( M.m_unit
+                                        ( ReflectiveValue.Ground
+                                            ( ReflectiveValue.Boolean
+                                                ( d1 < float( d2 ) ) ) ) )
                                        m 
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 < d2 ) ) ) )
                                        m
-                                       q ) ) ) ) ) )
+                                       q ) ) ) ) )
       | ReflectiveTerm.ComparisonGT( lhs, rhs ) ->
           ( M.m_bind 
               ( reduce lhs e k m q )
@@ -405,39 +406,46 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > d2 ) ) )
-                                       m 
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 > d2 ) ) ) )
+                                   m 
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) > d2 ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( ( float d1 ) > d2 ) ) ) )
                                        m 
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > float( d2 ) ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 > float( d2 ) ) ) ) )
                                        m 
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 > d2 ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean ( d1 > d2 ) ) ) )
                                        m 
-                                       q ) ) ) ) ) )
+                                       q ) ) ) ) )
       | ReflectiveTerm.ComparisonLTE( lhs, rhs ) ->
           ( M.m_bind 
               ( reduce lhs e k m q )
@@ -449,39 +457,46 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean ( d1 <= d2 ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) <= d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( ( float d1 ) <= d2 ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= float( d2 ) ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                                                      
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 <= float( d2 ) ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 <= d2 ) ) )
-                                       m
-                                       q ) ) ) ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 <= d2 ) ) ) )
+                                   m
+                                   q ) ) ) ) )
       | ReflectiveTerm.ComparisonGTE( lhs, rhs ) ->
           ( M.m_bind 
               ( reduce lhs e k m q )
@@ -493,38 +508,47 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 >= d2 ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( ( float d1 ) >= d2 ) ) )
-                                       m 
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( ( float d1 ) >= d2 ) ) ) )
+                                   m 
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= float( d2 ) ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                                                      
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 >= float( d2 ) ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 >= d2 ) ) )
-                                       m
-                                       q ) ) ) ) ) )
+                          ) -> ( apply_k                                  
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Boolean
+                                               ( d1 >= d2 ) ) ) )
+                                   m
+                                   q ) ) ) ) )
 
       (* reflection -- dual to reification *)
       | ReflectiveTerm.Reflection( v ) ->
@@ -556,39 +580,47 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 /. d2 ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) /. d2 ) ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( ( float d1 ) /. d2 ) ) ) )
                                        m
-                                       q ) )
+                                       q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 /. float( d2 ) ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 /. float( d2 ) ) ) ) )
+                                   m
+                                   q )
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 / d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Integer
+                                               ( d1 / d2 ) ) ) )
+                                   m
+                                   q )
                     )
                 )
               )
@@ -605,39 +637,48 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 +. d2 ) ) ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) +. d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( ( float d1 ) +. d2 )
+                                           ) ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 +. float( d2 ) ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 +. float( d2 ) ) )
+                                       ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 + d2 ) ) )
-                                       m 
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Integer ( d1 + d2 ) ) ) )
+                                   m 
+                                   q )
                     )
                 )
               )
@@ -653,39 +694,49 @@ struct
                           (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 *. d2 ) ) ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Double( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( ( float d1 ) *. d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( ( float d1 ) *. d2 )
+                                           ) ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Double( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Double ( d1 *. float( d2 ) ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Double
+                                               ( d1 *. float( d2 ) ) )
+                                       ) )
+                                   m
+                                   q ) 
                         | (
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d1 ) ),
                             ReflectiveValue.Ground( ReflectiveValue.Integer( d2 ) )
-                          ) -> ( M.m_unit
-                                   ( apply_k
-                                       k
-                                       ( ReflectiveValue.Ground ( ReflectiveValue.Integer ( d1 * d2 ) ) )
-                                       m
-                                       q ) )
+                          ) -> ( apply_k                                   
+                                   k
+                                   ( M.m_unit
+                                       ( ReflectiveValue.Ground
+                                           ( ReflectiveValue.Integer
+                                               ( d1 * d2 ) ) ) )
+                                   m
+                                   q ) 
                     )
                 )
               )
@@ -699,7 +750,7 @@ struct
               ( ReflectiveTerm.Identifier( v ), ReflectiveValue.Env( renv ) ) ->
                 ( match ( ReflectiveEnv.lookup ( v, renv ) ) with
                     Some( rslt ) ->
-                      ( M.m_unit ( apply_k k rslt m q ) )
+                      ( apply_k k ( M.m_unit rslt ) m q )
                   | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | ReflectiveTerm.Actualization( aterm ) ->
@@ -724,6 +775,17 @@ struct
   and apply_k k v m q =
     match ( k, v ) with 
         ( ReflectiveK.STOP, v ) -> v
+      | ( ReflectiveK.ARG( t, renv, kp, mp, qp ), v ) ->
+          ( M.m_bind
+              v
+              ( fun a ->
+                ( M.m_bind
+                    ( reduce t ( ReflectiveValue.Env renv ) kp mp qp )
+                    ( fun clsr ->
+                      match clsr with
+                          ReflectiveValue.Closure( _, _, _ ) ->
+                            ( apply_closure clsr a k m q )
+                        | _ -> raise ( NonFunctionInOpPosition clsr ) ) ) ) )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
   and apply_closure op v k m q =
     match op with
@@ -801,7 +863,7 @@ struct
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
   and new_prompt k m q =
-    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) m ( q + 1 ) )
+    ( apply_k k ( M.m_unit ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) ) m ( q + 1 ) )
   and push_prompt t1 t2 k m q = 
     raise ( NotYetImplemented "push_prompt" )   
   and with_sub_cont t1 t2 k m q =
