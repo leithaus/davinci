@@ -94,8 +94,7 @@ sig
   (* Application of continuations *)
   val apply_k : ktn -> value monad -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
-  val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
-
+  
   (* Pattern-matching *)
   val unify : pattern -> value -> env option
   val materialize : literal -> value
@@ -173,8 +172,7 @@ sig
   (* Application of continuations *)
   val apply_k : ktn -> value monad -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
-  val apply_closure : value -> value -> ktn -> meta_ktn -> prompt -> value monad
-
+  
   (* Pattern-matching *)
   val unify : pattern -> value -> env option
   val materialize : literal -> value
@@ -272,26 +270,29 @@ struct
 
       (* application *)
       | ReflectiveTerm.Application( op, [] ) ->
-          ( M.m_bind
-              ( reduce op e k m q )
-              ( fun clsr ->
-                match clsr with
-                    ReflectiveValue.Closure( _, _, _ ) ->
-                      ( apply_closure clsr yunit k m q )
-                  | _ -> raise ( NonFunctionInOpPosition clsr )
-              )
-          )
+          ( match e with
+              ReflectiveValue.Env( renv ) ->
+                let nk : ktn =
+                  ( ReflectiveK.ARG
+                      ( ( ReflectiveTerm.Calculation
+                            ( ReflectiveTerm.Actualization ReflectiveTerm.UNIT ) ),
+                      renv,
+                      k,
+                      m,
+                      q ) ) in
+                  ( reduce op e nk m q ) )                    
+
       | ReflectiveTerm.Application( op, actls ) ->          
           ( match e with
             ReflectiveValue.Env( renv ) ->
               let rv_actls : term list = ( List.rev actls ) in
               let actl_lst : term = ( List.hd rv_actls ) in
               let actls_no_lst : term list = ( List.rev ( List.tl rv_actls ) ) in
-              let arg_reduce actual acc =
+              let arg_reduce ( actual : term ) ( acc : ktn ) =
                 ( ReflectiveK.ARG ( actual, renv, acc, m, q ) ) in
+              let seed_ktn : ktn = ( arg_reduce actl_lst k ) in
               let nk : ktn =
-                ( List.fold_right
-                    arg_reduce actls_no_lst ( ReflectiveK.ARG ( actl_lst, renv, k, m, q ) ) ) in
+                ( List.fold_right arg_reduce actls_no_lst seed_ktn ) in
                 ( reduce op e nk m q ) )
 
       (* let *)
@@ -804,18 +805,6 @@ struct
                     m
                     q ) ) )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
-  and apply_closure op v k m q =
-    match op with
-        ReflectiveValue.Closure( c_ptn, c_term, c_env ) ->
-          let nc_ptn : pattern = c_ptn in
-          ( match ( ( unify nc_ptn v ), c_env ) with
-              ( Some( ReflectiveValue.Env( c_ptn_env ) ), ReflectiveValue.Env( c_renv ) ) ->
-                let nc_k : ktn = k in
-                let nc_term : term = c_term in
-                let nc_env : env = ( ReflectiveValue.Env( ReflectiveEnv.sum c_ptn_env c_renv ) ) in
-                  ( reduce nc_term nc_env nc_k m q )
-            | _ -> raise ( MatchFailure ( c_ptn, v ) ) )
-      | _ -> raise ( NonFunctionInOpPosition op )
   and unify p t = 
     match ( p, t ) with 
         ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> 
