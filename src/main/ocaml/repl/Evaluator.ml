@@ -797,13 +797,12 @@ struct
           ( M.m_bind
               v
               ( fun a ->
-                ( M.m_bind
-                    ( reduce t ( ReflectiveValue.Env renv ) kp mp qp )
-                    ( fun clsr ->
-                      match clsr with
-                          ReflectiveValue.Closure( _, _, _ ) ->
-                            ( apply_closure clsr a k m q )
-                        | _ -> raise ( NonFunctionInOpPosition clsr ) ) ) ) )
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env renv )
+                    ( ReflectiveK.FUN ( a, kp, mp, qp ) )
+                    m
+                    q ) ) )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP k's" )
   and apply_closure op v k m q =
     match op with
