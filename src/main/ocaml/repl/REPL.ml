@@ -77,12 +77,14 @@ struct
           "()"
 
   let eval m_term =
+    let p = ( Pipeline.REval.initial_prompt() ) in
     ( Pipeline.REval.reduce
         m_term
         Pipeline.REval.init_env (* BUGBUG -- lgm -- this assumes no builtin fns *)
+        p
         Pipeline.REval.init_k
         ( Pipeline.REval.initial_meta_ktn() )
-        ( Pipeline.REval.initial_prompt() ) )
+        ( p + 1 ) )
 
   let evaluate_expression ast =
     let desugared_ast = ( Pipeline.desugar ast ) in

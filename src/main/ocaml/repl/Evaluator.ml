@@ -88,11 +88,11 @@ sig
   type meta_ktn = ( value, term ) ReflectiveK.meta_cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
-  val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
+  val reduce : term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   (* The primitive arithmetic operations *)
-  val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
+  val calculate : arith_term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
-  val apply_k : ktn -> value -> meta_ktn -> prompt -> value monad
+  val apply_k : ktn -> value -> prompt -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
   
   (* Pattern-matching *)
@@ -166,11 +166,11 @@ sig
   type meta_ktn = ( value, term ) ReflectiveK.meta_cont
 
   (* The reduction of terms and/or the transitions of the abstract machine *)
-  val reduce : term -> env -> ktn -> meta_ktn -> prompt -> value monad
+  val reduce : term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   (* The primitive arithmetic operations *)
-  val calculate : arith_term -> env -> ktn -> meta_ktn -> prompt -> value monad
+  val calculate : arith_term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   (* Application of continuations *)
-  val apply_k : ktn -> value -> meta_ktn -> prompt -> value monad
+  val apply_k : ktn -> value -> prompt -> meta_ktn -> prompt -> value monad
   (* Application of closures *)
   
   (* Pattern-matching *)
@@ -252,18 +252,18 @@ struct
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT     
 
-  let rec reduce t e k m q =
+  let rec reduce t e p k m q =
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
-          ( apply_k k yunit m q )
+          ( apply_k k yunit p m q )
       | ReflectiveTerm.Sequence( thd :: ttl ) ->
-          let _ = ( reduce thd e k m q ) in 
+          let _ = ( reduce thd e p k m q ) in 
           let rec loop ts =
             match ts with
-                tshd :: [] -> ( reduce tshd e k m q )
+                tshd :: [] -> ( reduce tshd e p k m q )
               | tshd :: tstl ->
-                  let _ = ( reduce tshd e k m q ) in
+                  let _ = ( reduce tshd e p k m q ) in
                     ( loop tstl )          
               | _ -> raise NotEnough
           in ( loop ttl )
@@ -280,7 +280,7 @@ struct
                       k,
                       m,
                       q ) ) in
-                  ( reduce op e nk m q ) )                    
+                  ( reduce op e p nk m q ) )
 
       | ReflectiveTerm.Application( op, actls ) ->          
           ( match e with
@@ -293,18 +293,19 @@ struct
               let seed_ktn : ktn = ( arg_reduce actl_lst k ) in
               let nk : ktn =
                 ( List.fold_right arg_reduce actls_no_lst seed_ktn ) in
-                ( reduce op e nk m q ) )
+                ( reduce op e p nk m q ) )
 
       (* let *)
       | ReflectiveTerm.Supposition( ptn, pterm, eterm ) ->
           ( M.m_bind
-              ( reduce pterm e k m q )
+              ( reduce pterm e p k m q )
               ( fun a ->                
                 match ( ( unify ptn a ), e ) with
                     ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
                       ( reduce
                           eterm
                           ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                          p
                           k 
                           m
                           q )
@@ -318,16 +319,16 @@ struct
 
       (* abstraction *)
       | ReflectiveTerm.Abstraction( ptn, eterm ) ->
-          ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) m q )
+          ( apply_k k ( ReflectiveValue.Closure( ptn, eterm, e ) ) p m q )
             
       (* condition *)            
       | ReflectiveTerm.Condition( test, tbranch, fbranch ) ->
           ( M.m_bind
-              ( reduce test e k m q )
+              ( reduce test e p k m q )
               ( fun a ->
                 ( match a with
-                    ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) ) -> ( reduce tbranch e k m q )
-                  | ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) ) -> ( reduce fbranch e k m q )
+                    ReflectiveValue.Ground( ReflectiveValue.Boolean( true ) ) -> ( reduce tbranch e p k m q )
+                  | ReflectiveValue.Ground( ReflectiveValue.Boolean( false ) ) -> ( reduce fbranch e p k m q )
                   | _ -> raise ( RuntimeException ( "expected Boolean", test ) ) ) ) )
 
       (* monadic desugaring *)
@@ -336,22 +337,23 @@ struct
       (* comparison *)
       | ReflectiveTerm.Equation( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k m q )
+              ( reduce lhs e p k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k m q )
+                    ( reduce rhs e p k m q )
                     ( fun r ->
                       ( apply_k
                           k
                           ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( l == r ) ) )
+                          p
                           m
                           q ) ) ) ) )
       | ReflectiveTerm.ComparisonLT( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k m q )
+              ( reduce lhs e p k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k m q )
+                    ( reduce rhs e p k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -360,6 +362,7 @@ struct
                           ) -> ( apply_k
                                    k
                                    ( ReflectiveValue.Ground ( ReflectiveValue.Boolean ( d1 < d2 ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -369,6 +372,7 @@ struct
                                    k
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean ( ( float d1 ) < d2 ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -379,6 +383,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 < float( d2 ) ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -389,14 +394,15 @@ struct
                                    ( ReflectiveValue.Ground
                                            ( ReflectiveValue.Boolean
                                                ( d1 < d2 ) ) )
+                                   p
                                    m
                                    q ) ) ) ) )
       | ReflectiveTerm.ComparisonGT( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k m q )
+              ( reduce lhs e p k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k m q )
+                    ( reduce rhs e p k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -407,6 +413,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 > d2 ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -417,6 +424,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( ( float d1 ) > d2 ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -427,6 +435,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 > float( d2 ) ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -436,14 +445,15 @@ struct
                                    k
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean ( d1 > d2 ) ) )
+                                   p
                                    m 
                                    q ) ) ) ) )
       | ReflectiveTerm.ComparisonLTE( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k m q )
+              ( reduce lhs e p k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k m q )
+                    ( reduce rhs e p k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -453,6 +463,7 @@ struct
                                    k
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean ( d1 <= d2 ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -463,6 +474,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( ( float d1 ) <= d2 ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -473,6 +485,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 <= float( d2 ) ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -483,14 +496,15 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 <= d2 ) ) )
+                                   p
                                    m
                                    q ) ) ) ) )
       | ReflectiveTerm.ComparisonGTE( lhs, rhs ) ->
           ( M.m_bind 
-              ( reduce lhs e k m q )
+              ( reduce lhs e p k m q )
               ( fun l ->
                 ( M.m_bind
-                    ( reduce rhs e k m q )
+                    ( reduce rhs e p k m q )
                     ( fun r ->
                       match ( l, r ) with
                           (
@@ -501,6 +515,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 >= d2 ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -511,6 +526,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( ( float d1 ) >= d2 ) ) )
+                                   p
                                    m 
                                    q )
                         | (
@@ -521,6 +537,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 >= float( d2 ) ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -531,6 +548,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Boolean
                                            ( d1 >= d2 ) ) )
+                                   p
                                    m
                                    q ) ) ) ) )
 
@@ -550,15 +568,15 @@ struct
 
       (* primitive arithmetic calculation *)
       | ReflectiveTerm.Calculation( aterm ) -> 
-          ( calculate aterm e k m q )
-  and calculate a e k m q =
+          ( calculate aterm e p k m q )
+  and calculate a e p k m q =
     match a with 
         ReflectiveTerm.Division( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k m q )
+              ( calculate aterm1 e p k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k m q )
+                    ( calculate aterm2 e p k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -569,6 +587,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( d1 /. d2 ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -579,6 +598,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( ( float d1 ) /. d2 ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -589,6 +609,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( d1 /. float( d2 ) ) ) )
+                                   p
                                    m
                                    q )
                         | (
@@ -599,6 +620,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Integer
                                            ( d1 / d2 ) ) )
+                                   p
                                    m
                                    q )
                     )
@@ -608,10 +630,10 @@ struct
             
       | ReflectiveTerm.Addition( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k m q )
+              ( calculate aterm1 e p k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k m q )
+                    ( calculate aterm2 e p k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -622,6 +644,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( d1 +. d2 ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -631,8 +654,8 @@ struct
                                    k
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
-                                           ( ( float d1 ) +. d2 )
-                                       ) )
+                                           ( ( float d1 ) +. d2 ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -643,6 +666,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( d1 +. float( d2 ) ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -652,6 +676,7 @@ struct
                                    k
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Integer ( d1 + d2 ) ) )
+                                   p
                                    m 
                                    q )
                     )
@@ -660,10 +685,10 @@ struct
           )
       | ReflectiveTerm.Multiplication( aterm1, aterm2 ) ->
           ( M.m_bind
-              ( calculate aterm1 e k m q )
+              ( calculate aterm1 e p k m q )
               ( fun a ->
                 ( M.m_bind
-                    ( calculate aterm2 e k m q )
+                    ( calculate aterm2 e p k m q )
                     ( fun b ->
                       match ( a, b ) with
                           (
@@ -674,6 +699,7 @@ struct
                                    ( ReflectiveValue.Ground
                                            ( ReflectiveValue.Double
                                                ( d1 *. d2 ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -684,6 +710,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( ( float d1 ) *. d2 ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -694,6 +721,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Double
                                            ( d1 *. float( d2 ) ) ) )
+                                   p
                                    m
                                    q ) 
                         | (
@@ -704,6 +732,7 @@ struct
                                    ( ReflectiveValue.Ground
                                        ( ReflectiveValue.Integer
                                            ( d1 * d2 ) ) )
+                                   p
                                    m
                                    q ) 
                     )
@@ -719,13 +748,13 @@ struct
               ( ReflectiveTerm.Identifier( v ), ReflectiveValue.Env( renv ) ) ->
                 ( match ( ReflectiveEnv.lookup ( v, renv ) ) with
                     Some( rslt ) ->
-                      ( apply_k k rslt m q )
+                      ( apply_k k rslt p m q )
                   | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | ReflectiveTerm.Actualization( aterm ) ->
           ( M.m_unit ( materialize aterm ) )
       | ReflectiveTerm.Aggregation( aterm ) ->
-          ( reduce aterm e k m q )
+          ( reduce aterm e p k m q )
   and materialize lit = 
     match lit with
         ReflectiveTerm.BooleanLiteral( ReflectiveTerm.Verity ) ->
@@ -741,7 +770,7 @@ struct
       | ReflectiveTerm.Reification( t ) ->
           ReflectiveValue.Ground( ReflectiveValue.Reification( t ) )
       | ReflectiveTerm.UNIT -> yunit
-  and apply_k k v m q =
+  and apply_k k v p m q =
     ( match ( k, v ) with 
         ( ReflectiveK.STOP, v ) -> ( M.m_unit v )
       | (
@@ -755,6 +784,7 @@ struct
                 ( reduce
                     t
                     ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
                     k 
                     m
                     q )
@@ -763,6 +793,7 @@ struct
           ( reduce
               t
               ( ReflectiveValue.Env renv )
+              p
               ( ReflectiveK.FUN ( v, kp, mp, qp ) )
               m
               q )
@@ -831,7 +862,7 @@ struct
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
   and new_prompt k m q =
-    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) m ( q + 1 ) )
+    ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) q m ( q + 1 ) )
   and push_prompt t1 t2 k m q = 
     raise ( NotYetImplemented "push_prompt" )   
   and with_sub_cont t1 t2 k m q =
