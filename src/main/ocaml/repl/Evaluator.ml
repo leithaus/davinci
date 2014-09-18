@@ -775,6 +775,24 @@ struct
   and apply_k k v m q =
     match ( k, v ) with 
         ( ReflectiveK.STOP, v ) -> v
+      | (
+          ReflectiveK.FUN(
+            ReflectiveValue.Closure( ptn, t, e ), kp, mp, qp
+          ),
+          v
+        ) ->
+          ( M.m_bind
+              v
+              ( fun a ->
+                match ( ( unify ptn a ), e ) with
+                    ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                      ( reduce
+                          t
+                          ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                          k 
+                          m
+                          q )
+                  | _ -> raise ( MatchFailure ( ptn, a ) ) ) )
       | ( ReflectiveK.ARG( t, renv, kp, mp, qp ), v ) ->
           ( M.m_bind
               v
