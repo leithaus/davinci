@@ -112,9 +112,9 @@ sig
   val initial_meta_ktn : unit -> meta_ktn
 
   val new_prompt : ktn -> meta_ktn -> prompt -> value monad
-  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value monad
-  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
-  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val push_prompt : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+  val with_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+  val push_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
 end 
 
 (* The type of an abstract machine derived from a monadic evaluator *)
@@ -191,9 +191,9 @@ sig
   val initial_meta_ktn : unit -> meta_ktn
 
   val new_prompt : ktn -> meta_ktn -> prompt -> value monad
-  val push_prompt : term -> term -> ktn -> meta_ktn -> prompt -> value monad
-  val with_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
-  val push_sub_cont : term -> term -> ktn -> meta_ktn -> prompt -> value monad
+  val push_prompt : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+  val with_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+  val push_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
 end 
 
 (*
@@ -797,6 +797,12 @@ struct
               ( ReflectiveK.FUN ( v, kp, mp, qp ) )
               m
               q )
+      | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k PUSHPROMPT" )
+      | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k WITHSUBCONT" )
+      | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k PUSHSUBCONT" )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and unify p t = 
     match ( p, t ) with 
@@ -863,12 +869,27 @@ struct
           raise ( NotYetImplemented "unify PtnNegation" )   
   and new_prompt k m q =
     ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) q m ( q + 1 ) )
-  and push_prompt t1 t2 k m q = 
-    raise ( NotYetImplemented "push_prompt" )   
-  and with_sub_cont t1 t2 k m q =
-    raise ( NotYetImplemented "with_sub_cont" )   
-  and push_sub_cont t1 t2 k m q = 
-    raise ( NotYetImplemented "push_sub_cont" )    
+  and push_prompt t1 t2 e p k m q = 
+    ( match e with
+        ReflectiveValue.Env( renv ) ->
+          let nk = 
+            ( ReflectiveK.PUSHPROMPT ( t2, renv, k, m, q ) )
+          in
+            ( reduce t1 e p nk m q ) )
+  and with_sub_cont t1 t2 e p k m q =
+    ( match e with
+        ReflectiveValue.Env( renv ) ->
+          let nk = 
+            ( ReflectiveK.WITHSUBCONT ( t2, renv, k, m, q ) )
+          in
+            ( reduce t1 e p nk m q ) )
+  and push_sub_cont t1 t2 e p k m q = 
+    ( match e with
+        ReflectiveValue.Env( renv ) ->
+          let nk = 
+            ( ReflectiveK.PUSHSUBCONT ( t2, renv, k, m, q ) )
+          in
+            ( reduce t1 e p nk m q ) )
 
   let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
   let init_k = ReflectiveK.STOP
