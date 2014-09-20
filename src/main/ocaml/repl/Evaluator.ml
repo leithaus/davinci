@@ -798,7 +798,16 @@ struct
               m
               q )
       | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k PUSHPROMPT" )
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+          let nmk = ( nkp :: m ) in
+          ( reduce
+              t
+              ( ReflectiveValue.Env renv )
+              p
+              ( ReflectiveK.FUNPUSHPROMPT ( v, renv, kp, mp, qp ) )
+              ( pp :: nmk )
+              q )
       | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
           raise ( NotYetImplemented "apply_k WITHSUBCONT" )
       | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
