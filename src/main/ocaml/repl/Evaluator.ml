@@ -800,18 +800,39 @@ struct
       | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
           let nkp = ( ReflectiveK.K kp ) in
           let pp = ( ReflectiveK.Prompt p ) in
-          let nmk = ( nkp :: m ) in
-          ( reduce
-              t
-              ( ReflectiveValue.Env renv )
-              p
-              ( ReflectiveK.FUNPUSHPROMPT ( v, renv, kp, mp, qp ) )
-              ( pp :: nmk )
-              q )
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNPUSHPROMPT ( v, renv, kp, mp, qp ) )
+                ( pp :: ( nkp :: m ) )
+                q )
       | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k WITHSUBCONT" )
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNWITHSUBCONT ( v, renv, kp, mp, qp ) )
+                ( pp :: ( nkp :: m ) )
+                q )
       | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k PUSHSUBCONT" )
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNPUSHSUBCONT ( v, renv, kp, mp, qp ) )
+                ( pp :: ( nkp :: m ) )
+                q )
+      | ( ReflectiveK.FUNPUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k FUNPUSHPROMPT" )
+      | ( ReflectiveK.FUNWITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k FUNWITHSUBCONT" )
+      | ( ReflectiveK.FUNPUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          raise ( NotYetImplemented "apply_k FUNPUSHSUBCONT" )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and unify p t = 
     match ( p, t ) with 
