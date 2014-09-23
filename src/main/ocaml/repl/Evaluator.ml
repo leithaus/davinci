@@ -569,13 +569,13 @@ struct
 
       (* delimited continuations *)
       | ReflectiveTerm.Acquisition -> 
-          raise ( NotYetImplemented "Acquisition" )
+          ( new_prompt k m q )
       | ReflectiveTerm.Suspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "Suspension" )
+          ( push_prompt pterm eterm e p k m q )
       | ReflectiveTerm.Release( pterm, eterm ) -> 
-          raise ( NotYetImplemented "Release" )
+          ( with_sub_cont pterm eterm e p k m q )
       | ReflectiveTerm.InnerSuspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "InnerSuspension" )
+          ( push_sub_cont pterm eterm e p k m q )
 
       (* primitive arithmetic calculation *)
       | ReflectiveTerm.Calculation( aterm ) -> 
@@ -839,12 +839,54 @@ struct
                 ( ReflectiveK.FUNPUSHSUBCONT ( v, renv, kp, mp, qp ) )
                 ( pp :: ( nkp :: m ) )
                 q )
-      | ( ReflectiveK.FUNPUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k FUNPUSHPROMPT" )
-      | ( ReflectiveK.FUNWITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k FUNWITHSUBCONT" )
-      | ( ReflectiveK.FUNPUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          raise ( NotYetImplemented "apply_k FUNPUSHSUBCONT" )
+      | (
+          ReflectiveK.FUNPUSHPROMPT(
+            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+      | (
+          ReflectiveK.FUNWITHSUBCONT(
+            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+      | (
+          ReflectiveK.FUNWITHSUBCONT(
+            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and unify p t = 
     match ( p, t ) with 
