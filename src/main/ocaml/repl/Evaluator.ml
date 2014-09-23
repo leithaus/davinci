@@ -763,7 +763,7 @@ struct
                   | _ -> raise ( UnboundVariable v ) )
             | _ -> raise ( NotYetImplemented "Mention wildcard" ) )
       | ReflectiveTerm.Actualization( aterm ) ->
-          ( M.m_unit ( materialize aterm ) )
+          ( apply_k k ( materialize aterm ) p m q )
       | ReflectiveTerm.Aggregation( aterm ) ->
           ( reduce aterm e p k m q )
   and materialize lit = 
@@ -944,11 +944,6 @@ struct
   let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
   let init_k v e m q =
     let kv : value monad = ( k_pop v m q ) in
-    let t : value -> term =
-      ( fun rv ->
-        ( ReflectiveTerm.Calculation
-            ( ReflectiveTerm.Actualization
-                ( ReflectiveTerm.Intrinsic rv ) ) )  ) in
     let k_stop : ktn = ReflectiveK.STOP in
       ( match e with
           ReflectiveValue.Env( renv ) ->
@@ -956,8 +951,8 @@ struct
                 kv
                 ( fun rv ->
                   ( M.m_unit
-                      ( ReflectiveK.ARG
-                          ( ( t rv ), renv, k_stop, m, q ) ) ) ) ) )
+                      ( ReflectiveK.FUN
+                          ( rv, k_stop, m, q ) ) ) ) ) )
 
   let initial_prompt () = 0
   let the_prompt = ref ( initial_prompt() )
