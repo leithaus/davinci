@@ -45,7 +45,8 @@ sig
   module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
                                             and type term = ReflectiveTerm.term )
     (* Algebraic theory of terms *)
-  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal )     
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal
+                               and type intrinsic = ReflectiveValue.value )
     (* Algebraic theory of values *)
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
@@ -105,7 +106,7 @@ sig
   val yunit : value
     
   val init_env : env
-  val init_k : ktn  
+  val init_k : value -> env -> meta_ktn -> prompt -> ktn monad
 
   val initial_prompt : unit -> prompt
   val the_prompt : prompt ref
@@ -115,6 +116,10 @@ sig
   val push_prompt : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   val with_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   val push_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+
+  val k_pop : value -> meta_ktn -> prompt -> value monad
+
+  val m_mult : ( 'a monad ) monad -> 'a monad
 end 
 
 (* The type of an abstract machine derived from a monadic evaluator *)
@@ -125,7 +130,8 @@ sig
   module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
                                             and type term = ReflectiveTerm.term )
     (* Algebraic theory of terms *)
-  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal)     
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal 
+                               and type intrinsic = ReflectiveValue.value )
     (* Algebraic theory of values *)
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
@@ -184,7 +190,7 @@ sig
 
   (* Initial configurations *)
   val init_env : env
-  val init_k : ktn 
+  val init_k : value -> env -> meta_ktn -> prompt -> ktn monad
 
   val initial_prompt : unit -> prompt
   val the_prompt : prompt ref
@@ -194,6 +200,10 @@ sig
   val push_prompt : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   val with_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
   val push_sub_cont : term -> term -> env -> prompt -> ktn -> meta_ktn -> prompt -> value monad
+
+  val k_pop : value -> meta_ktn -> prompt -> value monad
+
+  val m_mult : ( 'a monad ) monad -> 'a monad
 end 
 
 (*
@@ -210,9 +220,10 @@ struct
                                             and type term = ReflectiveTerm.term )
     (* Algebraic theory of names, variables, identifiers *)
     = NOMINAL( ReflectiveTerm )
-  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal) 
+  and ReflectiveTerm : ( TERMS with type var = ReflectiveNominal.nominal
+                               and type intrinsic = ReflectiveValue.value )
     (* Algebraic theory of terms *)
-    = TERM( ReflectiveNominal ) 
+    = TERM( ReflectiveNominal )( ReflectiveValue )
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
@@ -769,6 +780,7 @@ struct
           ReflectiveValue.Ground( ReflectiveValue.Double( d ) )
       | ReflectiveTerm.Reification( t ) ->
           ReflectiveValue.Ground( ReflectiveValue.Reification( t ) )
+      | ReflectiveTerm.Intrinsic( i ) -> i
       | ReflectiveTerm.UNIT -> yunit
   and apply_k k v p m q =
     ( match ( k, v ) with 
@@ -920,13 +932,39 @@ struct
             ( ReflectiveK.PUSHSUBCONT ( t2, renv, k, m, q ) )
           in
             ( reduce t1 e p nk m q ) )
+  and k_pop v m q =
+    match m with
+        [] -> ( M.m_unit v )
+      | ReflectiveK.Prompt( p ) :: mp ->
+          ( k_pop v mp q )
+      | ReflectiveK.K( k ) :: mp ->
+          (* BUGBUG -- lgm : not sure q is the right value for prompt *)
+          ( apply_k k v q mp q )
 
   let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
-  let init_k = ReflectiveK.STOP
+  let init_k v e m q =
+    let kv : value monad = ( k_pop v m q ) in
+    let t : value -> term =
+      ( fun rv ->
+        ( ReflectiveTerm.Calculation
+            ( ReflectiveTerm.Actualization
+                ( ReflectiveTerm.Intrinsic rv ) ) )  ) in
+    let k_stop : ktn = ReflectiveK.STOP in
+      ( match e with
+          ReflectiveValue.Env( renv ) ->
+            ( M.m_bind
+                kv
+                ( fun rv ->
+                  ( M.m_unit
+                      ( ReflectiveK.ARG
+                          ( ( t rv ), renv, k_stop, m, q ) ) ) ) ) )
 
   let initial_prompt () = 0
   let the_prompt = ref ( initial_prompt() )
   let initial_meta_ktn () = []
+
+  let m_mult mma =
+    ( M.m_bind mma ( fun ma -> ma ) )
 end
 
 

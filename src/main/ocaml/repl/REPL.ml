@@ -12,6 +12,7 @@ open Exceptions
 open Evaluator
 open Monad
 open Stage1
+open Symbols
 open Cfg
 open BatChar
 
@@ -78,13 +79,32 @@ struct
 
   let eval m_term =
     let p = ( Pipeline.REval.initial_prompt() ) in
-    ( Pipeline.REval.reduce
-        m_term
-        Pipeline.REval.init_env (* BUGBUG -- lgm -- this assumes no builtin fns *)
-        p
-        Pipeline.REval.init_k
-        ( Pipeline.REval.initial_meta_ktn() )
-        ( p + 1 ) )
+    let m = ( Pipeline.REval.initial_meta_ktn() ) in
+    let e = ( Pipeline.REval.init_env ) in
+    let x_str = (* fresh variable string *)
+      ( Pipeline.REval.ReflectiveNominal.toString 
+          ( Pipeline.REval.ReflectiveNominal.fresh() ) ) in
+    let x_ident =
+      ( Pipeline.REval.ReflectiveTerm.Identifier
+          ( Pipeline.REval.ReflectiveNominal.Symbol ( Symbols.Opaque x_str ) ) ) in
+    let x_fml = 
+      ( Pipeline.REval.ReflectiveTerm.Variable x_ident ) in
+    let x_mntn = 
+      ( Pipeline.REval.ReflectiveTerm.Calculation
+          ( Pipeline.REval.ReflectiveTerm.Mention x_ident ) ) in
+    let id =
+      ( Pipeline.REval.ReflectiveValue.Closure ( x_fml, x_mntn, e ) ) in
+    let mk = ( Pipeline.REval.init_k id e m p ) in      
+      ( M.m_bind
+          mk
+          ( fun k ->
+            ( Pipeline.REval.reduce
+                m_term
+                e (* BUGBUG -- lgm -- this assumes no builtin fns *)
+                p
+                k
+                m
+                ( p + 1 ) ) ) )
 
   let evaluate_expression ast =
     let desugared_ast = ( Pipeline.desugar ast ) in

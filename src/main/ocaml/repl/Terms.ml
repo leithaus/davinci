@@ -9,6 +9,7 @@
 module type TERMS =
 sig
   type var 
+  type intrinsic
   type term =
       Sequence of term list
       | Application of term * term list
@@ -87,6 +88,7 @@ sig
       | IntegerLiteral of int
       | DoubleLiteral of float
       | Reification of term
+      | Intrinsic of intrinsic
       | UNIT
   and duality =
       Verity

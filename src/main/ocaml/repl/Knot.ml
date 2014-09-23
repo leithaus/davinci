@@ -9,6 +9,7 @@
 open Nominals
 open Symbols
 open Terms
+open Values
 open Uuidm
 open Exceptions
 
@@ -28,7 +29,9 @@ sig
   end
   and TERM :
     functor ( Nominal : NOMINALS ) ->
+      functor ( Value : VALUES ) ->
   sig
+    type intrinsic = Value.value
     type var = Nominal.nominal
     type term =
         Sequence of term list
@@ -108,6 +111,7 @@ sig
         | IntegerLiteral of int
         | DoubleLiteral of float
         | Reification of term
+        | Intrinsic of intrinsic
         | UNIT
     and duality =
         Verity
@@ -160,7 +164,9 @@ struct
 end
 and TERM :
   functor ( Nominal : ( NOMINALS with type symbol = Symbols.symbol ) ) ->
+    functor ( Value : VALUES ) ->
 sig
+  type intrinsic = Value.value
   type var = Nominal.nominal
   type term =
       Sequence of term list
@@ -240,6 +246,7 @@ sig
       | IntegerLiteral of int
       | DoubleLiteral of float
       | Reification of term
+      | Intrinsic of intrinsic
       | UNIT
   and duality =
       Verity
@@ -250,7 +257,9 @@ sig
   and uIdent = UIdent of string
   and wild = Wild of string    
 end = functor ( Nominal : ( NOMINALS with type symbol = Symbols.symbol ) ) ->
+      functor ( Value : VALUES ) ->
 struct
+  type intrinsic = Value.value
   type var = Nominal.nominal
   type term =
       Sequence of term list
@@ -330,6 +339,7 @@ struct
       | IntegerLiteral of int
       | DoubleLiteral of float
       | Reification of term
+      | Intrinsic of intrinsic
       | UNIT
   and duality =
       Verity
