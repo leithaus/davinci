@@ -259,6 +259,8 @@ struct
   exception MatchFailure of pattern * value
   exception RuntimeException of string * term
   exception UnboundVariable of ident
+  exception PushPromptPromptTypeError of value
+  exception FunPushPromptMatchError of meta_ktn
       
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT     
@@ -782,112 +784,6 @@ struct
           ReflectiveValue.Ground( ReflectiveValue.Reification( t ) )
       | ReflectiveTerm.Intrinsic( i ) -> i
       | ReflectiveTerm.UNIT -> yunit
-  and apply_k k v p m q =
-    ( match ( k, v ) with 
-        ( ReflectiveK.STOP, v ) -> ( M.m_unit v )
-      | (
-          ReflectiveK.FUN(
-            ReflectiveValue.Closure( ptn, t, e ), kp, mp, qp
-          ),
-          v
-        ) ->
-          ( match ( ( unify ptn v ), e ) with
-              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
-            | _ -> raise ( MatchFailure ( ptn, v ) ) )
-      | ( ReflectiveK.ARG( t, renv, kp, mp, qp ), v ) ->
-          ( reduce
-              t
-              ( ReflectiveValue.Env renv )
-              p
-              ( ReflectiveK.FUN ( v, kp, mp, qp ) )
-              m
-              q )
-      | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.FUNPUSHPROMPT ( v, renv, kp, mp, qp ) )
-                ( pp :: ( nkp :: m ) )
-                q )
-      | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.FUNWITHSUBCONT ( v, renv, kp, mp, qp ) )
-                ( pp :: ( nkp :: m ) )
-                q )
-      | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.FUNPUSHSUBCONT ( v, renv, kp, mp, qp ) )
-                ( pp :: ( nkp :: m ) )
-                q )
-      | (
-          ReflectiveK.FUNPUSHPROMPT(
-            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
-          ),
-          v
-        ) ->
-          ( match ( ( unify ptn v ), e ) with
-              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
-            | _ -> raise ( MatchFailure ( ptn, v ) ) )
-      | (
-          ReflectiveK.FUNWITHSUBCONT(
-            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
-          ),
-          v
-        ) ->
-          ( match ( ( unify ptn v ), e ) with
-              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
-            | _ -> raise ( MatchFailure ( ptn, v ) ) )
-      | (
-          ReflectiveK.FUNWITHSUBCONT(
-            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
-          ),
-          v
-        ) ->
-          ( match ( ( unify ptn v ), e ) with
-              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
-            | _ -> raise ( MatchFailure ( ptn, v ) ) )
-      | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and unify p t = 
     match ( p, t ) with 
         ( ReflectiveTerm.Element( fnctr, sptns ), t ) -> 
@@ -951,6 +847,106 @@ struct
           raise ( NotYetImplemented "unify PtnJuxtaposition" ) 
       | ( ReflectiveTerm.PtnNegation( n ), t ) -> 
           raise ( NotYetImplemented "unify PtnNegation" )   
+  and apply_k k v p m q =
+    ( match ( k, v ) with 
+        ( ReflectiveK.STOP, v ) -> ( M.m_unit v )
+      | (
+          ReflectiveK.FUN(
+            ReflectiveValue.Closure( ptn, t, e ), kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+      | ( ReflectiveK.ARG( t, renv, kp, mp, qp ), v ) ->
+          ( reduce
+              t
+              ( ReflectiveValue.Env renv )
+              p
+              ( ReflectiveK.FUN ( v, kp, mp, qp ) )
+              m
+              q )
+      | (
+          ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ),
+          ReflectiveValue.Ground( ReflectiveValue.Integer( n ) )
+        ) ->
+          let nkp = ( ReflectiveK.K kp ) in
+          let pv = ( ReflectiveK.Prompt n ) in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNPUSHPROMPT ( renv, kp, mp, qp ) )
+                ( pv :: ( nkp :: m ) )
+                q )
+      | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
+          raise ( PushPromptPromptTypeError v )
+      | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNWITHSUBCONT ( v, renv, kp, mp, qp ) )
+                ( pp :: ( nkp :: m ) )
+                q )
+      | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.FUNPUSHSUBCONT ( v, renv, kp, mp, qp ) )
+                ( pp :: ( nkp :: m ) )
+                q )
+      | ( ReflectiveK.FUNPUSHPROMPT( renv, kp, mp, qp ), v ) ->
+          ( match m with 
+              pp :: ReflectiveK.K( kpp ) :: mpp ->
+                ( apply_k kpp v p mpp q )
+            | _ -> raise ( FunPushPromptMatchError m ) )
+      | (
+          ReflectiveK.FUNWITHSUBCONT(
+            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+      | (
+          ReflectiveK.FUNWITHSUBCONT(
+            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ),
+          v
+        ) ->
+          ( match ( ( unify ptn v ), e ) with
+              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
+                ( reduce
+                    t
+                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                    p
+                    k 
+                    m
+                    q )
+            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+      | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and new_prompt k m q =
     ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) q m ( q + 1 ) )
   and push_prompt t1 t2 e p k m q = 
