@@ -52,7 +52,8 @@ sig
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map    
-                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
+                                 and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
     (* Algebraic theory of continuations *)
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
@@ -138,7 +139,8 @@ sig
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
-                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
+                                 and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
     (* Algebraic theory of continuations *)
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
@@ -230,7 +232,8 @@ struct
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
-                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
+                                 and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
     (* Algebraic theory of values *)
     = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )( ReflectiveK )
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
@@ -273,8 +276,8 @@ struct
             if ( pp == p )
             then ( acc, r )
             else ( loop r ( List.append acc [ ( ReflectiveK.Prompt pp ) ] ) )
-        | k :: r ->
-            ( loop r ( List.append acc [ k ] ) ) in
+        | ReflectiveK.K( kp ) :: r ->
+            ( loop r ( List.append acc [ ReflectiveK.K( kp ) ] ) ) in
       ( loop m [] )
 
   let bottom = ReflectiveValue.BOTTOM
