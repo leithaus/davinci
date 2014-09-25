@@ -51,7 +51,8 @@ sig
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
-                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )    
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map    
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
     (* Algebraic theory of continuations *)
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
@@ -136,7 +137,8 @@ sig
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
-                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )    
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
     (* Algebraic theory of continuations *)
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
@@ -227,9 +229,10 @@ struct
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
-                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map )
+                                 and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
+                                 and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont )
     (* Algebraic theory of values *)
-  = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )
+    = VALUEFUNCTOR( ReflectiveNominal )( ReflectiveTerm )( ReflectiveEnv )( ReflectiveK )
   and ReflectiveK : ( CONTINUATIONS with type nominal = ReflectiveNominal.nominal
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
     (* Algebraic theory of continuations *)
@@ -262,6 +265,18 @@ struct
   exception PushPromptPromptTypeError of value
   exception FunPushPromptMatchError of meta_ktn
       
+  let split_meta_k p m = 
+    let rec loop l acc = 
+      match l with
+          [] -> ( acc, [] )
+        | ReflectiveK.Prompt( pp ) :: r ->
+            if ( pp == p )
+            then ( acc, r )
+            else ( loop r ( List.append acc [ ( ReflectiveK.Prompt pp ) ] ) )
+        | k :: r ->
+            ( loop r ( List.append acc [ k ] ) ) in
+      ( loop m [] )
+
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT     
 
@@ -298,14 +313,10 @@ struct
       | ReflectiveTerm.Application( op, actls ) ->          
           ( match e with
             ReflectiveValue.Env( renv ) ->
-              let rv_actls : term list = ( List.rev actls ) in
-              let actl_lst : term = ( List.hd rv_actls ) in
-              let actls_no_lst : term list = ( List.rev ( List.tl rv_actls ) ) in
               let arg_reduce ( actual : term ) ( acc : ktn ) =
                 ( ReflectiveK.ARG ( actual, renv, acc, m, q ) ) in
-              let seed_ktn : ktn = ( arg_reduce actl_lst k ) in
               let nk : ktn =
-                ( List.fold_right arg_reduce actls_no_lst seed_ktn ) in
+                ( List.fold_right arg_reduce actls k ) in
                 ( reduce op e p nk m q ) )
 
       (* let *)
@@ -874,8 +885,9 @@ struct
               ( ReflectiveK.FUN ( v, kp, mp, qp ) )
               m
               q )
-      | (
-          ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ),
+      (* PUSHPROMPT FUN/ARG pair *)
+      | ( 
+          ReflectiveK.PUSHPROMPT_ARG( t, renv, kp, mp, qp ),
           ReflectiveValue.Ground( ReflectiveValue.Integer( n ) )
         ) ->
           let nkp = ( ReflectiveK.K kp ) in
@@ -884,42 +896,36 @@ struct
                 t
                 ( ReflectiveValue.Env renv )
                 p
-                ( ReflectiveK.FUNPUSHPROMPT ( renv, kp, mp, qp ) )
-                ( pv :: ( nkp :: m ) )
+                ( ReflectiveK.PUSHPROMPT_FUN ( n, renv, kp, mp, qp ) )
+                m
                 q )
-      | ( ReflectiveK.PUSHPROMPT( t, renv, kp, mp, qp ), v ) ->
+      | ( ReflectiveK.PUSHPROMPT_ARG( t, renv, kp, mp, qp ), v ) ->
           raise ( PushPromptPromptTypeError v )
-      | ( ReflectiveK.WITHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.FUNWITHSUBCONT ( v, renv, kp, mp, qp ) )
-                ( pp :: ( nkp :: m ) )
-                q )
-      | ( ReflectiveK.PUSHSUBCONT( t, renv, kp, mp, qp ), v ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.FUNPUSHSUBCONT ( v, renv, kp, mp, qp ) )
-                ( pp :: ( nkp :: m ) )
-                q )
-      | ( ReflectiveK.FUNPUSHPROMPT( renv, kp, mp, qp ), v ) ->
-          ( match m with 
-              pp :: ReflectiveK.K( kpp ) :: mpp ->
-                ( apply_k kpp v p mpp q )
-            | _ -> raise ( FunPushPromptMatchError m ) )
+      | ( ReflectiveK.PUSHPROMPT_FUN( n, renv, kp, mp, qp ), v ) ->
+          let pp = ( ReflectiveK.Prompt n ) in
+          let nkp = ( ReflectiveK.K kp ) in 
+          let mpp = ( pp :: ( nkp :: mp ) ) in
+          ( M.m_bind
+              ( init_k v ( ReflectiveValue.Env renv ) mp q )
+              ( fun k0 -> ( apply_k k0 v p mpp q ) ) )
+
+      (* WITHSUBCONT FUN/ARG pair *)
       | (
-          ReflectiveK.FUNWITHSUBCONT(
-            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
-          ),
-          v
+          ReflectiveK.WITHSUBCONT_ARG( t, renv, kp, mp, qp ),
+          ReflectiveValue.Ground( ReflectiveValue.Integer( n ) )
         ) ->
+          ( reduce
+              t
+              ( ReflectiveValue.Env renv )
+              p
+              ( ReflectiveK.WITHSUBCONT_FUN ( n, renv, kp, mp, qp ) )
+              m
+              q )
+      | (
+          ReflectiveK.WITHSUBCONT_FUN( n, renv, kp, mp, qp ),
+          ReflectiveValue.Closure( ptn, t, e )
+        ) ->
+          let ( ml, mr ) = ( split_meta_k n m ) in
           ( match ( ( unify ptn v ), e ) with
               ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
                 ( reduce
@@ -930,22 +936,29 @@ struct
                     m
                     q )
             | _ -> raise ( MatchFailure ( ptn, v ) ) )
+
+      (* WITHSUBCONT FUN/ARG pair *)
       | (
-          ReflectiveK.FUNWITHSUBCONT(
-            ReflectiveValue.Closure( ptn, t, e ), renv, kp, mp, qp
+          ReflectiveK.PUSHSUBCONT_ARG( t, renv, kp, mp, qp ),
+          v
+        ) ->
+          let nkp = ( ReflectiveK.K kp ) in
+          let pp = ( ReflectiveK.Prompt p ) in
+          let mk = [ ( ReflectiveK.K ( ReflectiveK.FUN ( v, k, m, q ) ) ) ] in
+            ( reduce
+                t
+                ( ReflectiveValue.Env renv )
+                p
+                ( ReflectiveK.PUSHSUBCONT_FUN ( mk, renv, kp, mp, qp ) )
+                m
+                q )
+      | (
+          ReflectiveK.PUSHSUBCONT_FUN(
+            mk, renv, kp, mp, qp
           ),
           v
         ) ->
-          ( match ( ( unify ptn v ), e ) with
-              ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
-            | _ -> raise ( MatchFailure ( ptn, v ) ) )
+          raise ( NotYetImplemented "WITHSUBCONT_FUN" )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and new_prompt k m q =
     ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) q m ( q + 1 ) )
@@ -953,21 +966,21 @@ struct
     ( match e with
         ReflectiveValue.Env( renv ) ->
           let nk = 
-            ( ReflectiveK.PUSHPROMPT ( t2, renv, k, m, q ) )
+            ( ReflectiveK.PUSHPROMPT_ARG ( t2, renv, k, m, q ) )
           in
             ( reduce t1 e p nk m q ) )
   and with_sub_cont t1 t2 e p k m q =
     ( match e with
         ReflectiveValue.Env( renv ) ->
           let nk = 
-            ( ReflectiveK.WITHSUBCONT ( t2, renv, k, m, q ) )
+            ( ReflectiveK.WITHSUBCONT_ARG ( t2, renv, k, m, q ) )
           in
             ( reduce t1 e p nk m q ) )
   and push_sub_cont t1 t2 e p k m q = 
     ( match e with
         ReflectiveValue.Env( renv ) ->
           let nk = 
-            ( ReflectiveK.PUSHSUBCONT ( t2, renv, k, m, q ) )
+            ( ReflectiveK.PUSHSUBCONT_ARG ( t2, renv, k, m, q ) )
           in
             ( reduce t1 e p nk m q ) )
   and k_pop v m q =
@@ -977,10 +990,8 @@ struct
           ( k_pop v mp q )
       | ReflectiveK.K( k ) :: mp ->
           (* BUGBUG -- lgm : not sure q is the right value for prompt *)
-          ( apply_k k v q mp q )
-
-  let init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
-  let init_k v e m q =
+          ( apply_k k v q mp q )              
+  and init_k v e m q =
     let kv : value monad = ( k_pop v m q ) in
     let k_stop : ktn = ReflectiveK.STOP in
       ( match e with
@@ -991,6 +1002,8 @@ struct
                   ( M.m_unit
                       ( ReflectiveK.FUN
                           ( rv, k_stop, m, q ) ) ) ) ) )
+
+  and init_env = ( ReflectiveValue.Env ReflectiveEnv.empty ) 
 
   let initial_prompt () = 0
   let the_prompt = ref ( initial_prompt() )

@@ -21,12 +21,12 @@ sig
       STOP
       | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHPROMPT of (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNWITHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt          
+      | PUSHPROMPT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_FUN of ('v, 't) meta_cont * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt          
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
@@ -48,12 +48,12 @@ sig
       STOP
       | ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ('v, 't) cont * ('v, 't) meta_cont * prompt          
-      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHPROMPT of (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNWITHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_FUN of ('v, 't) meta_cont * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
@@ -75,12 +75,12 @@ struct
       STOP
       | ARG of 't * ( Nominal.nominal, 'v ) k_env * ( 'v, 't ) cont * ('v, 't) meta_cont * prompt
       | FUN of 'v * ( 'v, 't ) cont * ('v, 't) meta_cont * prompt
-      | PUSHPROMPT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | WITHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | PUSHSUBCONT of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHPROMPT of (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNWITHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
-      | FUNPUSHSUBCONT of 'v * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_ARG of 't * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHPROMPT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | WITHSUBCONT_FUN of prompt * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
+      | PUSHSUBCONT_FUN of ('v, 't) meta_cont * (nominal, 'v) k_env * ('v, 't) cont * ('v, 't) meta_cont * prompt
   (* The type of contexts *)
   and ('v, 't) k_ctxt =
       Prompt of prompt
