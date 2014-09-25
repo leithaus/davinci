@@ -908,9 +908,9 @@ struct
           let pp = ( ReflectiveK.Prompt n ) in
           let nkp = ( ReflectiveK.K kp ) in 
           let mpp = ( pp :: ( nkp :: mp ) ) in
-          ( M.m_bind
-              ( init_k v ( ReflectiveValue.Env renv ) mp q )
-              ( fun k0 -> ( apply_k k0 v p mpp q ) ) )
+            ( M.m_bind
+                ( init_k v ( ReflectiveValue.Env renv ) mp q )
+                ( fun k0 -> ( apply_k k0 v p mpp q ) ) )
 
       (* WITHSUBCONT FUN/ARG pair *)
       | (
@@ -929,39 +929,43 @@ struct
           ReflectiveValue.Closure( ptn, t, e )
         ) ->
           let ( ml, mr ) = ( split_meta_k n m ) in
-          ( match ( ( unify ptn v ), e ) with
+          let mk = ( ReflectiveValue.MCont ( ReflectiveValue.MK ml ) ) in
+          ( match ( ( unify ptn mk ), e ) with
               ( Some( ReflectiveValue.Env( ptn_env ) ), ReflectiveValue.Env( renv ) ) ->
-                ( reduce
-                    t
-                    ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
-                    p
-                    k 
-                    m
-                    q )
+                ( M.m_bind
+                    ( init_k v ( ReflectiveValue.Env renv ) mp q )
+                    ( fun k0 ->
+                      ( reduce
+                          t
+                          ( ReflectiveValue.Env( ReflectiveEnv.sum ptn_env renv ) )
+                          p
+                          k0 
+                          mr
+                          q ) ) )
             | _ -> raise ( MatchFailure ( ptn, v ) ) )
 
-      (* WITHSUBCONT FUN/ARG pair *)
+      (* PUSHSUBCONT FUN/ARG pair *)
       | (
           ReflectiveK.PUSHSUBCONT_ARG( t, renv, kp, mp, qp ),
-          v
+          ReflectiveValue.MCont( ReflectiveValue.MK( mk ) )
         ) ->
-          let nkp = ( ReflectiveK.K kp ) in
-          let pp = ( ReflectiveK.Prompt p ) in
-          let mk = [ ( ReflectiveK.K ( ReflectiveK.FUN ( v, k, m, q ) ) ) ] in
-            ( reduce
-                t
-                ( ReflectiveValue.Env renv )
-                p
-                ( ReflectiveK.PUSHSUBCONT_FUN ( mk, renv, kp, mp, qp ) )
-                m
-                q )
+          ( reduce
+              t
+              ( ReflectiveValue.Env renv )
+              p
+              k
+              mk
+              q )
       | (
           ReflectiveK.PUSHSUBCONT_FUN(
             mk, renv, kp, mp, qp
           ),
           v
         ) ->
-          raise ( NotYetImplemented "WITHSUBCONT_FUN" )
+          let nkp = ( ReflectiveK.K kp ) in 
+            ( M.m_bind
+                ( init_k v ( ReflectiveValue.Env renv ) mp q )
+                ( fun k0 -> ( apply_k k0 v p ( List.append mk ( nkp :: m ) ) q ) ) )
       | _ -> raise ( NotYetImplemented "apply_k non-STOP/FUN/ARG k's" ) )
   and new_prompt k m q =
     ( apply_k k ( ReflectiveValue.Ground ( ReflectiveValue.Integer q ) ) q m ( q + 1 ) )
