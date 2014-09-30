@@ -10,6 +10,6 @@ Plugins:     DevFiles (0.4)
 Executable davinci
   Path:       src/main/ocaml/repl
   BuildTools: ocamlbuild
-  BuildDepends: batteries, uuidm, config-file, delimcc
+  BuildDepends: config-file, batteries, uuidm, delimcc 
   MainIs:     Cacao.ml
   

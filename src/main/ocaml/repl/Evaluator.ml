@@ -13,6 +13,7 @@ open Values
 open Continuations
 open Exceptions
 open Knot
+open Observation
 open Monad
 open Symbols
 
