@@ -62,12 +62,15 @@ sig
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
-  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
-                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+  and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal
+                                    and type tvar = ReflectiveTerm.var
+                                    and type term = ReflectiveTerm.term
+                                    and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
                                     and type binding = ReflectiveTerm.binding
                                     and type variation = ReflectiveTerm.variation
-                                    and type value = ReflectiveValue.value
+                                    and type lyst = ReflectiveTerm.lyst
+                                    and type value = ReflectiveValue.value                                    
                                     and type ground = ReflectiveValue.ground
                                     and type environment = ReflectiveValue.v_env
                                     and type continuation = ReflectiveValue.v_ktn
@@ -165,11 +168,14 @@ sig
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
-  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
-                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+  and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal
+                                    and type tvar = ReflectiveTerm.var
+                                    and type term = ReflectiveTerm.term
+                                    and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
                                     and type binding = ReflectiveTerm.binding
                                     and type variation = ReflectiveTerm.variation
+                                    and type lyst = ReflectiveTerm.lyst
                                     and type value = ReflectiveValue.value
                                     and type ground = ReflectiveValue.ground
                                     and type environment = ReflectiveValue.v_env
@@ -273,17 +279,20 @@ struct
   and ReflectiveEnv : ENVIRONMENTS =
     (* Algebraic theory of environments *)
     ListEnv (* ReflectiveNominal *)
-  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
-                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+  and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal 
+                                    and type tvar = ReflectiveTerm.var
+                                    and type term = ReflectiveTerm.term
+                                    and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
                                     and type binding = ReflectiveTerm.binding
                                     and type variation = ReflectiveTerm.variation
+                                    and type lyst = ReflectiveTerm.lyst
                                     and type value = ReflectiveValue.value
                                     and type ground = ReflectiveValue.ground
                                     and type environment = ReflectiveValue.v_env
                                     and type continuation = ReflectiveValue.v_ktn
                                     and type meta_continuation =  ReflectiveValue.v_meta_ktn )
-    = ShowOffFunctor( ReflectiveTerm )( ReflectiveValue )
+    = ShowOffFunctor( ReflectiveNominal )( ReflectiveTerm )( ReflectiveValue )
 
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
