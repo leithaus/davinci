@@ -16,6 +16,7 @@ open Knot
 open Observation
 open Monad
 open Symbols
+open Showoff
 
 (*
   The type of a monadic evaluator dependent on a monad and a collection of
@@ -42,6 +43,7 @@ open Symbols
 *)
 module type EVAL = 
 sig
+  module ReductionObservations : STRINGTHEORY
   (* Algebraic theory of names, variables, identifiers *)
   module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
                                             and type term = ReflectiveTerm.term )
@@ -60,6 +62,16 @@ sig
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
+  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
+                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+                                    and type pattern = ReflectiveTerm.pattern
+                                    and type binding = ReflectiveTerm.binding
+                                    and type variation = ReflectiveTerm.variation
+                                    and type value = ReflectiveValue.value
+                                    and type ground = ReflectiveValue.ground
+                                    and type environment = ReflectiveValue.v_env
+                                    and type continuation = ReflectiveValue.v_ktn
+                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn )
 
   type 'a monad 
 
@@ -129,6 +141,12 @@ end
 module type EVALFUNCTOR =
   functor ( M : MONAD ) ->
 sig
+  (* This is an interesting test of this approach. In the current
+     factorization, M cannot be used to inspect or report on the
+     transitions of the machine for the purposes of debugging the
+     machine. So, we have to have a separate entity for controlling
+     that aspect of execution. *)
+  module ReductionObservations : STRINGTHEORY
   (* Algebraic theory of names, variables, identifiers *)
   module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
                                             and type term = ReflectiveTerm.term )
@@ -147,6 +165,16 @@ sig
                                     and type ('n, 'v) k_env = ('n, 'v) ReflectiveEnv.map )
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
+  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
+                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+                                    and type pattern = ReflectiveTerm.pattern
+                                    and type binding = ReflectiveTerm.binding
+                                    and type variation = ReflectiveTerm.variation
+                                    and type value = ReflectiveValue.value
+                                    and type ground = ReflectiveValue.ground
+                                    and type environment = ReflectiveValue.v_env
+                                    and type continuation = ReflectiveValue.v_ktn
+                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn )
 
   type 'a monad = 'a M.monad
       (* The type used for identifiers *)
@@ -220,6 +248,7 @@ end
 module ReflectiveEval : EVALFUNCTOR =
   functor ( M : MONAD ) ->
 struct
+  module ReductionObservations : STRINGTHEORY = OBSERVER
   (* This gives a simple and effective form of reflection for quasiquote *)
   module rec ReflectiveNominal : ( NOMINALS with type symbol = Symbols.symbol
                                             and type term = ReflectiveTerm.term )
@@ -244,6 +273,17 @@ struct
   and ReflectiveEnv : ENVIRONMENTS =
     (* Algebraic theory of environments *)
     ListEnv (* ReflectiveNominal *)
+  and ReflectiveDisplay : ( SHOWOFF with type term = ReflectiveTerm.term
+                                    and type arithemetic_term = ReflectiveTerm.arithmeticTerm
+                                    and type pattern = ReflectiveTerm.pattern
+                                    and type binding = ReflectiveTerm.binding
+                                    and type variation = ReflectiveTerm.variation
+                                    and type value = ReflectiveValue.value
+                                    and type ground = ReflectiveValue.ground
+                                    and type environment = ReflectiveValue.v_env
+                                    and type continuation = ReflectiveValue.v_ktn
+                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn )
+    = ShowOffFunctor( ReflectiveTerm )( ReflectiveValue )
 
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
@@ -284,12 +324,44 @@ struct
   let bottom = ReflectiveValue.BOTTOM
   let yunit = ReflectiveValue.UNIT     
 
+  let observation_context =
+    ReductionObservations.observation_context()
+  let report_p () =
+    ( ReductionObservations.report_reductions_p observation_context ) 
+  let show t =
+    let s = ( ReflectiveDisplay.show_term t ) in
+    let init_size = 16 in (* you may want to adjust this *)
+    let b = Buffer.create init_size in
+      s b;
+      Buffer.contents b
+
   let rec reduce t e p k m q =
     match t with 
         (* sequential composition *)
         ReflectiveTerm.Sequence( [] ) ->
+          (
+            if ( report_p() ) 
+            then
+              let hypothesis_str =  "reduce () "  in 
+              let consequent_str = " ()"  in
+              let transition_str =
+                ( hypothesis_str ^ ( " ==> " ^ consequent_str ) ) in
+                ( print_string transition_str )
+          );
           ( apply_k k yunit p m q )
-      | ReflectiveTerm.Sequence( thd :: ttl ) ->
+      | ReflectiveTerm.Sequence( thd :: ttl ) -> 
+          (
+            if ( report_p() ) 
+            then 
+              let hd_str = ( show thd ) in
+              let hypothesis_str = 
+                "reduce ( " ^ hd_str ^ " ; ... ) " in 
+              let consequent_str =
+                "reduce " ^ hd_str ^ " reduce ( ... )"  in
+              let transition_str =
+                ( hypothesis_str ^ ( " ==> " ^ consequent_str ) ) in
+                ( print_string transition_str )
+          );
           let _ = ( reduce thd e p k m q ) in 
           let rec loop ts =
             match ts with

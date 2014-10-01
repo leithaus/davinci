@@ -22,6 +22,8 @@ sig
   module StrTbl : StringTable
 
   type obs_ctxt = bool StrTbl.t
+
+  val observation_context : unit -> obs_ctxt
   val report_reductions_p : 'a StrTbl.t -> bool
   val report_reductions : 'a StrTbl.t -> 'b -> bool
 end
@@ -47,6 +49,9 @@ struct
   module StrTbl : StringTable = Hashtbl.Make( StrKey )
 
   type obs_ctxt = bool StrTbl.t
+
+  let observation_context () =
+    ( StrTbl.create 100 )
   let report_reductions_p obs_c =
     ( StrTbl.mem obs_c "report_reductions" )
   let report_reductions obs_c b =
