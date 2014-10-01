@@ -15,7 +15,6 @@ open Exceptions
 module type SHOWOFF =
 sig
   type ident
-  type tvar
   type term
   type arithmetic_term
   type pattern
@@ -29,7 +28,6 @@ sig
   type meta_continuation
 
   val show_ident : ident -> showable
-  val show_tvar : tvar -> showable  
   val show_term : term -> showable
   val show_arithmetic_term : arithmetic_term -> showable
   val show_binding : binding -> showable
@@ -45,11 +43,10 @@ end
 
 module type SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS ) ->
-    functor( Terms : TERMS ) ->
+    functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES ) ->
 sig
   type ident = Nominals.nominal
-  type tvar = Terms.var
   type term = Terms.term
   type arithmetic_term = Terms.arithmeticTerm
   type pattern = Terms.pattern
@@ -63,7 +60,6 @@ sig
   type meta_continuation = Values.v_meta_ktn
 
   val show_ident : ident -> showable
-  val show_tvar : tvar -> showable
   val show_term : term -> showable
   val show_arithmetic_term : arithmetic_term -> showable
   val show_binding : binding -> showable
@@ -79,11 +75,10 @@ end
 
 module ShowOffFunctor : SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS ) ->
-    functor( Terms : TERMS ) ->
+    functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES ) ->
 struct
   type ident = Nominals.nominal
-  type tvar = Terms.var
   type term = Terms.term
   type arithmetic_term = Terms.arithmeticTerm
   type pattern = Terms.pattern
@@ -98,8 +93,6 @@ struct
 
   let show_ident ident = 
     raise ( NotYetImplemented "show_ident" )
-  let show_tvar tvar = 
-    raise ( NotYetImplemented "show_tvar" )
   let show_value v =
     raise ( NotYetImplemented "show_value" )
   let show_ground g =
@@ -131,7 +124,7 @@ struct
     |    Terms.ComparisonGT (term0, term) -> s2s "ComparisonGT" >> c2s ' ' >> c2s '(' >> show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
     |    Terms.ComparisonLTE (term0, term) -> s2s "ComparisonLTE" >> c2s ' ' >> c2s '(' >> show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
     |    Terms.ComparisonGTE (term0, term) -> s2s "ComparisonGTE" >> c2s ' ' >> c2s '(' >> show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
-    |    Terms.Reflection tvar -> s2s "Reflection" >> c2s ' ' >> c2s '(' >> show_tvar tvar >> c2s ')'
+    |    Terms.Reflection tvar -> s2s "Reflection" >> c2s ' ' >> c2s '(' >> show_ident tvar >> c2s ')'
     |    Terms.Acquisition  -> s2s "Acquisition" 
     |    Terms.Suspension (term0, term) -> s2s "Suspension" >> c2s ' ' >> c2s '(' >> show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
     |    Terms.Release (term0, term) -> s2s "Release" >> c2s ' ' >> c2s '(' >> show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
@@ -147,9 +140,8 @@ struct
     |    Terms.Juxtaposition (arithmeticterm0, arithmeticterm) -> s2s "Juxtaposition" >> c2s ' ' >> c2s '(' >> show_arithmetic_term arithmeticterm0  >> s2s ", " >>  show_arithmetic_term arithmeticterm >> c2s ')'
     |    Terms.Negation arithmeticterm -> s2s "Negation" >> c2s ' ' >> c2s '(' >> show_arithmetic_term arithmeticterm >> c2s ')'
     |    Terms.Mention vr ->
-           (* let sv = ( show_variation vr ) in
-              s2s "Mention" >> c2s ' ' >> c2s '(' >> sv >> c2s ')' *)
-             raise ( NotYetImplemented "show_arithmetic_term" )
+           let sv = ( show_variation vr ) in
+             s2s "Mention" >> c2s ' ' >> c2s '(' >> sv >> c2s ')'
     |    Terms.Actualization value -> s2s "Actualization" >> c2s ' ' >> c2s '(' >> show_literal value >> c2s ')'
     |    Terms.Aggregation term -> s2s "Aggregation" >> c2s ' ' >> c2s '(' >> show_term term >> c2s ')'
 
@@ -163,42 +155,40 @@ struct
     match e with
         Terms.Element (symbol, patterns) -> s2s "Element" >> c2s ' ' >> c2s '(' >> show_symbol symbol  >> s2s ", " >>  showList show_pattern patterns >> c2s ')'
     |    Terms.Variable tvar ->
-           (* s2s "Variable" >> c2s ' ' >> c2s '(' >> show_tvar tvar >> c2s ')' *)
-           raise ( NotYetImplemented "show_pattern" )
+           s2s "Variable" >> c2s ' ' >> c2s '(' >> show_ident tvar >> c2s ')'
     |    Terms.Materialization value -> s2s "Materialization" >> c2s ' ' >> c2s '(' >> show_literal value >> c2s ')'
-    |    Terms.Procession lyst -> s2s "Procession" >> c2s ' ' >> c2s '(' >> show_lyst lyst >> c2s ')'
-    |    Terms.PtnSequence tvar -> s2s "PtnSequence" >> c2s ' ' >> c2s '(' >> show_tvar tvar >> c2s ')'
-    |    Terms.PtnApplication (tvar0, tvar) -> s2s "PtnApplication" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnSupposition (tvar0, tvar1, tvar) -> s2s "PtnSupposition" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar1  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnRecurrence (tvar0, tvar1, tvar) -> s2s "PtnRecurrence" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar1  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnAbstraction (tvar0, tvar) -> s2s "PtnAbstraction" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnCondition (tvar0, tvar1, tvar) -> s2s "PtnCondition" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar1  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnComprehension (tvar0, tvar) -> s2s "PtnComprehend" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnConsolidation (tvar0, tvar) -> s2s "PtnConsolidate" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnFiltration (tvar0, tvar1, tvar) -> s2s "PtnFiltration" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar1  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnConcentration (tvar0, tvar1, tvar) -> s2s "PtnConcentrate" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar1  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnEquation (tvar0, tvar) -> s2s "PtnEquation" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnComparisonLT (tvar0, tvar) -> s2s "PtnCompLT" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnComparisonGT (tvar0, tvar) -> s2s "PtnCompGT" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnComparisonLTE (tvar0, tvar) -> s2s "PtnCompLTE" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnComparisonGTE (tvar0, tvar) -> s2s "PtnCompGTE" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnReflection (tvar0) -> s2s "PtnReflection" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> c2s ')'
+    |    Terms.Procession lyst -> s2s "Procession" >> c2s ' ' >> c2s '(' >> show_lyst lyst >> c2s ')' 
+    |    Terms.PtnSequence tvar -> s2s "PtnSequence" >> c2s ' ' >> c2s '(' >> show_ident tvar >> c2s ')'
+    |    Terms.PtnApplication (tvar0, tvar) -> s2s "PtnApplication" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnSupposition (tvar0, tvar1, tvar) -> s2s "PtnSupposition" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar1  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnRecurrence (tvar0, tvar1, tvar) -> s2s "PtnRecurrence" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar1  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnAbstraction (tvar0, tvar) -> s2s "PtnAbstraction" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnCondition (tvar0, tvar1, tvar) -> s2s "PtnCondition" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar1  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnComprehension (tvar0, tvar) -> s2s "PtnComprehend" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnConsolidation (tvar0, tvar) -> s2s "PtnConsolidate" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnFiltration (tvar0, tvar1, tvar) -> s2s "PtnFiltration" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar1  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnConcentration (tvar0, tvar1, tvar) -> s2s "PtnConcentrate" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar1  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnEquation (tvar0, tvar) -> s2s "PtnEquation" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnComparisonLT (tvar0, tvar) -> s2s "PtnCompLT" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnComparisonGT (tvar0, tvar) -> s2s "PtnCompGT" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnComparisonLTE (tvar0, tvar) -> s2s "PtnCompLTE" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnComparisonGTE (tvar0, tvar) -> s2s "PtnCompGTE" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnReflection (tvar0) -> s2s "PtnReflection" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> c2s ')'
     |    Terms.PtnAcquisition  -> s2s "PtnAcquisition" 
-    |    Terms.PtnSuspension (tvar0, tvar) -> s2s "PtnSuspension" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnRelease (tvar0, tvar) -> s2s "PtnRelease" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnInnerSuspension (tvar0, tvar) -> s2s "PtnInnerSuspend" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnDivision (tvar0, tvar) -> s2s "PtnDivision" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnAddition (tvar0, tvar) -> s2s "PtnAddition" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnMultiplication (tvar0, tvar) -> s2s "PtnMultiply" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnJuxtaposition (tvar0, tvar) -> s2s "PtnJuxtapose" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> s2s ", " >>  show_tvar tvar >> c2s ')'
-    |    Terms.PtnNegation (tvar0) -> s2s "PtnNegate" >> c2s ' ' >> c2s '(' >> show_tvar tvar0  >> c2s ')'
+    |    Terms.PtnSuspension (tvar0, tvar) -> s2s "PtnSuspension" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnRelease (tvar0, tvar) -> s2s "PtnRelease" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnInnerSuspension (tvar0, tvar) -> s2s "PtnInnerSuspend" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnDivision (tvar0, tvar) -> s2s "PtnDivision" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnAddition (tvar0, tvar) -> s2s "PtnAddition" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnMultiplication (tvar0, tvar) -> s2s "PtnMultiply" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnJuxtaposition (tvar0, tvar) -> s2s "PtnJuxtapose" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> s2s ", " >>  show_ident tvar >> c2s ')'
+    |    Terms.PtnNegation (tvar0) -> s2s "PtnNegate" >> c2s ' ' >> c2s '(' >> show_ident tvar0  >> c2s ')'
 
 
   and show_variation e : showable =
     match e with
         Terms.Identifier ident ->
-          (* s2s "Identifier" >> c2s ' ' >> c2s '(' >> show_ident ident >> c2s ')' *)
-          raise ( NotYetImplemented "show_variation" )
+          s2s "Identifier" >> c2s ' ' >> c2s '(' >> show_ident ident >> c2s ')'
       | Terms.Abandon( Terms.Wild( wild ) ) -> s2s "Abandon" >> c2s ' ' >> c2s '(' >> showString wild >> c2s ')'
 
 

@@ -63,7 +63,6 @@ sig
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
   and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal
-                                    and type tvar = ReflectiveTerm.var
                                     and type term = ReflectiveTerm.term
                                     and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
@@ -169,7 +168,6 @@ sig
     (* Algebraic theory of environments *)
   and ReflectiveEnv : ENVIRONMENTS
   and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal
-                                    and type tvar = ReflectiveTerm.var
                                     and type term = ReflectiveTerm.term
                                     and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
@@ -280,7 +278,6 @@ struct
     (* Algebraic theory of environments *)
     ListEnv (* ReflectiveNominal *)
   and ReflectiveDisplay : ( SHOWOFF with type ident = ReflectiveNominal.nominal 
-                                    and type tvar = ReflectiveTerm.var
                                     and type term = ReflectiveTerm.term
                                     and type arithmetic_term = ReflectiveTerm.arithmeticTerm
                                     and type pattern = ReflectiveTerm.pattern
