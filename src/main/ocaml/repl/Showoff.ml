@@ -45,7 +45,7 @@ end
 module type SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
-      functor( Values : VALUES ) ->
+      functor( Values : VALUES with type term = Terms.term ) ->
 sig
   type ident = Nominals.nominal
   type term = Terms.term
@@ -77,7 +77,7 @@ end
 module ShowOffFunctor : SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
-      functor( Values : VALUES ) ->
+      functor( Values : VALUES with type term = Terms.term ) ->
 struct
   type ident = Nominals.nominal
   type term = Terms.term
@@ -92,16 +92,27 @@ struct
   type continuation = Values.v_ktn
   type meta_continuation = Values.v_meta_ktn
 
-  let show_value v =
-    raise ( NotYetImplemented "show_value" )
   let show_ground g =
-    raise ( NotYetImplemented "show_ground" )
-  let show_env e = 
-    raise ( NotYetImplemented "show_env" )
-  let show_k k =
-    raise ( NotYetImplemented "show_k" )
-  let show_mk mk =
-    raise ( NotYetImplemented "show_mk" )
+    match g with
+        Values.Boolean( true ) -> s2s "true"
+      | Values.Boolean( false ) -> s2s "false"
+      | Values.String( s ) -> ( s2s "\"" >> s2s s >> s2s "\"" )
+      | Values.Integer( i ) -> ( showInt i )
+      | Values.Double( d ) -> ( showFloat d )
+      | Values.Reification( t ) ->
+          raise ( NotYetImplemented "render reification" )
+  let show_env e = s2s "#<environment>"
+  let show_k k = s2s "#<closure>"
+  let show_mk mk = s2s "#<closure>"
+  let show_value v =
+    match v with
+        Values.Ground( g ) -> show_ground g
+      | Values.Closure( p, t, e ) -> s2s "#<closure>"
+      | Values.Cont( k ) -> show_k k
+      | Values.MCont( mk ) -> show_mk mk
+      | Values.BOTTOM ->
+          raise ( NotYetImplemented "render bottom" )
+      | Values.UNIT -> s2s "()"  
 
   let rec show_term (e:term) : showable =
     match e with
