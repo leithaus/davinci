@@ -10,6 +10,7 @@ open Showcacao
 open Nominals
 open Terms
 open Values
+open Symbols
 open Exceptions
 
 module type SHOWOFF =
@@ -42,7 +43,7 @@ sig
 end  
 
 module type SHOWOFFFUNCTOR =
-  functor( Nominals : NOMINALS ) ->
+  functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES ) ->
 sig
@@ -74,7 +75,7 @@ sig
 end  
 
 module ShowOffFunctor : SHOWOFFFUNCTOR =
-  functor( Nominals : NOMINALS ) ->
+  functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES ) ->
 struct
@@ -91,8 +92,6 @@ struct
   type continuation = Values.v_ktn
   type meta_continuation = Values.v_meta_ktn
 
-  let show_ident ident = 
-    raise ( NotYetImplemented "show_ident" )
   let show_value v =
     raise ( NotYetImplemented "show_value" )
   let show_ground g =
@@ -107,9 +106,7 @@ struct
   let rec show_term (e:term) : showable =
     match e with
       Terms.Sequence ( terms ) ->
-        let sqn s =
-          ( List.fold_left ( fun acc t -> acc >> ( show_term t ) ) s terms ) in
-          ( s2s "Sequence" >> c2s ' ' >> c2s '(' >> ( sqn ( c2s ')' ) ) )
+          ( s2s "Sequence" >> c2s ' ' >> c2s '(' >> showList show_term terms >> c2s ')' )
     |    Terms.Application (term, terms) -> s2s "Application" >> c2s ' ' >> c2s '(' >> show_term term  >> s2s ", " >>  showList show_term terms >> c2s ')'
     |    Terms.Supposition (pattern, term0, term) -> s2s "Supposition" >> c2s ' ' >> c2s '(' >> show_pattern pattern  >> s2s ", " >>  show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
     |    Terms.Recurrence (pattern, term0, term) -> s2s "Recurrence" >> c2s ' ' >> c2s '(' >> show_pattern pattern  >> s2s ", " >>  show_term term0  >> s2s ", " >>  show_term term >> c2s ')'
@@ -155,7 +152,7 @@ struct
     match e with
         Terms.Element (symbol, patterns) -> s2s "Element" >> c2s ' ' >> c2s '(' >> show_symbol symbol  >> s2s ", " >>  showList show_pattern patterns >> c2s ')'
     |    Terms.Variable tvar ->
-           s2s "Variable" >> c2s ' ' >> c2s '(' >> show_ident tvar >> c2s ')'
+           s2s "Variable" >> c2s ' ' >> c2s '(' >> show_variation tvar >> c2s ')'
     |    Terms.Materialization value -> s2s "Materialization" >> c2s ' ' >> c2s '(' >> show_literal value >> c2s ')'
     |    Terms.Procession lyst -> s2s "Procession" >> c2s ' ' >> c2s '(' >> show_lyst lyst >> c2s ')' 
     |    Terms.PtnSequence tvar -> s2s "PtnSequence" >> c2s ' ' >> c2s '(' >> show_ident tvar >> c2s ')'
@@ -219,4 +216,15 @@ struct
   and show_symbol e : showable =
     match e with
         Terms.Tag( Terms.LIdent( lident ) ) -> s2s "Tag" >> c2s ' ' >> c2s '(' >> showString lident >> c2s ')'
+
+  and show_ident ident = 
+    match ident with
+        Transcription( t ) ->
+          s2s "<<" >> c2s ' ' >> s2s "..." >> c2s ' ' >> s2s ">>"
+      | Symbol( s ) ->
+          match s with
+              Symbols.URL( url ) -> showString url
+            | Symbols.Opaque( opaque ) -> showString opaque
+            | Symbols.Debruijn( ( i, j ) ) ->
+                c2s '(' >> c2s ' ' >> showInt i >> s2s " , " >> showInt j >> c2s ')'
 end
