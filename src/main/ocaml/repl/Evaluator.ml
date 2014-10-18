@@ -334,40 +334,35 @@ struct
     ReductionObservations.observation_context()
   let report_p () =
     ( ReductionObservations.report_reductions_p observation_context ) 
-  let show t =
-    let s = ( ReflectiveDisplay.show_term t ) in
+  let show_role show_fn t =
+    let s = ( show_fn t ) in
     let init_size = 16 in (* you may want to adjust this *)
     let b = Buffer.create init_size in
       s b;
       Buffer.contents b
+  let show t =
+    show_role ReflectiveDisplay.show_term t
+
+  let show_hyp t =
+    show_role ReflectiveDisplay.show_hypothesis t
+      
+  let show_cnsq t =
+    show_role ReflectiveDisplay.show_consequent t
+
+  let show_trans t =
+    show_role ReflectiveDisplay.show_transition t
 
   let rec reduce t e p k m q =
+    (
+      if ( report_p() ) 
+      then 
+        ( print_string ( show_trans t ) )
+    );
     match t with 
         (* sequential composition *)
-        ReflectiveTerm.Sequence( [] ) ->
-          (
-            if ( report_p() ) 
-            then
-              let hypothesis_str =  "reduce () "  in 
-              let consequent_str = " ()"  in
-              let transition_str =
-                ( hypothesis_str ^ ( " ==> " ^ consequent_str ) ) in
-                ( print_string transition_str )
-          );
+        ReflectiveTerm.Sequence( [] ) ->          
           ( apply_k k yunit p m q )
       | ReflectiveTerm.Sequence( thd :: ttl ) -> 
-          (
-            if ( report_p() ) 
-            then 
-              let hd_str = ( show thd ) in
-              let hypothesis_str = 
-                "reduce ( " ^ hd_str ^ " ; ... ) " in 
-              let consequent_str =
-                "reduce " ^ hd_str ^ " reduce ( ... )"  in
-              let transition_str =
-                ( hypothesis_str ^ ( " ==> " ^ consequent_str ) ) in
-                ( print_string transition_str )
-          );
           let _ = ( reduce thd e p k m q ) in 
           let rec loop ts =
             match ts with

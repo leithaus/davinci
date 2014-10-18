@@ -40,6 +40,10 @@ sig
   val show_env : environment -> showable
   val show_k : continuation -> showable
   val show_mk : meta_continuation -> showable
+
+  val show_hypothesis : term -> showable
+  val show_consequent : term -> showable
+  val show_transition : term -> showable
 end  
 
 module type SHOWOFFFUNCTOR =
@@ -72,6 +76,10 @@ sig
   val show_env : environment -> showable
   val show_k : continuation -> showable
   val show_mk : meta_continuation -> showable
+
+  val show_hypothesis : term -> showable
+  val show_consequent : term -> showable
+  val show_transition : term -> showable
 end  
 
 module ShowOffFunctor : SHOWOFFFUNCTOR =
@@ -238,4 +246,146 @@ struct
             | Symbols.Opaque( opaque ) -> showString opaque
             | Symbols.Debruijn( ( i, j ) ) ->
                 c2s '(' >> c2s ' ' >> showInt i >> s2s " , " >> showInt j >> c2s ')'
+
+  let show_hypothesis t =
+    match t with
+        Terms.Sequence( [] ) ->
+          raise ( NotYetImplemented "show_hypothesis: Sequence" )
+      | Terms.Sequence( thd :: ttl ) -> 
+          raise ( NotYetImplemented "show_hypothesis: Sequence" )
+
+      (* application *)
+      | Terms.Application( op, [] ) ->
+          raise ( NotYetImplemented "show_hypothesis: Application" )
+
+      | Terms.Application( op, actls ) ->          
+          raise ( NotYetImplemented "show_hypothesis: Application" )
+
+      (* let *)
+      | Terms.Supposition( ptn, pterm, eterm ) ->
+          raise ( NotYetImplemented "show_hypothesis: Supposition" )
+
+      (* letrec *)
+      | Terms.Recurrence( ptn, pterm, eterm ) ->
+          raise ( NotYetImplemented "show_hypothesis: Recurrence" )
+
+      (* abstraction *)
+      | Terms.Abstraction( ptn, eterm ) ->
+          raise ( NotYetImplemented "show_hypothesis: Abstraction" )
+            
+      (* condition *)            
+      | Terms.Condition( test, tbranch, fbranch ) ->
+          raise ( NotYetImplemented "show_hypothesis: Condition" )
+
+      (* monadic desugaring *)
+      (*  This has been moved to the syntactic transform stage *)
+
+      (* comparison *)
+      | Terms.Equation( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_hypothesis: Equation" )
+          
+      | Terms.ComparisonLT( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_hypothesis: ComparisonLT" )
+
+      | Terms.ComparisonGT( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_hypothesis: ComparisonGT" )
+
+      | Terms.ComparisonLTE( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_hypothesis: ComparisonLTE" )
+
+      | Terms.ComparisonGTE( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_hypothesis: ComparisonGTE" )
+
+      (* reflection -- dual to reification *)
+      | Terms.Reflection( v ) ->
+          raise ( NotYetImplemented "show_hypothesis: Reflection" )
+
+      (* delimited continuations *)
+      | Terms.Acquisition -> 
+          raise ( NotYetImplemented "show_hypothesis: Acquisition" )
+
+      | Terms.Suspension( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_hypothesis: Suspension" )
+            
+      | Terms.Release( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_hypothesis: Release" )
+
+      | Terms.InnerSuspension( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_hypothesis: InnerSuspension" )
+
+      (* primitive arithmetic calculation *)
+      | Terms.Calculation( aterm ) -> 
+          raise ( NotYetImplemented "show_hypothesis: Calculation" )
+
+  let show_consequent t =
+    match t with
+        Terms.Sequence( [] ) -> s2s "()"
+      | Terms.Sequence( thd :: ttl ) ->
+          ( show_term ( Terms.Sequence ttl ) )
+
+      (* application *)
+      | Terms.Application( op, [] ) ->
+          raise ( NotYetImplemented "show_consequent: Application" )
+
+      | Terms.Application( op, actls ) ->          
+          raise ( NotYetImplemented "show_consequent: Application" )
+
+      (* let *)
+      | Terms.Supposition( ptn, pterm, eterm ) ->
+          raise ( NotYetImplemented "show_consequent: Supposition" )
+
+      (* letrec *)
+      | Terms.Recurrence( ptn, pterm, eterm ) ->
+          raise ( NotYetImplemented "show_consequent: Recurrence" )
+
+      (* abstraction *)
+      | Terms.Abstraction( ptn, eterm ) ->
+          raise ( NotYetImplemented "show_consequent: Abstraction" )
+            
+      (* condition *)            
+      | Terms.Condition( test, tbranch, fbranch ) ->
+          raise ( NotYetImplemented "show_consequent: Condition" )
+
+      (* monadic desugaring *)
+      (*  This has been moved to the syntactic transform stage *)
+
+      (* comparison *)
+      | Terms.Equation( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_consequent: Equation" )
+          
+      | Terms.ComparisonLT( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_consequent: ComparisonLT" )
+
+      | Terms.ComparisonGT( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_consequent: ComparisonGT" )
+
+      | Terms.ComparisonLTE( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_consequent: ComparisonLTE" )
+
+      | Terms.ComparisonGTE( lhs, rhs ) ->
+          raise ( NotYetImplemented "show_consequent: ComparisonGTE" )
+
+      (* reflection -- dual to reification *)
+      | Terms.Reflection( v ) ->
+          raise ( NotYetImplemented "show_consequent: Reflection" )
+
+      (* delimited continuations *)
+      | Terms.Acquisition -> 
+          raise ( NotYetImplemented "show_consequent: Acquisition" )
+
+      | Terms.Suspension( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_consequent: Suspension" )
+            
+      | Terms.Release( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_consequent: Release" )
+
+      | Terms.InnerSuspension( pterm, eterm ) -> 
+          raise ( NotYetImplemented "show_consequent: InnerSuspension" )
+
+      (* primitive arithmetic calculation *)
+      | Terms.Calculation( aterm ) -> 
+          raise ( NotYetImplemented "show_consequent: Calculation" )            
+
+  let show_transition t =
+    ( show_hypothesis t ) >> s2s "====>" >> ( show_consequent t )
 end
