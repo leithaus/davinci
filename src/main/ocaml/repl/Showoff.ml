@@ -250,72 +250,72 @@ struct
   let show_hypothesis t =
     match t with
         Terms.Sequence( [] ) ->
-          raise ( NotYetImplemented "show_hypothesis: Sequence" )
+          s2s "()"
       | Terms.Sequence( thd :: ttl ) -> 
-          raise ( NotYetImplemented "show_hypothesis: Sequence" )
+          show_term t
 
       (* application *)
       | Terms.Application( op, [] ) ->
-          raise ( NotYetImplemented "show_hypothesis: Application" )
+          show_term t
 
       | Terms.Application( op, actls ) ->          
-          raise ( NotYetImplemented "show_hypothesis: Application" )
+          show_term t
 
       (* let *)
       | Terms.Supposition( ptn, pterm, eterm ) ->
-          raise ( NotYetImplemented "show_hypothesis: Supposition" )
+          show_term t
 
       (* letrec *)
       | Terms.Recurrence( ptn, pterm, eterm ) ->
-          raise ( NotYetImplemented "show_hypothesis: Recurrence" )
+          show_term t
 
       (* abstraction *)
       | Terms.Abstraction( ptn, eterm ) ->
-          raise ( NotYetImplemented "show_hypothesis: Abstraction" )
+          show_term t
             
       (* condition *)            
       | Terms.Condition( test, tbranch, fbranch ) ->
-          raise ( NotYetImplemented "show_hypothesis: Condition" )
+          show_term t
 
       (* monadic desugaring *)
       (*  This has been moved to the syntactic transform stage *)
 
       (* comparison *)
       | Terms.Equation( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_hypothesis: Equation" )
+          show_term t
           
       | Terms.ComparisonLT( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_hypothesis: ComparisonLT" )
+          show_term t
 
       | Terms.ComparisonGT( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_hypothesis: ComparisonGT" )
+          show_term t
 
       | Terms.ComparisonLTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_hypothesis: ComparisonLTE" )
+          show_term t
 
       | Terms.ComparisonGTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_hypothesis: ComparisonGTE" )
+          show_term t
 
       (* reflection -- dual to reification *)
       | Terms.Reflection( v ) ->
-          raise ( NotYetImplemented "show_hypothesis: Reflection" )
+          show_term t
 
       (* delimited continuations *)
       | Terms.Acquisition -> 
-          raise ( NotYetImplemented "show_hypothesis: Acquisition" )
+          show_term t
 
       | Terms.Suspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_hypothesis: Suspension" )
+          show_term t
             
       | Terms.Release( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_hypothesis: Release" )
+          show_term t
 
       | Terms.InnerSuspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_hypothesis: InnerSuspension" )
+          show_term t
 
       (* primitive arithmetic calculation *)
       | Terms.Calculation( aterm ) -> 
-          raise ( NotYetImplemented "show_hypothesis: Calculation" )
+          show_term t
 
   let show_consequent t =
     match t with
