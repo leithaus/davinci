@@ -54,6 +54,7 @@ sig
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
+                                 and type prompt = ReflectiveK.prompt
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map    
                                  and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
                                  and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
@@ -159,6 +160,7 @@ sig
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
+                                 and type prompt = ReflectiveK.prompt
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
                                  and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
                                  and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
@@ -178,7 +180,8 @@ sig
                                     and type ground = ReflectiveValue.ground
                                     and type environment = ReflectiveValue.v_env
                                     and type continuation = ReflectiveValue.v_ktn
-                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn )
+                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn
+                                    and type prompt = ReflectiveValue.v_prompt )
 
   type 'a monad = 'a M.monad
       (* The type used for identifiers *)
@@ -265,6 +268,7 @@ struct
   and ReflectiveValue : ( VALUES with type ident = ReflectiveNominal.nominal
                                  and type term = ReflectiveTerm.term
                                  and type pattern = ReflectiveTerm.pattern
+                                 and type prompt = ReflectiveK.prompt
                                  and type ('n, 'v) environment = ('n, 'v) ReflectiveEnv.map 
                                  and type ('v, 't) continuation = ('v, 't ) ReflectiveK.cont
                                  and type ('v, 't) meta_continuation = ('v, 't ) ReflectiveK.meta_cont )
@@ -288,7 +292,8 @@ struct
                                     and type ground = ReflectiveValue.ground
                                     and type environment = ReflectiveValue.v_env
                                     and type continuation = ReflectiveValue.v_ktn
-                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn )
+                                    and type meta_continuation =  ReflectiveValue.v_meta_ktn
+                                    and type prompt = ReflectiveValue.v_prompt )
     = ShowOffFunctor( ReflectiveNominal )( ReflectiveTerm )( ReflectiveValue )
 
   type 'a monad = 'a M.monad
@@ -334,29 +339,33 @@ struct
     ReductionObservations.observation_context()
   let report_p () =
     ( ReductionObservations.report_reductions_p observation_context ) 
-  let show_role show_fn t =
-    let s = ( show_fn t ) in
+  let show_role show_fn (t:term) (e:env) (p:prompt) (k:ktn) (mk:meta_ktn) (q:prompt) =
+    let v_k = ( ReflectiveValue.K k ) in
+    let v_mk = ( ReflectiveValue.MK mk ) in
+    let v_p = ( ReflectiveValue.P p ) in
+    let v_q = ( ReflectiveValue.P q ) in
+    let s = ( show_fn t e v_p v_k v_mk v_q ) in
     let init_size = 16 in (* you may want to adjust this *)
     let b = Buffer.create init_size in
       s b;
       Buffer.contents b
-  let show t =
-    show_role ReflectiveDisplay.show_term t
+  let show (t:term) (e:env) (p:prompt) (k:ktn) (mk:meta_ktn) (q:prompt) =   
+    show_role ReflectiveDisplay.show_term t e p k mk q
 
-  let show_hyp t =
-    show_role ReflectiveDisplay.show_hypothesis t
+  let show_hyp (t:term) (e:env) (p:prompt) (k:ktn) (mk:meta_ktn) (q:prompt) =
+    show_role ReflectiveDisplay.show_hypothesis t e p k mk q 
       
-  let show_cnsq t =
-    show_role ReflectiveDisplay.show_consequent t
+  let show_cnsq (t:term) (e:env) (p:prompt) (k:ktn) (mk:meta_ktn) (q:prompt) =
+    show_role ReflectiveDisplay.show_consequent t e p k mk q
 
-  let show_trans t =
-    show_role ReflectiveDisplay.show_transition t
+  let show_trans (t:term) (e:env) (p:prompt) (k:ktn) (mk:meta_ktn) (q:prompt) =
+    show_role ReflectiveDisplay.show_transition t e p k mk q
 
   let rec reduce t e p k m q =
     (
       if ( report_p() ) 
       then 
-        ( print_string ( show_trans t ) )
+        ( print_string ( show_trans t e p k m q ) )
     );
     match t with 
         (* sequential composition *)

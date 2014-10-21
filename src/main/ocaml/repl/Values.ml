@@ -16,6 +16,7 @@ sig
   type ident 
   type term
   type pattern
+  type prompt
   type ('n, 'v) environment
   type ('v, 't) continuation
   type ('v, 't) meta_continuation
@@ -24,6 +25,7 @@ sig
       | Closure of pattern * term * v_env
       | Cont of v_ktn
       | MCont of v_meta_ktn
+      | Prompt of v_prompt
       | BOTTOM
       | UNIT
   and ground =
@@ -32,6 +34,8 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
+  and v_prompt =
+      P of prompt
   and v_env =
       Env of (ident, value) environment
   and v_ktn =
@@ -45,6 +49,7 @@ struct
   type ident 
   type term
   type pattern
+  type prompt
   type ('n, 'v) environment
   type ('v, 't) continuation
   type ('v, 't) meta_continuation
@@ -53,6 +58,7 @@ struct
       | Closure of pattern * term * v_env
       | Cont of v_ktn
       | MCont of v_meta_ktn
+      | Prompt of v_prompt
       | BOTTOM
       | UNIT
   and ground =
@@ -61,6 +67,8 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
+  and v_prompt =
+      P of prompt
   and v_env =
       Env of (ident, value) environment  
   and v_ktn =
@@ -78,6 +86,7 @@ sig
   type ident = Nominal.nominal 
   type term = Term.term
   type pattern = Term.pattern 
+  type prompt = K.prompt
   type ('n, 'v) environment = ('n, 'v) Env.map
   type ('v, 't) continuation = ( 'v, 't ) K.cont
   type ('v, 't) meta_continuation = ( 'v, 't ) K.meta_cont
@@ -86,6 +95,7 @@ sig
       | Closure of pattern * term * v_env
       | Cont of v_ktn
       | MCont of v_meta_ktn
+      | Prompt of v_prompt
       | BOTTOM
       | UNIT 
   and ground =
@@ -94,6 +104,8 @@ sig
       | Integer of int
       | Double of float
       | Reification of term
+  and v_prompt =
+      P of prompt
   and v_env =
       Env of ( ident, value ) Env.map
   and v_ktn =
@@ -111,6 +123,7 @@ struct
   type ident = Nominal.nominal 
   type term = Term.term
   type pattern = Term.pattern
+  type prompt = K.prompt
   type ('n, 'v) environment = ('n, 'v) Env.map
   type ('v, 't) continuation = ( 'v, 't ) K.cont
   type ('v, 't) meta_continuation = ( 'v, 't ) K.meta_cont
@@ -119,6 +132,7 @@ struct
       | Closure of pattern * term * v_env
       | Cont of v_ktn
       | MCont of v_meta_ktn
+      | Prompt of v_prompt
       | BOTTOM
       | UNIT
   and ground =
@@ -127,6 +141,8 @@ struct
       | Integer of int
       | Double of float
       | Reification of term
+  and v_prompt =
+      P of prompt
   and v_env = 
       Env of ( ident, value ) Env.map
   and v_ktn =
