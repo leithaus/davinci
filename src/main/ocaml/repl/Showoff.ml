@@ -41,6 +41,7 @@ sig
   val show_env : environment -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_k : continuation -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_mk : meta_continuation -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
+  val show_prompt : prompt -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
 
   val show_hypothesis : term -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_consequent : term -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
@@ -50,7 +51,7 @@ end
 module type SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
-      functor( Values : VALUES with type term = Terms.term ) ->
+      functor( Values : VALUES with type term = Terms.term and type prompt = int ) ->
 sig
   type ident = Nominals.nominal
   type term = Terms.term
@@ -78,6 +79,7 @@ sig
   val show_env : environment -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_k : continuation -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_mk : meta_continuation -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
+  val show_prompt : prompt -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
 
   val show_hypothesis : term -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
   val show_consequent : term -> environment -> prompt -> continuation -> meta_continuation -> prompt -> showable
@@ -87,7 +89,7 @@ end
 module ShowOffFunctor : SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
-      functor( Values : VALUES with type term = Terms.term ) ->
+      functor( Values : VALUES with type term = Terms.term and type prompt = int ) ->
 struct
   type ident = Nominals.nominal
   type term = Terms.term
@@ -115,6 +117,9 @@ struct
   let show_env e env p k mk q = s2s "#<environment>"
   let show_k k e p k mk q = s2s "#<closure>"
   let show_mk mk e p k mk q = s2s "#<closure>"
+  let show_prompt prmpt e p k mk q = 
+    match prmpt with
+        Values.P( i ) -> showInt i
   let show_value v e p k mk q =
     match v with
         Values.Ground( g ) -> show_ground g e p k mk q
@@ -251,8 +256,9 @@ struct
                 c2s '(' >> c2s ' ' >> showInt i >> s2s " , " >> showInt j >> c2s ')'
 
   let show_hypothesis t e p k mk q =
-    let regsShow = s2s "e" >> s2s "p" >> s2s "k" >> s2s "mk" >> s2s "q" in
-      s2s "reduce" >> c2s '(' >> show_term t e p k mk q >> regsShow >> c2s ')' 
+    let regsShow =
+      show_env e e p k mk q >> s2s " , " >> show_prompt p e p k mk q >> s2s " , " >> show_k k e p k mk q >> s2s " , " >> show_mk mk q p k mk q  >> s2s " , " >> show_prompt q e p k mk q in
+      s2s "reduce" >> c2s '(' >> show_term t e p k mk q >> s2s " , " >> regsShow >> c2s ')' 
 
   let show_consequent t e p k mk q = 
     match t with
