@@ -255,19 +255,29 @@ struct
             | Symbols.Debruijn( ( i, j ) ) ->
                 c2s '(' >> c2s ' ' >> showInt i >> s2s " , " >> showInt j >> c2s ')'
 
+  let show_registers e p k mk q =
+    let s_env = show_env e e p k mk q in
+    let s_p = show_prompt p e p k mk q in
+    let s_k = show_k k e p k mk q in
+    let s_mk = show_mk mk e p k mk q in
+    let s_q = show_prompt q e p k mk q in
+      s_env >> s2s " , " >> s_p >> s2s " , " >> s_k >> s2s " , " >> s_mk >> s2s " , " >> s_q 
+
   let show_hypothesis t e p k mk q =
-    let regsShow =
-      show_env e e p k mk q >> s2s " , " >> show_prompt p e p k mk q >> s2s " , " >> show_k k e p k mk q >> s2s " , " >> show_mk mk q p k mk q  >> s2s " , " >> show_prompt q e p k mk q in
-      s2s "reduce" >> c2s '(' >> show_term t e p k mk q >> s2s " , " >> regsShow >> c2s ')' 
+    let regs_show = show_registers e p k mk q in
+      s2s "reduce" >> c2s '(' >> show_term t e p k mk q >> s2s " , " >> regs_show >> c2s ')' 
 
   let show_consequent t e p k mk q = 
     match t with
         Terms.Sequence( [] ) -> s2s "()"
       | Terms.Sequence( thd :: ttl ) ->
+          let s_t = show_term thd e p k mk q in 
+          let s_tl = ( show_term ( Terms.Sequence ttl ) e p k mk q ) in
+          let regs_show = show_registers e p k mk q in          
           let seqHdShow =
-            s2s "reduce" >> c2s '(' >> show_term thd e p k mk q >> c2s ')' in
+            s2s "reduce" >> c2s '(' >> s_t >> s2s " , " >> regs_show >> c2s ')' in
           let seqTlShow =
-            s2s "reduce" >> c2s '(' >> ( show_term ( Terms.Sequence ttl ) e p k mk q ) >> c2s ')' in
+            s2s "reduce" >> c2s '(' >> s_tl >> s2s " , " >> regs_show >> c2s ')' in 
             seqHdShow >> s2s " ; " >> seqTlShow
 
       (* application *)
