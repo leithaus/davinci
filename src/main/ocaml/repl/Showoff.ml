@@ -10,6 +10,8 @@ open Showcacao
 open Nominals
 open Terms
 open Values
+open Environments
+open Continuations
 open Symbols
 open Exceptions
 
@@ -52,6 +54,8 @@ module type SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES with type term = Terms.term and type prompt = int ) ->
+        functor( Environments : ENVIRONMENTS ) ->
+          functor( Continuations : CONTINUATIONS with type nominal = Nominals.nominal and type ('n, 'v) k_env = ('n, 'v) Environments.map ) ->
 sig
   type ident = Nominals.nominal
   type term = Terms.term
@@ -90,6 +94,8 @@ module ShowOffFunctor : SHOWOFFFUNCTOR =
   functor( Nominals : NOMINALS with type symbol = Symbols.symbol ) ->
     functor( Terms : TERMS with type var = Nominals.nominal ) ->
       functor( Values : VALUES with type term = Terms.term and type prompt = int ) ->
+        functor( Environments : ENVIRONMENTS ) ->
+          functor( Continuations : CONTINUATIONS with type nominal = Nominals.nominal and type ('n, 'v) k_env = ('n, 'v) Environments.map ) ->
 struct
   type ident = Nominals.nominal
   type term = Terms.term
@@ -268,80 +274,82 @@ struct
       s2s "reduce" >> c2s '(' >> show_term t e p k mk q >> s2s " , " >> regs_show >> c2s ')' 
 
   let show_consequent t e p k mk q = 
-    match t with
-        Terms.Sequence( [] ) -> s2s "()"
-      | Terms.Sequence( thd :: ttl ) ->
-          let s_t = show_term thd e p k mk q in 
-          let s_tl = ( show_term ( Terms.Sequence ttl ) e p k mk q ) in
-          let regs_show = show_registers e p k mk q in          
-          let seqHdShow =
-            s2s "reduce" >> c2s '(' >> s_t >> s2s " , " >> regs_show >> c2s ')' in
-          let seqTlShow =
-            s2s "reduce" >> c2s '(' >> s_tl >> s2s " , " >> regs_show >> c2s ')' in 
-            seqHdShow >> s2s " ; " >> seqTlShow
+    let regs_show = show_registers e p k mk q in
+      match t with
+          Terms.Sequence( [] ) -> s2s "()"
+        | Terms.Sequence( thd :: ttl ) ->
+            let s_t = show_term thd e p k mk q in 
+            let s_tl = ( show_term ( Terms.Sequence ttl ) e p k mk q ) in          
+            let seqHdShow =
+              s2s "reduce" >> c2s '(' >> s_t >> s2s " , " >> regs_show >> c2s ')' in
+            let seqTlShow =
+              s2s "reduce" >> c2s '(' >> s_tl >> s2s " , " >> regs_show >> c2s ')' in 
+              seqHdShow >> s2s " ; " >> seqTlShow
 
-      (* application *)
-      | Terms.Application( op, [] ) ->
-          s2s "reduce" >> c2s '(' >> show_term op e p k mk q >> c2s ')' >> s2s "()"
+        (* application *)
+        | Terms.Application( op, [] ) ->
+            let s_op = show_term op e p k mk q in
+              s2s "reduce" >> c2s '(' >> s_op >> s2s " , " >> regs_show >> c2s ')' >> s2s "()"
 
-      | Terms.Application( op, actls ) ->           
-          s2s "reduce" >> c2s '(' >> show_term op e p k mk q >> c2s ')'
+        | Terms.Application( op, actls ) ->           
+            let s_op = show_term op e p k mk q in
+              s2s "reduce" >> c2s '(' >> s_op >> s2s " , " >> regs_show >> c2s ')'
 
-      (* let *)
-      | Terms.Supposition( ptn, pterm, eterm ) ->
-          raise ( NotYetImplemented "show_consequent: Supposition" )
+        (* let *)
+        | Terms.Supposition( ptn, pterm, eterm ) ->
+            raise ( NotYetImplemented "show_consequent: Supposition" )
 
-      (* letrec *)
-      | Terms.Recurrence( ptn, pterm, eterm ) ->
-          raise ( NotYetImplemented "show_consequent: Recurrence" )
+        (* letrec *)
+        | Terms.Recurrence( ptn, pterm, eterm ) ->
+            raise ( NotYetImplemented "show_consequent: Recurrence" )
 
-      (* abstraction *)
-      | Terms.Abstraction( ptn, eterm ) ->
-          raise ( NotYetImplemented "show_consequent: Abstraction" )
-            
-      (* condition *)            
-      | Terms.Condition( test, tbranch, fbranch ) ->
-          raise ( NotYetImplemented "show_consequent: Condition" )
+        (* abstraction *)
+        | Terms.Abstraction( ptn, eterm ) ->
+            raise ( NotYetImplemented "show_consequent: Abstraction" )
+              
+        (* condition *)            
+        | Terms.Condition( test, tbranch, fbranch ) ->
+            raise ( NotYetImplemented "show_consequent: Condition" )
 
-      (* monadic desugaring *)
-      (*  This has been moved to the syntactic transform stage *)
+        (* monadic desugaring *)
+        (*  This has been moved to the syntactic transform stage *)
 
-      (* comparison *)
-      | Terms.Equation( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_consequent: Equation" )
-          
-      | Terms.ComparisonLT( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_consequent: ComparisonLT" )
+        (* comparison *)
+        | Terms.Equation( lhs, rhs ) ->
+            raise ( NotYetImplemented "show_consequent: Equation" )
+              
+        | Terms.ComparisonLT( lhs, rhs ) ->
+            raise ( NotYetImplemented "show_consequent: ComparisonLT" )
 
-      | Terms.ComparisonGT( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_consequent: ComparisonGT" )
+        | Terms.ComparisonGT( lhs, rhs ) ->
+            raise ( NotYetImplemented "show_consequent: ComparisonGT" )
 
-      | Terms.ComparisonLTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_consequent: ComparisonLTE" )
+        | Terms.ComparisonLTE( lhs, rhs ) ->
+            raise ( NotYetImplemented "show_consequent: ComparisonLTE" )
 
-      | Terms.ComparisonGTE( lhs, rhs ) ->
-          raise ( NotYetImplemented "show_consequent: ComparisonGTE" )
+        | Terms.ComparisonGTE( lhs, rhs ) ->
+            raise ( NotYetImplemented "show_consequent: ComparisonGTE" )
 
-      (* reflection -- dual to reification *)
-      | Terms.Reflection( v ) ->
-          raise ( NotYetImplemented "show_consequent: Reflection" )
+        (* reflection -- dual to reification *)
+        | Terms.Reflection( v ) ->
+            raise ( NotYetImplemented "show_consequent: Reflection" )
 
-      (* delimited continuations *)
-      | Terms.Acquisition -> 
-          raise ( NotYetImplemented "show_consequent: Acquisition" )
+        (* delimited continuations *)
+        | Terms.Acquisition -> 
+            raise ( NotYetImplemented "show_consequent: Acquisition" )
 
-      | Terms.Suspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_consequent: Suspension" )
-            
-      | Terms.Release( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_consequent: Release" )
+        | Terms.Suspension( pterm, eterm ) -> 
+            raise ( NotYetImplemented "show_consequent: Suspension" )
+              
+        | Terms.Release( pterm, eterm ) -> 
+            raise ( NotYetImplemented "show_consequent: Release" )
 
-      | Terms.InnerSuspension( pterm, eterm ) -> 
-          raise ( NotYetImplemented "show_consequent: InnerSuspension" )
+        | Terms.InnerSuspension( pterm, eterm ) -> 
+            raise ( NotYetImplemented "show_consequent: InnerSuspension" )
 
-      (* primitive arithmetic calculation *)
-      | Terms.Calculation( aterm ) -> 
-          raise ( NotYetImplemented "show_consequent: Calculation" )            
+        (* primitive arithmetic calculation *)
+        | Terms.Calculation( aterm ) -> 
+            raise ( NotYetImplemented "show_consequent: Calculation" )            
 
   let show_transition t e p k mk q =
     ( show_hypothesis t e p k mk q ) >> s2s "====>" >> ( show_consequent t e p k mk q )

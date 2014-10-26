@@ -294,7 +294,7 @@ struct
                                     and type continuation = ReflectiveValue.v_ktn
                                     and type meta_continuation =  ReflectiveValue.v_meta_ktn
                                     and type prompt = ReflectiveValue.v_prompt )
-    = ShowOffFunctor( ReflectiveNominal )( ReflectiveTerm )( ReflectiveValue )
+    = ShowOffFunctor( ReflectiveNominal )( ReflectiveTerm )( ReflectiveValue )( ReflectiveEnv )( ReflectiveK )
 
   type 'a monad = 'a M.monad
   type ident = ReflectiveNominal.nominal
